@@ -69,15 +69,15 @@ def vectorize(tensor):
     :param tensor: tf.Tensor, ndarray
     :return: vector-like tf.Tensor
     """
-    return tf.reshape(tensor, -1)
+    return tf.reshape(tensor, [-1])
 
 
 def vec_to_tensor(vec, shape):
     """
-    Transfer a vector to a specified shpae tensor
-    :param vec:
-    :param shape:
-    :return:
+    Transfer a vector to a specified shape tensor
+    :param vec: a vector-like tensor
+    :param shape: list, tuple
+    :return: TTensor
     """
     return tf.reshape(vec, shape)
 
@@ -97,3 +97,56 @@ def dot(tensorA, tensorB, a_axis, b_axis):
     back_shape = [_ for _ in range(len(tensorA.shape)) if _ not in a_axis] + \
                  [_ for _ in range(len(tensorB.shape)) if _ not in b_axis]
     return tf.reshape(mat_dot, back_shape)
+
+
+def inner(tensorA, tensorB):
+    """
+    Inner product of two tensor
+    :param tensorA:
+    :param tensorB:
+    :return:
+    """
+    return tf.reduce_sum(vectorize(tensorA) * vectorize(tensorB))
+
+
+def kron(matrices, skip_matrices_index=None, reverse=False):
+    """
+
+    :param matrices:
+    :param skip_matrices_index:
+    :param reverse:
+    :return:
+    """
+    if skip_matrices_index is not None:
+        matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
+    if reverse:
+        order = -1
+        start = len(matrices) - 2
+        res = matrices[-1]
+    else:
+        order = 1
+        start = 1
+        res = matrices[0]
+    for mat in matrices[start::order]:
+        res = np.kron(res, mat)
+    return res
+
+
+def khatri(matrices, skip_matrices_index=None, reverse=False):
+    """
+
+    :param matrices:
+    :param skip_matrices_index:
+    :param reverse:
+    :return:
+    """
+    if skip_matrices_index is not None:
+        matrices = [tf.constant(matrices[_]) for _ in range(len(matrices)) if _ not in skip_matrices_index]
+    if reverse:
+        matrices = matrices[::-1]
+    start = ord('a')
+    common_dim = 'z'
+    target = ''.join(chr(start + i) for i in range(len(matrices)))
+    source = ','.join(i + common_dim for i in target)
+    operation = source + '->' + target + common_dim
+    return tf.einsum(operation, *matrices).reshape(([-1], matrices[0].shape[1]))

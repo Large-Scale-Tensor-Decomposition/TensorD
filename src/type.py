@@ -22,18 +22,39 @@ class TTensor:
     def t2mat(self, r_axis, c_axis):
         return TTensor(ops.t2mat(self.T, r_axis, c_axis))
 
+    def vectorize(self):
+        return TTensor(ops.vectorize(self.T))
+
+    def get_shape(self):
+        return self.T.get_shape()
+
+    def kron(self, tensor):
+        if isinstance(tensor, TTensor):
+            return np.kron(self.T.eval(), tensor.T.eval())
+        else:
+            return np.kron(self.T.eval(), tensor)
+
     @staticmethod
     def fold(unfolded_tensor, mode, shape):
         return TTensor(ops.fold(unfolded_tensor, mode, shape))
 
     def __add__(self, other):
-        return TTensor(self.T + other.t)
+        if isinstance(other, TTensor):
+            return TTensor(self.T + other.T)
+        else:
+            return TTensor(self.T + other)
 
     def __mul__(self, other):
-        return TTensor(self.T * other.t)
+        if isinstance(other, TTensor):
+            return TTensor(self.T * other.T)
+        else:
+            return TTensor(self.T * other)
 
     def __sub__(self, other):
-        return TTensor(self.T - other.t)
+        if isinstance(other, TTensor):
+            return TTensor(self.T - other.T)
+        else:
+            return TTensor(self.T - other)
 
     def __getitem__(self, index):
         return self.T[index]
