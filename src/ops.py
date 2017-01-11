@@ -3,6 +3,13 @@ import tensorflow as tf
 import numpy as np
 
 
+def __gen_perm(order, mode):
+    tmp = list(range(order - 1, -1, -1))
+    tmp.remove(mode)
+    perm = [mode] + tmp
+    return perm
+
+
 def unfold(tensor, mode=0):
     """
     Unfold tensor to a matrix, using Kolda-type
@@ -10,10 +17,9 @@ def unfold(tensor, mode=0):
     :param mode: int, default is 0
     :return: tf.Tensor
     """
-    tmp = list(range(len(tensor.shape) - 1, -1, -1))
-    tmp.remove(mode)
-    perm = [mode] + tmp
+    perm = __gen_perm(len(tensor.shape), mode)
     return tf.reshape(tf.transpose(tensor, perm), (tensor.shape[mode], -1))
+
 
 def fold(unfolded_tensor, mode, shape):
     """
@@ -23,3 +29,7 @@ def fold(unfolded_tensor, mode, shape):
     :param shape:
     :return:
     """
+    perm = __gen_perm(len(shape), mode)
+    shape_now = [shape[_] for _ in perm]
+    back_perm = [item[0] for item in sorted(enumerate(perm), key=lambda x: x[1])]
+    return tf.transpose(tf.reshape(unfolded_tensor, shape_now), back_perm)
