@@ -12,7 +12,7 @@ class TTensor:
         self.fold_T = self.T
 
     def dot(self, tensor, a_axis, b_axis):
-        return TTensor(ops.dot(self.T, tensor.T, a_axis, b_axis))
+        return TTensor(ops.mul(self.T, tensor.T, a_axis, b_axis))
 
     def unfold(self, mode=0):
         if self.unfold_T is None:

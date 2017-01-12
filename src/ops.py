@@ -82,7 +82,7 @@ def vec_to_tensor(vec, shape):
     return tf.reshape(vec, shape)
 
 
-def dot(tensorA, tensorB, a_axis, b_axis):
+def mul(tensorA, tensorB, a_axis, b_axis):
     """
 
     :param tensorA:
@@ -101,7 +101,7 @@ def dot(tensorA, tensorB, a_axis, b_axis):
 
 def inner(tensorA, tensorB):
     """
-    Inner product of two tensor
+
     :param tensorA:
     :param tensorB:
     :return:
@@ -142,6 +142,8 @@ def khatri(matrices, skip_matrices_index=None, reverse=False):
     """
     if skip_matrices_index is not None:
         matrices = [tf.constant(matrices[_]) for _ in range(len(matrices)) if _ not in skip_matrices_index]
+    else:
+        matrices = [tf.constant(mat) for mat in matrices]
     if reverse:
         matrices = matrices[::-1]
     start = ord('a')
@@ -149,4 +151,7 @@ def khatri(matrices, skip_matrices_index=None, reverse=False):
     target = ''.join(chr(start + i) for i in range(len(matrices)))
     source = ','.join(i + common_dim for i in target)
     operation = source + '->' + target + common_dim
-    return tf.einsum(operation, *matrices).reshape(([-1], matrices[0].shape[1]))
+    tmp = tf.einsum(operation, *matrices)
+    r_size = np.prod([int(mat.get_shape()[0]) for mat in matrices])
+    back_shape = (r_size, int(matrices[0].get_shape()[1]))
+    return tf.reshape(tmp, back_shape)
