@@ -118,18 +118,23 @@ def kron(matrices, skip_matrices_index=None, reverse=False):
     :return:
     """
     if skip_matrices_index is not None:
-        matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
-    if reverse:
-        order = -1
-        start = len(matrices) - 2
-        res = matrices[-1]
+        matrices = [matrices[_] if isinstance(matrices[_], tf.Tensor) else tf.constant(matrices[_])
+                    for _ in range(len(matrices)) if _ not in skip_matrices_index]
     else:
-        order = 1
-        start = 1
-        res = matrices[0]
-    for mat in matrices[start::order]:
-        res = np.kron(res, mat)
-    return res
+        matrices = [mat if isinstance(mat, tf.Tensor) else tf.constant(mat)
+                    for mat in matrices]
+    if reverse:
+        matrices = matrices[::-1]
+    start = ord('a')
+    source = ','.join(chr(start + i) + chr(start + i + 1) for i in range(0, len(matrices), 2))
+    row = ''.join(chr(start + i) for i in range(0, len(matrices), 2))
+    col = ''.join(chr(start + i) for i in range(1, len(matrices), 2))
+    operation = source + '->' + row + col
+    tmp = tf.einsum(operation, *matrices)
+    r_size = np.prod([int(mat.get_shape()[0]) for mat in matrices])
+    c_size = np.prod([int(mat.get_shape()[1]) for mat in matrices])
+    back_shape = (r_size, c_size)
+    return tf.reshape(tmp, back_shape)
 
 
 def khatri(matrices, skip_matrices_index=None, reverse=False):

@@ -16,6 +16,13 @@ class MyTestCase(unittest.TestCase):
         tmp = np.einsum('az,bz,cz->abcz', a, b, c).reshape(-1, 4)
         np.testing.assert_array_almost_equal(res, tmp)
 
+    def kron(self):
+        a = np.random.rand(3, 4)
+        b = np.random.rand(5, 6)
+        c = np.kron(a, b)
+        with tf.Session().as_default():
+            res = ops.kron([a, b]).eval()
+        np.testing.assert_array_almost_equal(res, c)
 
 if __name__ == '__main__':
     unittest.main()
