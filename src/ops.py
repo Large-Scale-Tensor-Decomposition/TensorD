@@ -109,6 +109,21 @@ def inner(tensorA, tensorB):
     return tf.reduce_sum(vectorize(tensorA) * vectorize(tensorB))
 
 
+def hadamard(matrices, skip_matrices_index=None, reverse=False):
+    if skip_matrices_index is not None:
+        matrices = [tf.constant(matrices[_]) if isinstance(matrices[_], np.ndarray) else matrices[_]
+                    for _ in range(len(matrices)) if _ not in skip_matrices_index]
+    else:
+        matrices = [tf.constant(mat) if isinstance(mat, np.ndarray) else mat
+                    for mat in matrices]
+    if reverse:
+        matrices = matrices[::-1]
+    res = np.eye(matrices[0].get_shape()[0], matrices[0].get_shape()[1])
+    for mat in matrices:
+        res = res * mat
+    return res
+
+
 def kron(matrices, skip_matrices_index=None, reverse=False):
     """
 
@@ -118,10 +133,10 @@ def kron(matrices, skip_matrices_index=None, reverse=False):
     :return:
     """
     if skip_matrices_index is not None:
-        matrices = [matrices[_] if isinstance(matrices[_], tf.Tensor) else tf.constant(matrices[_])
+        matrices = [tf.constant(matrices[_]) if isinstance(matrices[_], np.ndarray) else matrices[_]
                     for _ in range(len(matrices)) if _ not in skip_matrices_index]
     else:
-        matrices = [mat if isinstance(mat, tf.Tensor) else tf.constant(mat)
+        matrices = [tf.constant(mat) if isinstance(mat, np.ndarray) else mat
                     for mat in matrices]
     if reverse:
         matrices = matrices[::-1]
