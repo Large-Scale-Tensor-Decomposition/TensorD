@@ -2,7 +2,7 @@
 import tensorflow as tf
 import numpy as np
 
-
+#ssssssssssssssssssssssssssssssssssssssssssss
 def __gen_perm(order, mode):
     """
     Generate the specified permutation by the given mode
