@@ -75,6 +75,7 @@ class KTensor:
     """
     Kruskal Tensor
     """
+
     def __init__(self, factors, lambdas=None):
         self.U = factors
         if lambdas is None:
@@ -95,14 +96,31 @@ class TTensor:
     """
 
     def __init__(self, core, factors):
-        self.g = core
-        self.U = factors
+        """
+        construct the Tucker Tensor
+        :param core: tf.Tensor, ndarray
+        :param factors: List of tf.Tensor or ndarray
+        """
+        if isinstance(core, np.ndarray):
+            self.g = tf.constant(core)
+        else:
+            self.g = core
+        if isinstance(factors[0], np.ndarray):
+            self.U = [tf.constant(mat) for mat in factors]
+        else:
+            self.U = factors
         self.order = self.g.get_shape().ndims
 
     def extract(self):
+        """
+        extract the full tensor of core and factors
+        :return: tf.Tensor
+        full tensor
+        """
         g_start = ord('a')
         u_start = ord('z') - self.order + 1
 
+        # construct the operator subscripts, such as: abc,ax,by,cz->xyz
         g_source = ''.join(chr(g_start + i) for i in range(self.order))
         u_source = ','.join(chr(g_start + i) + chr(u_start + i) for i in range(self.order))
         dest = ''.join(chr(u_start + i) for i in range(self.order))

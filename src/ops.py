@@ -1,4 +1,6 @@
 # Created by ay27 at 17/1/11
+from functools import reduce
+
 import tensorflow as tf
 import numpy as np
 
@@ -130,10 +132,7 @@ def hadamard(matrices, skip_matrices_index=None, reverse=False):
         matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
     if reverse:
         matrices = matrices[::-1]
-    res = tf.eye(matrices[0].get_shape()[0], matrices[0].get_shape()[1])
-    for mat in matrices:
-        res *= mat
-    return res
+    return reduce(lambda a, b: a*b, matrices)
 
 
 def kron(matrices, skip_matrices_index=None, reverse=False):

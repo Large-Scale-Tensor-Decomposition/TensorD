@@ -1,9 +1,13 @@
 # Created by ay27 at 17/1/11
 import unittest
+from functools import reduce
+
 import tensorflow as tf
 import numpy as np
 import src.ops as ops
 import time
+
+rand = np.random.rand
 
 
 class MyTestCase(unittest.TestCase):
@@ -36,7 +40,7 @@ class MyTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.np_x, res)
 
     def test_t2mat(self):
-        np_A = np.random.rand(2, 3, 4, 5)
+        np_A = rand(2, 3, 4, 5)
         tf_A = tf.constant(np_A)
 
         res1 = np.reshape(np.transpose(np_A, [1, 2, 3, 0]), [12, 10])
@@ -59,8 +63,8 @@ class MyTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.np_x, res)
 
     def test_mul(self):
-        np_A = np.random.rand(2, 3, 4)
-        np_B = np.random.rand(4, 5, 6)
+        np_A = rand(2, 3, 4)
+        np_B = rand(4, 5, 6)
         np_res = np.einsum('ijk,klm->ijlm', np_A, np_B)
 
         tf_A = tf.constant(np_A)
@@ -71,8 +75,8 @@ class MyTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(np_res, tf_res)
 
     def test_mul_run_time(self):
-        np_A = np.random.rand(20, 30, 400)
-        np_B = np.random.rand(400, 30, 60)
+        np_A = rand(20, 30, 400)
+        np_B = rand(400, 30, 60)
 
         ##################################################
         # Also test the run time with numpy, tf.einsum, and ops.mul.
@@ -98,8 +102,8 @@ class MyTestCase(unittest.TestCase):
         print('tf ops: %f' % (ts5 - ts4))
 
     def test_inner(self):
-        np_A = np.random.rand(2, 3, 4)
-        np_B = np.random.rand(2, 3, 4)
+        np_A = rand(2, 3, 4)
+        np_B = rand(2, 3, 4)
         np_res = np.sum(np.reshape(np_A, -1) * np.reshape(np_B, -1))
 
         tf_A = tf.constant(np_A)
@@ -108,9 +112,21 @@ class MyTestCase(unittest.TestCase):
             tf_res = ops.inner(tf_A, tf_B).eval()
         np.testing.assert_almost_equal(np_res, tf_res)
 
+    def test_hadamard(self):
+        num = 4
+        nps = [rand(4, 5) for _ in range(num)]
+        np_res = reduce(lambda mata, matb: mata * matb, nps)
+
+        tfs = [tf.constant(nps[i]) for i in range(num)]
+        with tf.Session().as_default():
+            tf_res = ops.hadamard(tfs).eval()
+
+        np.testing.assert_array_equal(np_res.shape, (4, 5))
+        np.testing.assert_array_almost_equal(np_res, tf_res)
+
     def test_kron(self):
-        np_A = np.random.rand(3, 4)
-        np_B = np.random.rand(5, 6)
+        np_A = rand(3, 4)
+        np_B = rand(5, 6)
         np_res = np.kron(np_A, np_B)
 
         tf_A = tf.constant(np_A)
@@ -121,9 +137,9 @@ class MyTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(np_res, tf_res)
 
     def test_khatri(self):
-        np_A = np.random.rand(3, 4)
-        np_B = np.random.rand(5, 4)
-        np_C = np.random.rand(6, 4)
+        np_A = rand(3, 4)
+        np_B = rand(5, 4)
+        np_C = rand(6, 4)
         np_res = np.einsum('az,bz,cz->abcz', np_A, np_B, np_C).reshape((90, 4))
 
         tf_A = tf.constant(np_A)
