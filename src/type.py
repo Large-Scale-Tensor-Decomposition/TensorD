@@ -69,3 +69,42 @@ class DTensor:
 
     def __getitem__(self, index):
         return self.T[index]
+
+
+class KTensor:
+    """
+    Kruskal Tensor
+    """
+    def __init__(self, factors, lambdas=None):
+        self.U = factors
+        if lambdas is None:
+            self.lambdas = tf.ones(len(factors))
+        else:
+            self.lambdas = lambdas
+
+    def extract(self):
+        pass
+
+
+class TTensor:
+    """
+    Tucker Tensor
+
+    \mathcal{X} =  \mathcal{G} \times_1 \mathbf{A} \times_2 \mathbf{B} \times_3 \mathbf{C}
+
+    """
+
+    def __init__(self, core, factors):
+        self.g = core
+        self.U = factors
+        self.order = self.g.get_shape().ndims
+
+    def extract(self):
+        g_start = ord('a')
+        u_start = ord('z') - self.order + 1
+
+        g_source = ''.join(chr(g_start + i) for i in range(self.order))
+        u_source = ','.join(chr(g_start + i) + chr(u_start + i) for i in range(self.order))
+        dest = ''.join(chr(u_start + i) for i in range(self.order))
+        operator = g_source + ',' + u_source + '->' + dest
+        return tf.einsum(operator, *([self.g] + self.U))
