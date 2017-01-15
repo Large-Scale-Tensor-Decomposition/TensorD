@@ -16,12 +16,12 @@ def __gen_perm(order, mode):
 def unfold(tensor, mode=0):
     """
     Unfold tensor to a matrix, using Kolda-type
-    :param tensor: tf.Tensor, ndarray
+    :param tensor: tf.Tensor
     :param mode: int, default is 0
     :return: tf.Tensor
     """
-    perm = __gen_perm(len(tensor.shape), mode)
-    return tf.reshape(tf.transpose(tensor, perm), (tensor.shape[mode], -1))
+    perm = __gen_perm(tensor.get_shape().ndims, mode)
+    return tf.reshape(tf.transpose(tensor, perm), (tensor.get_shape().as_list()[mode], -1))
 
 
 def fold(unfolded_tensor, mode, shape):
@@ -111,16 +111,12 @@ def inner(tensorA, tensorB):
 
 def hadamard(matrices, skip_matrices_index=None, reverse=False):
     if skip_matrices_index is not None:
-        matrices = [tf.constant(matrices[_]) if isinstance(matrices[_], np.ndarray) else matrices[_]
-                    for _ in range(len(matrices)) if _ not in skip_matrices_index]
-    else:
-        matrices = [tf.constant(mat) if isinstance(mat, np.ndarray) else mat
-                    for mat in matrices]
+        matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
     if reverse:
         matrices = matrices[::-1]
-    res = np.eye(matrices[0].get_shape()[0], matrices[0].get_shape()[1])
+    res = tf.eye(matrices[0].get_shape()[0], matrices[0].get_shape()[1])
     for mat in matrices:
-        res = res * mat
+        res *= mat
     return res
 
 
@@ -133,21 +129,17 @@ def kron(matrices, skip_matrices_index=None, reverse=False):
     :return:
     """
     if skip_matrices_index is not None:
-        matrices = [tf.constant(matrices[_]) if isinstance(matrices[_], np.ndarray) else matrices[_]
-                    for _ in range(len(matrices)) if _ not in skip_matrices_index]
-    else:
-        matrices = [tf.constant(mat) if isinstance(mat, np.ndarray) else mat
-                    for mat in matrices]
+        matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
     if reverse:
         matrices = matrices[::-1]
     start = ord('a')
-    source = ','.join(chr(start + i) + chr(start + i + 1) for i in range(0, len(matrices), 2))
+    source = ','.join(chr(start + i) + chr(start + i + 1) for i in range(0, 2*len(matrices), 2))
     row = ''.join(chr(start + i) for i in range(0, len(matrices), 2))
     col = ''.join(chr(start + i) for i in range(1, len(matrices), 2))
     operation = source + '->' + row + col
     tmp = tf.einsum(operation, *matrices)
-    r_size = np.prod([int(mat.get_shape()[0]) for mat in matrices])
-    c_size = np.prod([int(mat.get_shape()[1]) for mat in matrices])
+    r_size = tf.reduce_prod([mat.get_shape()[0].value for mat in matrices])
+    c_size = tf.reduce_prod([mat.get_shape()[1].value for mat in matrices])
     back_shape = (r_size, c_size)
     return tf.reshape(tmp, back_shape)
 
@@ -161,19 +153,16 @@ def khatri(matrices, skip_matrices_index=None, reverse=False):
     :return:
     """
     if skip_matrices_index is not None:
-        matrices = [tf.constant(matrices[_]) if isinstance(matrices[_], np.ndarray) else matrices[_]
-                    for _ in range(len(matrices)) if _ not in skip_matrices_index]
-    else:
-        matrices = [tf.constant(mat) if isinstance(mat, np.ndarray) else mat
-                    for mat in matrices]
+        matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
     if reverse:
         matrices = matrices[::-1]
     start = ord('a')
     common_dim = 'z'
+
     target = ''.join(chr(start + i) for i in range(len(matrices)))
     source = ','.join(i + common_dim for i in target)
     operation = source + '->' + target + common_dim
     tmp = tf.einsum(operation, *matrices)
-    r_size = np.prod([int(mat.get_shape()[0]) for mat in matrices])
-    back_shape = (r_size, int(matrices[0].get_shape()[1]))
+    r_size = tf.reduce_prod([int(mat.get_shape()[0].value) for mat in matrices])
+    back_shape = (r_size, int(matrices[0].get_shape()[1].value))
     return tf.reshape(tmp, back_shape)
