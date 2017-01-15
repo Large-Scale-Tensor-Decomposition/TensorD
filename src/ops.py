@@ -63,6 +63,8 @@ def t2mat(tensor, r_axis, c_axis):
     return tf.reshape(tf.transpose(tensor, indies), (int(row_size), int(col_size)))
 
 
+
+
 def vectorize(tensor):
     """
     Verctorize a tensor to a vector
@@ -126,7 +128,7 @@ def kron(matrices, skip_matrices_index=None, reverse=False):
     if reverse:
         matrices = matrices[::-1]
     start = ord('a')
-    source = ','.join(chr(start + i) + chr(start + i + 1) for i in range(0, len(matrices), 2))
+    source = ','.join(chr(start + i) + chr(start + i + 1) for i in range(0, 2*len(matrices), 2))
     row = ''.join(chr(start + i) for i in range(0, len(matrices), 2))
     col = ''.join(chr(start + i) for i in range(1, len(matrices), 2))
     operation = source + '->' + row + col
