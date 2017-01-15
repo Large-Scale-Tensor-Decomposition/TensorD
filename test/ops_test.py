@@ -3,6 +3,7 @@ import unittest
 import tensorflow as tf
 import numpy as np
 import src.ops as ops
+import time
 
 
 class MyTestCase(unittest.TestCase):
@@ -59,7 +60,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_mul(self):
         np_A = np.random.rand(2, 3, 4)
-        np_B = np.random.rand(4, 3, 6)
+        np_B = np.random.rand(4, 5, 6)
         np_res = np.einsum('ijk,klm->ijlm', np_A, np_B)
 
         tf_A = tf.constant(np_A)
@@ -68,6 +69,33 @@ class MyTestCase(unittest.TestCase):
             tf_res = ops.mul(tf_A, tf_B, [2], [0]).eval()
         self.assertEqual(len(np_res.shape), 4)
         np.testing.assert_array_almost_equal(np_res, tf_res)
+
+    def test_mul_run_time(self):
+        np_A = np.random.rand(20, 30, 400)
+        np_B = np.random.rand(400, 30, 60)
+
+        ##################################################
+        # Also test the run time with numpy, tf.einsum, and ops.mul.
+        # Result is very interesting, the speed of einsum is equal to
+        #  the ops.mul, but slow than numpy.
+        ts1 = time.time()
+        for _ in range(10):
+            np_res = np.einsum('ijk,kjm->im', np_A, np_B)
+        ts2 = time.time()
+
+        tf_A = tf.constant(np_A)
+        tf_B = tf.constant(np_B)
+        with tf.Session().as_default():
+            ts3 = time.time()
+            for _ in range(10):
+                tf_res = tf.einsum('ijk,kjm->im', tf_A, tf_B).eval()
+            ts4 = time.time()
+            for _ in range(10):
+                tf_res = ops.mul(tf_A, tf_B, [2, 1], [0, 1]).eval()
+            ts5 = time.time()
+        print('np: %f' % (ts2 - ts1))
+        print('tf_einsum: %f' % (ts4 - ts3))
+        print('tf ops: %f' % (ts5 - ts4))
 
     def test_inner(self):
         np_A = np.random.rand(2, 3, 4)
@@ -81,22 +109,29 @@ class MyTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(np_res, tf_res)
 
     def test_kron(self):
-        a = np.kron(self.mc2, self.mc3)
-        b = np.kron(self.mc3, self.mc2)
+        np_A = np.random.rand(3, 4)
+        np_B = np.random.rand(5, 6)
+        np_res = np.kron(np_A, np_B)
+
+        tf_A = tf.constant(np_A)
+        tf_B = tf.constant(np_B)
         with tf.Session().as_default():
-            r1 = ops.kron(self.matrices).eval()
-            r2 = ops.kron(self.matrices, None, True).eval()
-        np.testing.assert_array_almost_equal(a, r1)
-        np.testing.assert_array_almost_equal(b, r2)
+            tf_res = ops.kron([tf_A, tf_B]).eval()
+        np.testing.assert_array_equal(np_res.shape, [15, 24])
+        np.testing.assert_array_almost_equal(np_res, tf_res)
 
     def test_khatri(self):
-        a = np.random.rand(3, 4)
-        b = np.random.rand(5, 4)
-        c = np.random.rand(6, 4)
+        np_A = np.random.rand(3, 4)
+        np_B = np.random.rand(5, 4)
+        np_C = np.random.rand(6, 4)
+        np_res = np.einsum('az,bz,cz->abcz', np_A, np_B, np_C).reshape((90, 4))
+
+        tf_A = tf.constant(np_A)
+        tf_B = tf.constant(np_B)
+        tf_C = tf.constant(np_C)
         with tf.Session().as_default():
-            res = ops.khatri([a, b, c]).eval()
-        tmp = np.einsum('az,bz,cz->abcz', a, b, c).reshape(-1, 4)
-        np.testing.assert_array_almost_equal(res, tmp)
+            tf_res = ops.khatri([tf_A, tf_B, tf_C]).eval()
+        np.testing.assert_array_almost_equal(np_res, tf_res)
 
 
 if __name__ == '__main__':

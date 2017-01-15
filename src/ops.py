@@ -153,12 +153,12 @@ def kron(matrices, skip_matrices_index=None, reverse=False):
         matrices = matrices[::-1]
     start = ord('a')
     source = ','.join(chr(start + i) + chr(start + i + 1) for i in range(0, 2 * len(matrices), 2))
-    row = ''.join(chr(start + i) for i in range(0, len(matrices), 2))
-    col = ''.join(chr(start + i) for i in range(1, len(matrices), 2))
+    row = ''.join(chr(start + i) for i in range(0, 2*len(matrices), 2))
+    col = ''.join(chr(start + i) for i in range(1, 2*len(matrices), 2))
     operation = source + '->' + row + col
     tmp = tf.einsum(operation, *matrices)
-    r_size = tf.reduce_prod([mat.get_shape()[0].value for mat in matrices])
-    c_size = tf.reduce_prod([mat.get_shape()[1].value for mat in matrices])
+    r_size = np.prod([mat.get_shape()[0].value for mat in matrices])
+    c_size = np.prod([mat.get_shape()[1].value for mat in matrices])
     back_shape = (r_size, c_size)
     return tf.reshape(tmp, back_shape)
 
