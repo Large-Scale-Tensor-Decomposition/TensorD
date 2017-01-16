@@ -15,14 +15,21 @@ class DTensor:
         """
         if isinstance(tensor, tf.Tensor):
             self.T = tensor
-            self.shape = tf.shape(tensor)
+            self.shape = tensor.get_shape().as_list()
         else:
             self.T = tf.constant(tensor)
             self.shape = tensor.shape
         self.unfold_T = None
         self.fold_T = self.T
 
-    def mul(self, tensor, a_axis, b_axis):
+    def mul(self, tensor, a_axis=0, b_axis=0):
+        """
+
+        :param tensor: DTensor
+        :param a_axis:
+        :param b_axis:
+        :return:
+        """
         return DTensor(ops.mul(self.T, tensor.T, a_axis, b_axis))
 
     def unfold(self, mode=0):
@@ -41,9 +48,18 @@ class DTensor:
 
     def kron(self, tensor):
         if isinstance(tensor, DTensor):
-            return np.kron(self.T.eval(), tensor.T.eval())
+            return DTensor(ops.kron([self.T, tensor.T]))
         else:
-            return np.kron(self.T.eval(), tensor)
+            return DTensor(ops.kron([self.T, tensor]))
+
+    def khatri(self, tensor):
+        if isinstance(tensor, DTensor):
+            return DTensor(ops.khatri([self.T, tensor.T]))
+        else:
+            return DTensor(ops.khatri([self.T, tensor]))
+
+    def eval(self, feed_dict=None, session=None):
+        return self.T.eval(feed_dict, session)
 
     @staticmethod
     def fold(unfolded_tensor, mode, shape):
@@ -56,6 +72,11 @@ class DTensor:
             return DTensor(self.T + other)
 
     def __mul__(self, other):
+        """
+        Hadamard product with other tensor, an element-wise product
+        :param other: DTensor or ndarray
+        :return: DTensor
+        """
         if isinstance(other, DTensor):
             return DTensor(self.T * other.T)
         else:
