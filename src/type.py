@@ -24,11 +24,13 @@ class DTensor:
 
     def mul(self, tensor, a_axis=0, b_axis=0):
         """
-
+        tensor multiply, or tensor contraction
         :param tensor: DTensor
-        :param a_axis:
-        :param b_axis:
-        :return:
+        :param a_axis: List, int
+        axis to contract, belong to self
+        :param b_axis: List, int
+        axis to contract, belong to given tensor
+        :return: DTensor
         """
         return DTensor(ops.mul(self.T, tensor.T, a_axis, b_axis))
 
@@ -95,17 +97,46 @@ class DTensor:
 class KTensor:
     """
     Kruskal Tensor
+
+    \mathbf{\mathcal{X}} = \sum_r \sigma_r a_r \circ b_r \circ c_r
+
     """
 
     def __init__(self, factors, lambdas=None):
-        self.U = factors
-        if lambdas is None:
-            self.lambdas = tf.ones(len(factors))
+        """
+        :param factors: List
+        the factor matrix of Kruskal Tensor
+
+        :param lambdas: List
+        the weight of every axis of factors
+        """
+        if isinstance(factors[0], np.ndarray):
+            self.U = [tf.constant(mat) for mat in factors]
         else:
-            self.lambdas = lambdas
+            self.U = factors
+
+        # Note that the shape of lambdas must be (x, 1).
+        # The dimension of "1" should not be ignored!!
+        if lambdas is None:
+            self.lambdas = tf.ones((len(factors), 1), dtype=tf.float64)
+        else:
+            if isinstance(lambdas, np.ndarray):
+                self.lambdas = tf.constant(lambdas)
+            else:
+                self.lambdas = lambdas
+            if self.lambdas.get_shape().ndims == 1:
+                self.lambdas = tf.reshape(self.lambdas, (self.lambdas.get_shape()[0].value, 1))
+
+        self.order = len(self.U)
 
     def extract(self):
-        pass
+        """
+        \mathbf{\mathcal{X}} = \sum_r \sigma_r a_r \circ b_r \circ c_r = (A \odot B \odot C) \times \Sigma
+        :return: tf.Tensor
+        """
+        tmp = ops.khatri(self.U)
+        back_shape = [U.get_shape()[0].value for U in self.U]
+        return tf.reshape(tf.matmul(tmp, self.lambdas), back_shape)
 
 
 class TTensor:
