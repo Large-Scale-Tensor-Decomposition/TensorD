@@ -8,6 +8,7 @@ import src.ops as ops
 import time
 
 rand = np.random.rand
+assert_array_equal = np.testing.assert_array_almost_equal
 
 
 class MyTestCase(unittest.TestCase):
@@ -22,14 +23,43 @@ class MyTestCase(unittest.TestCase):
     def test_gen_perm(self):
         x = [2, 3, 1, 0]
         res = ops._gen_perm(4, 2)
-        np.testing.assert_array_equal(x, res)
+        assert_array_equal(x, res)
+
+        x = [0]
+        res = ops._gen_perm(1, 0)
+        assert_array_equal(x, res)
+
+        # Error test
+        with self.assertRaises(ValueError):
+            x = []
+            res = ops._gen_perm(0, 0)
 
     def test_unfold(self):
         # mode 1: 3x4x2 -> 4x2x3 -> 4x6
         r1 = np.reshape(np.transpose(self.np_x, [1, 2, 0]), [4, 6])
         with tf.Session().as_default():
             r2 = ops.unfold(self.tf_x, 1).eval()
-        np.testing.assert_array_almost_equal(r1, r2)
+        assert_array_equal(r1, r2)
+
+        # high order
+        t = rand(3, 4, 5, 6, 7, 8)
+        r1 = np.reshape(np.transpose(t, [3, 5, 4, 2, 1, 0]), [6, 3 * 4 * 5 * 7 * 8])
+        with tf.Session().as_default():
+            r2 = ops.unfold(tf.constant(t), 3).eval()
+        assert_array_equal(r1, r2)
+
+        # low order
+        t = rand(1, 2)
+        r1 = t.T
+        with tf.Session().as_default():
+            r2 = ops.unfold(tf.constant(t, 1), 1).eval()
+        assert_array_equal(r1, r2)
+
+        t = rand(2)
+        with tf.Session().as_default():
+            r2 = ops.unfold(tf.constant(t), 0).eval()
+        # must take attention that shape (2,) not equal than (2,1)
+        assert_array_equal(np.reshape(t, (2, 1)), r2)
 
     def test_fold(self):
         # mode 2 : 3x4x2 -> 2x4x3 -> 2x12
@@ -37,7 +67,18 @@ class MyTestCase(unittest.TestCase):
         mode_2_tf = tf.constant(mode_2_mat)
         with tf.Session().as_default():
             res = ops.fold(mode_2_tf, 2, [3, 4, 2]).eval()
-        np.testing.assert_array_almost_equal(self.np_x, res)
+        assert_array_equal(self.np_x, res)
+
+        mat = rand(2, 3)
+        with tf.Session().as_default():
+            res = ops.fold(tf.constant(mat), 1, (3, 2)).eval()
+        assert_array_equal(mat.T, res)
+
+        t = rand(1, 2, 3, 4, 5, 6, 7)
+        mat = np.einsum('abcdefg->egfdcba', t).reshape(5, 1 * 2 * 3 * 4 * 6 * 7)
+        with tf.Session().as_default():
+            res = ops.fold(tf.constant(mat), 4, (1, 2, 3, 4, 5, 6, 7)).eval()
+        assert_array_equal(t, res)
 
     def test_t2mat(self):
         np_A = rand(2, 3, 4, 5)
@@ -46,21 +87,36 @@ class MyTestCase(unittest.TestCase):
         res1 = np.reshape(np.transpose(np_A, [1, 2, 3, 0]), [12, 10])
         with tf.Session().as_default():
             res2 = ops.t2mat(tf_A, [1, 2], [3, 0]).eval()
-        np.testing.assert_array_almost_equal(res1, res2)
+        assert_array_equal(res1, res2)
+
+        x = rand(2, 3)
+        with tf.Session().as_default():
+            res = ops.t2mat(tf.constant(x), 0, 1).eval()
+        assert_array_equal(x, res)
+
+        x = rand(3)
+        with tf.Session().as_default():
+            res = ops.t2mat(tf.constant(x), 0, -1).eval()
+        assert_array_equal(np.reshape(x, (3, 1)), res)
 
     def test_vectorize(self):
         res1 = np.reshape(self.np_x, -1)
 
         with tf.Session().as_default():
             res2 = ops.vectorize(self.tf_x).eval()
-        np.testing.assert_array_equal(res1, res2)
+        assert_array_equal(res1, res2)
+
+        x = rand(2)
+        with tf.Session().as_default():
+            res = ops.vectorize(tf.constant(x)).eval()
+        assert_array_equal(x, res)
 
     def test_vec_to_tensor(self):
         np_vec = np.reshape(self.np_x, -1)
         tf_vec = tf.constant(np_vec)
         with tf.Session().as_default():
             res = ops.vec_to_tensor(tf_vec, (3, 4, 2)).eval()
-        np.testing.assert_array_almost_equal(self.np_x, res)
+        assert_array_equal(self.np_x, res)
 
     def test_mul(self):
         np_A = rand(2, 3, 4)

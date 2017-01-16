@@ -55,7 +55,7 @@ def t2mat(tensor, r_axis, c_axis):
         indies = r_axis
         row_size = np.prod([tensor.get_shape()[i].value for i in r_axis])
     if c_axis == -1:
-        c_axis = [_ for _ in range(tensor.get_shape().ndims) if _ not in r_axis]
+        c_axis = [_ for _ in range(tensor.get_shape().ndims) if _ not in indies]
     if isinstance(c_axis, int):
         indies.append(c_axis)
         col_size = tensor.get_shape()[c_axis].value
