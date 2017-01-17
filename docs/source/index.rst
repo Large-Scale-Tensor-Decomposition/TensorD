@@ -1,16 +1,17 @@
-.. TensorToolbox documentation master file, created by
-   sphinx-quickstart on Wed Jan 11 09:43:12 2017.
+.. TFboys documentation master file, created by
+   sphinx-quickstart on Mon Jan 16 16:27:04 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to TensorToolbox's documentation!
-=========================================
+Welcome to TFboys's documentation!
+==================================
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
+   :numbered: 4
+
 
 
 Indices and tables
