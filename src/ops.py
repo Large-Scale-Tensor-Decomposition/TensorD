@@ -1,4 +1,6 @@
 # Created by ay27 at 17/1/11
+from functools import reduce
+
 import tensorflow as tf
 import numpy as np
 
@@ -53,7 +55,7 @@ def t2mat(tensor, r_axis, c_axis):
         indies = r_axis
         row_size = np.prod([tensor.get_shape()[i].value for i in r_axis])
     if c_axis == -1:
-        c_axis = [_ for _ in range(tensor.get_shape().ndims) if _ not in r_axis]
+        c_axis = [_ for _ in range(tensor.get_shape().ndims) if _ not in indies]
     if isinstance(c_axis, int):
         indies.append(c_axis)
         col_size = tensor.get_shape()[c_axis].value
@@ -130,10 +132,7 @@ def hadamard(matrices, skip_matrices_index=None, reverse=False):
         matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
     if reverse:
         matrices = matrices[::-1]
-    res = tf.eye(matrices[0].get_shape()[0], matrices[0].get_shape()[1])
-    for mat in matrices:
-        res *= mat
-    return res
+    return reduce(lambda a, b: a*b, matrices)
 
 
 def kron(matrices, skip_matrices_index=None, reverse=False):
