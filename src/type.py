@@ -118,7 +118,7 @@ class KTensor:
         # Note that the shape of lambdas must be (x, 1).
         # The dimension of "1" should not be ignored!!
         if lambdas is None:
-            self.lambdas = tf.ones((len(factors), 1), dtype=tf.float64)
+            self.lambdas = tf.ones((self.U[0].get_shape()[1].value, 1), dtype=tf.float64)
         else:
             if isinstance(lambdas, np.ndarray):
                 self.lambdas = tf.constant(lambdas)

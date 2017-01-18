@@ -10,9 +10,10 @@ assert_array_equal = np.testing.assert_array_almost_equal
 
 class MyTestCase(unittest.TestCase):
     def test_cp(self):
-        x = rand(3,4,5)*10
-        with tf.Session().as_default():
-            cp(tf.constant(x), 3, steps=20)
+        x = rand(30,40,50)*10
+        sess = tf.Session()
+        with sess.as_default():
+            cp(sess, tf.constant(x), 10, steps=20)
 
 
 if __name__ == '__main__':

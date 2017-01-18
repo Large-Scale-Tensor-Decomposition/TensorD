@@ -8,7 +8,7 @@ import time
 rand = np.random.rand
 
 
-def cp(tensor, rank, steps=100, tol=10e-7, verbose=True):
+def cp(sess, tensor, rank, steps=100, tol=10e-7, verbose=True):
     ts = time.time()
     shape = tensor.get_shape().as_list()
     order = len(shape)
@@ -23,18 +23,17 @@ def cp(tensor, rank, steps=100, tol=10e-7, verbose=True):
             A[mode] = tf.matmul(XA, tf.matrix_inverse(V))
             # A[mode] = tf.matrix_solve(V.T, XA.T).T
 
-            if step == 0:
-                lambdas = tf.sqrt(tf.reduce_sum(tf.square(A[mode]), 0))
-            else:
-                lambdas = tf.maximum(tf.reduce_max(A[mode], 0), tf.ones(A[mode].get_shape()[1].value, dtype=tf.float64))
-            A[mode] = tf.map_fn(lambda x_row: x_row / lambdas, A[mode][:])
+            # if step == 0:
+            #     lambdas = tf.sqrt(tf.reduce_sum(tf.square(A[mode]), 0))
+            # else:
+            #     lambdas = tf.maximum(tf.reduce_max(A[mode], 0), tf.ones(A[mode].get_shape()[1].value, dtype=tf.float64))
+            # A[mode] = tf.map_fn(lambda x_row: x_row / lambdas, A[mode][:])
 
             AtA[mode] = tf.matmul(A[mode], A[mode], transpose_a=True)
 
-    P = KTensor(A, lambdas)
-
+    P = KTensor(A)
+    sess.run(tf.global_variables_initializer())
     res = rmse(tensor - P.extract())
-
-    print(res.eval())
+    print(sess.run(res))
 
     print(time.time() - ts)
