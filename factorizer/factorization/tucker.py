@@ -1,12 +1,10 @@
+import math
 from _operator import add
 from functools import reduce
-import math
-import tensorflow as tf
+
 import numpy as np
-import src.ops as ops
-from src.type import KTensor
-from src.validator import rmse
-import time
+
+import factorizer.base.ops as ops
 
 rand = np.random.rand
 

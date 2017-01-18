@@ -1,7 +1,8 @@
 # Created by ay27 at 17/1/12
-import tensorflow as tf
 import numpy as np
-import src.ops as ops
+import tensorflow as tf
+
+import factorizer.base.ops as ops
 
 rand = np.random.rand
 

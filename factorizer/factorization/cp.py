@@ -1,10 +1,10 @@
 # Created by ay27 at 17/1/13
-import tensorflow as tf
 import numpy as np
-import src.ops as ops
-from src.type import KTensor
-from src.validator import rmse
-import time
+import tensorflow as tf
+from factorizer.base.type import KTensor
+
+import factorizer.base.ops as ops
+from factorizer.validator import rmse
 
 rand = np.random.rand
 

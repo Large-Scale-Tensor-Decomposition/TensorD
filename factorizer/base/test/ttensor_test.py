@@ -1,8 +1,10 @@
 # Created by ay27 at 17/1/15
 import unittest
-from src.type import TTensor
-import tensorflow as tf
+
 import numpy as np
+import tensorflow as tf
+
+from factorizer.base.type import TTensor
 
 rand = np.random.rand
 

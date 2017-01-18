@@ -1,9 +1,12 @@
 
 # Created by ay27 at 17/1/16
 import unittest
-from src.type import DTensor
-import tensorflow as tf
+
 import numpy as np
+import tensorflow as tf
+
+from factorizer.base.type import DTensor
+
 rand = np.random.rand
 assert_array_equal = np.testing.assert_array_almost_equal
 

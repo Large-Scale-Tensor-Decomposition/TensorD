@@ -1,9 +1,11 @@
 # Created by ay27 at 17/1/17
+import time
 import unittest
+
 import numpy as np
 import tensorflow as tf
-from src.cp import cp
-import time
+
+from factorizer.factorization.cp import cp
 
 rand = np.random.rand
 assert_array_equal = np.testing.assert_array_almost_equal
