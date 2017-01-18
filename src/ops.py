@@ -129,6 +129,8 @@ def hadamard(matrices, skip_matrices_index=None, reverse=False):
     :return: tf.Tensor
     """
     if skip_matrices_index is not None:
+        if isinstance(skip_matrices_index, int):
+            skip_matrices_index = [skip_matrices_index]
         matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
     if reverse:
         matrices = matrices[::-1]
@@ -147,6 +149,8 @@ def kron(matrices, skip_matrices_index=None, reverse=False):
     :return: tf.Tensor
     """
     if skip_matrices_index is not None:
+        if isinstance(skip_matrices_index, int):
+            skip_matrices_index = [skip_matrices_index]
         matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
     if reverse:
         matrices = matrices[::-1]
@@ -174,6 +178,8 @@ def khatri(matrices, skip_matrices_index=None, reverse=False):
     :return: tf.Tensor
     """
     if skip_matrices_index is not None:
+        if isinstance(skip_matrices_index, int):
+            skip_matrices_index = [skip_matrices_index]
         matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
     if reverse:
         matrices = matrices[::-1]

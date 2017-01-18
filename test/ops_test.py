@@ -180,6 +180,12 @@ class MyTestCase(unittest.TestCase):
         np.testing.assert_array_equal(np_res.shape, (4, 5))
         np.testing.assert_array_almost_equal(np_res, tf_res)
 
+        np_res = nps[0] * nps[1] * nps[3]
+        with tf.Session().as_default():
+            tf_res = ops.hadamard(tfs, skip_matrices_index=2).eval()
+        assert_array_equal(np_res, tf_res)
+
+
     def test_kron(self):
         np_A = rand(3, 4)
         np_B = rand(5, 6)
