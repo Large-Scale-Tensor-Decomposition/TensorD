@@ -1,11 +1,12 @@
 # Created by ay27 at 17/1/11
+import time
 import unittest
 from functools import reduce
 
-import tensorflow as tf
 import numpy as np
-import src.ops as ops
-import time
+import tensorflow as tf
+
+import factorizer.base.ops as ops
 
 rand = np.random.rand
 assert_array_equal = np.testing.assert_array_almost_equal
