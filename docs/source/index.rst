@@ -6,18 +6,14 @@
 Welcome to TFboys's documentation!
 ==================================
 
-Contents:
+This is a toolbox on tensor factorization.
 
 .. toctree::
-   :maxdepth: 2
-   :numbered: 4
+   :maxdepth: 1
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   introduction
+   Quick Start <quick_start>
+   user_guide
+   API Reference <src>
 
