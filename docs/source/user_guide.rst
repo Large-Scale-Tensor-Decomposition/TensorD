@@ -1,5 +1,6 @@
-==========
+
 User Guide
 ==========
 
-Welcome to this guidence.
+Welcome to this guidance. This is a table of contents.
+

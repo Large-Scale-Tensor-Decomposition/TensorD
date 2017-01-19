@@ -15,5 +15,5 @@ This is a toolbox on tensor factorization.
    introduction
    Quick Start <quick_start>
    user_guide
-   API Reference <src>
+   API Reference <factorizer>
 
