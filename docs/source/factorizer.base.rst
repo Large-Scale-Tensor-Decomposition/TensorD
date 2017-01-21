@@ -8,19 +8,18 @@ Subpackages
 
     factorizer.base.test
 
-Submodules
-----------
 
-factorizer.base.ops module
---------------------------
+
+factorizer.base.ops
+-------------------
 
 .. automodule:: factorizer.base.ops
     :members:
     :undoc-members:
     :show-inheritance:
 
-factorizer.base.type module
----------------------------
+factorizer.base.type
+--------------------
 
 .. automodule:: factorizer.base.type
     :members:

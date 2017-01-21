@@ -1,5 +1,5 @@
-=========================
-TensorToolbox Quick Start
-=========================
+===========
+Quick Start
+===========
 
-Welcome to this tutorial. It will guide you to the basic operations of tensor.
+Welcome to this introduction tutorial.
