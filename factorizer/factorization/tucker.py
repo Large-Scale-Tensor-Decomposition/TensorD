@@ -1,66 +1,43 @@
-import math
-from _operator import add
-from functools import reduce
+# Created by ay27 at 17/1/21
 
+import tensorflow as tf
 import numpy as np
-
-import factorizer.base.ops as ops
-
-rand = np.random.rand
-
-
-def RMSE(A, B):
-    a = ops.vectorize(A)
-    b = ops.vectorize(B)
-
-    if A.shape != B.shape:
-        raise ValueError('the shape of A and B must be equal')
-
-    t = reduce(add, np.power(a - b, 2))
-
-    return math.sqrt(t / len(a))
+from factorizer.validator import rmse
+from factorizer.base import type
+from factorizer.base import ops
 
 
-def HOSVD(tensor):
-    U = []
-    x = tensor
-    for i in range(len(tensor.shape)):
-        tmp, _, _ = np.linalg.svd(ops.unfold(tensor, i))
-        U.append(tmp)
-        x = ops.mul(x, U[i], i, 0)
-    return x, U
+def HOSVD(tensor, ranks):
+    """
 
-    # tmp = list(range(len(tensor.shape)))
-    # l = range(0, len(tmp))
-    # U = list(l)  # left singular value list
-    # x = tensor
-    # for i in l:
-    #     U[i], _, _ = np.linalg.svd(ops.unfold(tensor, i), True, True)
-    #     x = ops.mul(x, U[i], i, 0)
-    #
-    # return x, U
+    :param tensor: tf.Tensor
+
+    :param ranks: List
+
+    :return: TTensor
+    """
+    order = tensor.get_shape().ndims
+    A = []
+    for n in range(order):
+        _, U, _ = tf.svd(ops.unfold(tensor, n), full_matrices=True)
+        A.append(U[:, :ranks[n]])
+    g = ops.ttm(tensor, A, transpose=True)
+    return g, A
 
 
-def HOOI(tensor, R=10, steps=100, tol=1e-10):
-    tmp = list(range(len(tensor.shape)))
-    # core = np.zeros(self.shape)
-    l = range(len(tmp))
-    # A = list(l)
-    x = tensor
-    Ti = tensor
-    _, A = HOSVD(tensor)
-    # for iter_num in range(iter):
-    for s in range(steps):
-        for i in l:
-            tmp.remove(i)
-            for ii in range(len(tensor.shape)):
-                if ii == i:
-                    continue
-                Ti = ops.mul(Ti, A[ii].T, ii, ii)
-                A[i], _, _ = np.linalg.svd(ops.t2mat(i, -1), True, True)
-                # A[i] = (Y[i])[:, 0:lsr]
-            tmp.append(i)
-            tmp.sort()
-            x = ops.mul(x, A[i].T, i, i)
+def HOOI(tensor, ranks, steps=100, verbose=False):
+    order = tensor.get_shape().ndims
+    _, A = HOSVD(tensor, ranks)
 
-        return A, x
+    for step in range(steps):
+        for n in range(order):
+            Y = ops.ttm(tensor, A, skip_matrices_index=n, transpose=True)
+            _, tmp, _ = tf.svd(ops.unfold(Y, n))
+            A[n] = tmp[:, :ranks[n]]
+        if verbose:
+            g = ops.ttm(tensor, A, transpose=True)
+            res = ops.ttm(g, A)
+            err =rmse(tensor - res).eval()
+            print('step %d, rmse=%f' % (step, err))
+    g = ops.ttm(tensor, A, transpose=True)
+    return type.TTensor(g, A)

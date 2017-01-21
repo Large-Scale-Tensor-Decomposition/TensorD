@@ -100,6 +100,24 @@ class MyTestCase(unittest.TestCase):
             res = ops.t2mat(tf.constant(x), 0, -1).eval()
         assert_array_equal(np.reshape(x, (3, 1)), res)
 
+    def test_ttm(self):
+        np_X = rand(3, 4, 5, 6)
+        np_A = rand(3, 4)
+        np_B = rand(4, 5)
+        np_C = rand(5, 6)
+        tf_X = tf.constant(np_X)
+        tf_A = tf.constant(np_A)
+        tf_B = tf.constant(np_B)
+        tf_C = tf.constant(np_C)
+        np_res1 = np.einsum('wxyz,xb,yc->wbcz', np_X, np_B, np_C)
+        np_res2 = np.matmul(np_A, np_B)
+
+        with tf.Session().as_default():
+            tf_res1 = ops.ttm(tf_X, [tf_B, tf_C], transpose=True, axis=[1, 2]).eval()
+            tf_res2 = ops.ttm(tf_B, tf_A, axis=[0]).eval()
+        assert_array_equal(np_res1, tf_res1, 4)
+        assert_array_equal(np_res2, tf_res2, 4)
+
     def test_vectorize(self):
         res1 = np.reshape(self.np_x, -1)
 
@@ -185,7 +203,6 @@ class MyTestCase(unittest.TestCase):
         with tf.Session().as_default():
             tf_res = ops.hadamard(tfs, skip_matrices_index=2).eval()
         assert_array_equal(np_res, tf_res)
-
 
     def test_kron(self):
         np_A = rand(3, 4)
