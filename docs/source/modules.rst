@@ -1,5 +1,5 @@
-factorizer
-==========
+TensorToolbox
+=============
 
 .. toctree::
    :maxdepth: 4
