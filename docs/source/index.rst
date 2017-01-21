@@ -6,23 +6,16 @@
 Welcome to factorizer's documentation!
 ======================================
 
-Contents:
+This is a toolbox on tenser basic operations and factorization.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    introduction
-   quick_start <Quick Start>
-   modules
-   user_guide <User Guide>
+   Quick Start <quick_start>
+   API Reference <modules>
+   User Guide <user_guide>
 
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
