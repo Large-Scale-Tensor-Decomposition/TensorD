@@ -123,33 +123,40 @@ def ttm(tensor, matrices, axis=None, transpose=False, skip_matrices_index=None):
     if axis is given, such as axis=[2,0,1],
     \mathcal{Y} = \mathcal{X} \times_3 C \times_1 A \times_2 B
 
+    if skip_matrices_index is given, such as [0,1], and matrices = [A, B, C]
+    \mathcal{Y} = \mathcal{X} \times_3 C
+
     :param tensor:
     :param matrices:
     :param axis:
     :param transpose:
+    :param skip_matrices_index:
     :return:
     """
+    # the axis and skip_matrices_index can not be set both, or will make it confused
+    if axis is not None and skip_matrices_index is not None:
+        raise ValueError('axis and skip_matrices_index can not be set at the same time')
+
     order = tensor.get_shape().ndims
 
     if not isinstance(matrices, list):
         matrices = [matrices]
     matrices_cnt = len(matrices)
-    matrices = _skip(matrices, skip_matrices_index)
-
-    if axis is not None and skip_matrices_index is not None:
-        raise ValueError('axis and skip_matrices_index can not be set at the same time')
 
     if skip_matrices_index is not None:
+        # skip matrices, will remove some matrix in matrices
+        matrices = _skip(matrices, skip_matrices_index)
+
+        # construct the correct axis
         if isinstance(skip_matrices_index, int):
             axis = [i for i in range(min(order, matrices_cnt)) if i != skip_matrices_index]
         else:
             axis = [i for i in range(min(order, matrices_cnt)) if i not in skip_matrices_index]
+
     if axis is None:
         axis = [i for i in range(matrices_cnt)]
-    # else:
-    #     axis = [i for i in range(matrices_cnt)]
 
-
+    # example: xyz,by,cz->xbc
     tensor_start = ord('z') - order + 1
     mats_start = ord('a')
     tensor_op = ''.join([chr(tensor_start + i) for i in range(order)])
@@ -157,12 +164,12 @@ def ttm(tensor, matrices, axis=None, transpose=False, skip_matrices_index=None):
         mat_op = ','.join([chr(tensor_start + i) + chr(mats_start + i) for i in axis])
     else:
         mat_op = ','.join([chr(mats_start + i) + chr(tensor_start + i) for i in axis])
-    # target_op = ''.join([chr(mats_start + i) for i in axis])
+
     target_op = [chr(tensor_start + i) for i in range(order)]
     for i in axis:
         target_op[i] = chr(mats_start + i)
     target_op = ''.join(target_op)
-    # target_op += ''.join([chr(tensor_start + i) for i in range(order) if i not in axis])
+
     operator = tensor_op + ',' + mat_op + '->' + target_op
     return tf.einsum(operator, *([tensor] + matrices))
 
