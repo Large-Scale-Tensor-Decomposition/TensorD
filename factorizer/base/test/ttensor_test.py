@@ -12,11 +12,11 @@ rand = np.random.rand
 class MyTestCase(unittest.TestCase):
     def test_extract(self):
         g = rand(2, 3, 4)
-        a = rand(2, 5)
-        b = rand(3, 6)
-        c = rand(4, 7)
+        a = rand(5, 2)
+        b = rand(6, 3)
+        c = rand(7, 4)
 
-        res1 = np.einsum('abc,ax,by,cz->xyz', g, a, b, c)
+        res1 = np.einsum('xyz,ax,by,cz->abc', g, a, b, c)
 
         tg = tf.constant(g)
         ta = tf.constant(a)

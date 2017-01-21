@@ -5,6 +5,14 @@ import tensorflow as tf
 import numpy as np
 
 
+def _skip(matrices, skip_matrices_index):
+    if skip_matrices_index is not None:
+        if isinstance(skip_matrices_index, int):
+            skip_matrices_index = [skip_matrices_index]
+        return [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
+    return matrices
+
+
 def _gen_perm(order, mode):
     """
     Generate the specified permutation by the given mode
@@ -89,16 +97,74 @@ def mul(tensorA, tensorB, a_axis, b_axis):
     Multiple tensor A and tensor B by the axis of a_axis and b_axis
     :param tensorA: tf.Tensor
     :param tensorB: tf.Tensor
-    :param a_axis: list
-    :param b_axis: list
+    :param a_axis: List, int
+    :param b_axis: List, int
     :return: tf.Tensor
     """
+    if isinstance(a_axis, int):
+        a_axis = [a_axis]
+    if isinstance(b_axis, int):
+        b_axis = [b_axis]
     A = t2mat(tensorA, a_axis, -1)
     B = t2mat(tensorB, b_axis, -1)
     mat_dot = tf.matmul(A, B, transpose_a=True)
     back_shape = [tensorA.get_shape()[_].value for _ in range(tensorA.get_shape().ndims) if _ not in a_axis] + \
                  [tensorB.get_shape()[_].value for _ in range(tensorB.get_shape().ndims) if _ not in b_axis]
     return tf.reshape(mat_dot, back_shape)
+
+
+def ttm(tensor, matrices, axis=None, transpose=False, skip_matrices_index=None):
+    """
+    \mathcal{Y} = \mathcal{X} \times_1 A \times_2 B \times_3 C
+
+    if transpose is True,
+    \mathcal{Y} = \mathcal{X} \times_1 A^T \times_2 B^T \times_3 C^T
+
+    if axis is given, such as axis=[2,0,1],
+    \mathcal{Y} = \mathcal{X} \times_3 C \times_1 A \times_2 B
+
+    :param tensor:
+    :param matrices:
+    :param axis:
+    :param transpose:
+    :return:
+    """
+    order = tensor.get_shape().ndims
+
+    if not isinstance(matrices, list):
+        matrices = [matrices]
+    matrices_cnt = len(matrices)
+    matrices = _skip(matrices, skip_matrices_index)
+
+    if axis is not None and skip_matrices_index is not None:
+        raise ValueError('axis and skip_matrices_index can not be set at the same time')
+
+    if skip_matrices_index is not None:
+        if isinstance(skip_matrices_index, int):
+            axis = [i for i in range(min(order, matrices_cnt)) if i != skip_matrices_index]
+        else:
+            axis = [i for i in range(min(order, matrices_cnt)) if i not in skip_matrices_index]
+    if axis is None:
+        axis = [i for i in range(matrices_cnt)]
+    # else:
+    #     axis = [i for i in range(matrices_cnt)]
+
+
+    tensor_start = ord('z') - order + 1
+    mats_start = ord('a')
+    tensor_op = ''.join([chr(tensor_start + i) for i in range(order)])
+    if transpose:
+        mat_op = ','.join([chr(tensor_start + i) + chr(mats_start + i) for i in axis])
+    else:
+        mat_op = ','.join([chr(mats_start + i) + chr(tensor_start + i) for i in axis])
+    # target_op = ''.join([chr(mats_start + i) for i in axis])
+    target_op = [chr(tensor_start + i) for i in range(order)]
+    for i in axis:
+        target_op[i] = chr(mats_start + i)
+    target_op = ''.join(target_op)
+    # target_op += ''.join([chr(tensor_start + i) for i in range(order) if i not in axis])
+    operator = tensor_op + ',' + mat_op + '->' + target_op
+    return tf.einsum(operator, *([tensor] + matrices))
 
 
 def inner(tensorA, tensorB):
@@ -128,13 +194,10 @@ def hadamard(matrices, skip_matrices_index=None, reverse=False):
 
     :return: tf.Tensor
     """
-    if skip_matrices_index is not None:
-        if isinstance(skip_matrices_index, int):
-            skip_matrices_index = [skip_matrices_index]
-        matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
+    matrices = _skip(matrices, skip_matrices_index)
     if reverse:
         matrices = matrices[::-1]
-    return reduce(lambda a, b: a*b, matrices)
+    return reduce(lambda a, b: a * b, matrices)
 
 
 def kron(matrices, skip_matrices_index=None, reverse=False):
@@ -148,16 +211,13 @@ def kron(matrices, skip_matrices_index=None, reverse=False):
 
     :return: tf.Tensor
     """
-    if skip_matrices_index is not None:
-        if isinstance(skip_matrices_index, int):
-            skip_matrices_index = [skip_matrices_index]
-        matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
+    matrices = _skip(matrices, skip_matrices_index)
     if reverse:
         matrices = matrices[::-1]
     start = ord('a')
     source = ','.join(chr(start + i) + chr(start + i + 1) for i in range(0, 2 * len(matrices), 2))
-    row = ''.join(chr(start + i) for i in range(0, 2*len(matrices), 2))
-    col = ''.join(chr(start + i) for i in range(1, 2*len(matrices), 2))
+    row = ''.join(chr(start + i) for i in range(0, 2 * len(matrices), 2))
+    col = ''.join(chr(start + i) for i in range(1, 2 * len(matrices), 2))
     operation = source + '->' + row + col
     tmp = tf.einsum(operation, *matrices)
     r_size = np.prod([mat.get_shape()[0].value for mat in matrices])
@@ -177,10 +237,7 @@ def khatri(matrices, skip_matrices_index=None, reverse=False):
 
     :return: tf.Tensor
     """
-    if skip_matrices_index is not None:
-        if isinstance(skip_matrices_index, int):
-            skip_matrices_index = [skip_matrices_index]
-        matrices = [matrices[_] for _ in range(len(matrices)) if _ not in skip_matrices_index]
+    matrices = _skip(matrices, skip_matrices_index)
     if reverse:
         matrices = matrices[::-1]
     start = ord('a')

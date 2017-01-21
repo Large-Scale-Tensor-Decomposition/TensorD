@@ -170,12 +170,4 @@ class TTensor:
         :return: tf.Tensor
         full tensor
         """
-        g_start = ord('a')
-        u_start = ord('z') - self.order + 1
-
-        # construct the operator subscripts, such as: abc,ax,by,cz->xyz
-        g_source = ''.join(chr(g_start + i) for i in range(self.order))
-        u_source = ','.join(chr(g_start + i) + chr(u_start + i) for i in range(self.order))
-        dest = ''.join(chr(u_start + i) for i in range(self.order))
-        operator = g_source + ',' + u_source + '->' + dest
-        return tf.einsum(operator, *([self.g] + self.U))
+        return ops.ttm(self.g, self.U)
