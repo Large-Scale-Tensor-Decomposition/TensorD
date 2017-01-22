@@ -15,7 +15,19 @@ def _skip(matrices, skip_matrices_index):
 
 def _gen_perm(order, mode):
     """
-    Generate the specified permutation by the given mode
+    Generate the specified permutation by the given mode.
+
+    Parameters
+    ----------
+    order : int
+        the length of permutation
+    mode : int
+        the mode of specific permutation
+
+    Returns
+    -------
+    list
+        the axis order, according to Kolda's unfold
     """
     tmp = list(range(order - 1, -1, -1))
     tmp.remove(mode)
@@ -24,23 +36,37 @@ def _gen_perm(order, mode):
 
 
 def unfold(tensor, mode=0):
-    """
-    Unfold tensor to a matrix, using Kolda-type
-    :param tensor: tf.Tensor
-    :param mode: int, default is 0
-    :return: tf.Tensor
+    """Unfold tensor to a matrix, using Kolda-type.
+
+    Parameters
+    ----------
+    tensor : tf.Tensor
+    mode : int, default is 0
+
+    Returns
+    -------
+    tf.Tensor
+        unfold matrix, store in a tf.Tensor class
     """
     perm = _gen_perm(tensor.get_shape().ndims, mode)
     return tf.reshape(tf.transpose(tensor, perm), (tensor.get_shape().as_list()[mode], -1))
 
 
 def fold(unfolded_tensor, mode, shape):
-    """
-    Fold an unfolded tensor to tensor with specified shape
-    :param unfolded_tensor: tf.Tensor
-    :param mode: int
-    :param shape: the specified shape of target tensor
-    :return: tf.Tensor
+    """Fold the mode-``mode`` unfolding tensor into a tensor of shape `shape`.
+
+    Parameters
+    ----------
+    unfolded_tensor : tf.Tensor
+        matrix-like tensor
+    mode : int, default is 0
+        indexing starts at 0, therefore mode is in ``range(0, tensor.ndim)``
+    shape : list, tuple
+
+    Returns
+    -------
+    tf.Tensor
+        unfolded_tensor of shape ``(tensor.shape[mode], -1)``
     """
     perm = _gen_perm(len(shape), mode)
     shape_now = [shape[_] for _ in perm]
@@ -51,10 +77,14 @@ def fold(unfolded_tensor, mode, shape):
 def t2mat(tensor, r_axis, c_axis):
     """
     Transfer a tensor to a matrix by given row axis and column axis
-    :param tensor: tf.Tensor
-    :param r_axis: int, list
-    :param c_axis: int, list
-    :return: matrix-like tf.Tensor
+
+    Args:
+        tensor (tf.Tensor): given tensor
+        r_axis (int, list): row axis
+        c_axis (int, list): column axis
+
+    Returns:
+        tf.Tensor: matrix-like tensor
     """
     if isinstance(r_axis, int):
         indies = [r_axis]
@@ -95,10 +125,15 @@ def vec_to_tensor(vec, shape):
 def mul(tensorA, tensorB, a_axis, b_axis):
     """
     Multiple tensor A and tensor B by the axis of a_axis and b_axis
+
     :param tensorA: tf.Tensor
+                    given tensor A
     :param tensorB: tf.Tensor
+                    given tensor B
     :param a_axis: List, int
+
     :param b_axis: List, int
+
     :return: tf.Tensor
     """
     if isinstance(a_axis, int):
