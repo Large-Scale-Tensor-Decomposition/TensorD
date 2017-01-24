@@ -5,8 +5,7 @@ from factorizer.base.type import KTensor
 
 import factorizer.base.ops as ops
 from factorizer.validator import rmse
-
-rand = np.random.rand
+from numpy.random import rand
 
 
 def cp(sess, tensor, rank, steps=100, tol=10e-4, ignore_tol=True, get_lambdas=False, get_rmse=False, verbose=False):

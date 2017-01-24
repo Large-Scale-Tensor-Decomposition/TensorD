@@ -7,7 +7,7 @@ from factorizer.base import ops
 from factorizer.factorization.tucker import HOSVD, HOOI
 from factorizer.validator import rmse
 import time
-rand = np.random.rand
+from numpy.random import rand
 
 
 class MyTestCase(unittest.TestCase):

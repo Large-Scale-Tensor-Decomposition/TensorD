@@ -6,7 +6,7 @@ import tensorflow as tf
 
 from factorizer.base.type import TTensor
 
-rand = np.random.rand
+from numpy.random import rand
 
 
 class MyTestCase(unittest.TestCase):
