@@ -141,7 +141,7 @@ def t2mat(tensor, r_axis, c_axis):
     >>> mat1 = ops.t2mat(tensor, 1, -1)     # matrix shape is 3x(2*4)=3x8
     >>> mat2 = ops.t2mat(tensor, [0,2], -1) # matrix shape is (2*4)x3=8x3
     >>> mat3 = ops.t2mat(tensor, 1, [2, 0]) # Kolda-type mode-2 unfolding
-    >>> mat4 = ops.t2mat(tensor, 1, [0, 2]) #
+    >>> mat4 = ops.t2mat(tensor, 1, [0, 2]) # LMV-type mode-2 unfolding
 
     """
     if isinstance(r_axis, int):
@@ -163,36 +163,88 @@ def t2mat(tensor, r_axis, c_axis):
 
 def vectorize(tensor):
     """
-    Verctorize a tensor to a vector
-    :param tensor: tf.Tensor
-    :return: vector-like tf.Tensor
+    Reshape a tensor to a vector.
+
+    Parameters
+    ----------
+    tensor : tf.Tensor
+        full-shape of tensor
+
+    Returns
+    -------
+    tf.Tensor
+        vector-shape tensor
+
+    Examples
+    --------
+    >>> vec = ops.vectorize(tf.constant(np.arange(24).reshape(3,4,2)))
+    >>> tf.Session().run(vec)
+    array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+       17, 18, 19, 20, 21, 22, 23])
     """
     return tf.reshape(tensor, [-1])
 
 
 def vec_to_tensor(vec, shape):
     """
-    Transfer a vector to a specified shape tensor
-    :param vec: a vector-like tensor
-    :param shape: list, tuple
-    :return: TTensor
+    Reshape a vector to a full tensor with specific shape.
+
+    Parameters
+    ----------
+    vec : tf.Tensor
+        vector-shape of tensor
+    shape : list, tuple
+        full tensor shape
+
+    Returns
+    -------
+    tf.Tensor
+        full tensor with shape ``shape``
     """
     return tf.reshape(vec, shape)
 
 
 def mul(tensorA, tensorB, a_axis, b_axis):
     """
-    Multiple tensor A and tensor B by the axis of a_axis and b_axis
+    Multiple two tensors along given axis. The same definition with tensor contraction.
+    See [1]_
 
-    :param tensorA: tf.Tensor
-                    given tensor A
-    :param tensorB: tf.Tensor
-                    given tensor B
-    :param a_axis: List, int
+    Parameters
+    ----------
+    tensorA : tf.Tensor
+        tensor A
+    tensorB : tf.Tensor
+        tensor B
+    a_axis : int, list, tuple
+        tensor A axis to contract
+    b_axis : int, list, tuple
+        tensor B axis to contract, the len of ``a_axis`` and ``b_axis`` must be equal.
 
-    :param b_axis: List, int
+    Returns
+    -------
+    tf.Tensor
+        the contracted tensor
 
-    :return: tf.Tensor
+    Examples
+    --------
+    tensor contraction
+
+    >>> A = tf.constant(np.random.rand(2,3,4,5,6))
+    >>> B = tf.constant(np.random.rand(1,2,3,5,7))
+    >>> C = ops.mul(A, B, [0,1],[1,2])      # shape of C is 4x5x6x1x4x7
+    >>> D = ops.mul(A, B, [0,1,3], [1,2,3]) # shape of C is 4x6x1x7
+
+    classical matrix multiple
+
+    >>> A = tf.constant(np.random.rand(4,5))
+    >>> B = tf.constant(np.random.rand(5,4))
+    >>> C = ops.mul(A, B, 1, 0)             # same as AB
+    >>> D = ops.mul(A, B, 0, 1)             # same as BA
+
+    References
+    ----------
+    .. [1] Cichocki, Andrzej. "Era of big data processing: A new approach via tensor networks and tensor decompositions."
+     arXiv preprint arXiv:1403.2048 (2014).
     """
     if isinstance(a_axis, int):
         a_axis = [a_axis]
@@ -208,23 +260,31 @@ def mul(tensorA, tensorB, a_axis, b_axis):
 
 def ttm(tensor, matrices, axis=None, transpose=False, skip_matrices_index=None):
     """
-    \mathcal{Y} = \mathcal{X} \times_1 A \times_2 B \times_3 C
+    ``\mathcal{Y} = \mathcal{X} \times_1 A \times_2 B \times_3 C``
 
     if transpose is True,
-    \mathcal{Y} = \mathcal{X} \times_1 A^T \times_2 B^T \times_3 C^T
+    ``\mathcal{Y} = \mathcal{X} \times_1 A^T \times_2 B^T \times_3 C^T``
 
     if axis is given, such as axis=[2,0,1],
-    \mathcal{Y} = \mathcal{X} \times_3 C \times_1 A \times_2 B
+    ``\mathcal{Y} = \mathcal{X} \times_3 C \times_1 A \times_2 B``
 
     if skip_matrices_index is given, such as [0,1], and matrices = [A, B, C]
     \mathcal{Y} = \mathcal{X} \times_3 C
 
-    :param tensor:
-    :param matrices:
-    :param axis:
-    :param transpose:
-    :param skip_matrices_index:
-    :return:
+    Parameters
+    ----------
+    tensor
+    matrices
+    axis
+    transpose
+    skip_matrices_index
+
+    Returns
+    -------
+
+    .. math::
+
+    W^{3\beta}_{\delta_1 \rho_1 \sigma_2} \approx U^{3\beta}_{\delta_1 \rho_1}
     """
     # the axis and skip_matrices_index can not be set both, or will make it confused
     if axis is not None and skip_matrices_index is not None:
