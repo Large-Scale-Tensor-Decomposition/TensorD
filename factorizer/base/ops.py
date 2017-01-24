@@ -28,6 +28,11 @@ def _gen_perm(order, mode):
     -------
     list
         the axis order, according to Kolda's unfold
+
+    Examples
+    --------
+    >>> perm = _gen_perm(6, 2)
+    list([2, 5, 4, 3, 1, 0])
     """
     tmp = list(range(order - 1, -1, -1))
     tmp.remove(mode)
@@ -36,37 +41,71 @@ def _gen_perm(order, mode):
 
 
 def unfold(tensor, mode=0):
-    """Unfold tensor to a matrix, using Kolda-type.
+    """
+    Unfold tensor to a matrix, using Kolda-type.
 
     Parameters
     ----------
     tensor : tf.Tensor
-    mode : int, default is 0
+        the tensor with full shape
+    mode : int
+        default is 0, mode-``mode`` unfold
 
     Returns
     -------
     tf.Tensor
-        unfold matrix, store in a tf.Tensor class
+        a matrix-shape of unfolding tensor, store in a tf.Tensor class
+
+    Examples
+    --------
+    >>> import factorizer.base.ops as ops
+    >>> import tensorflow as tf
+    >>> import numpy as np
+    >>> tensor = tf.constant(np.arange(24).reshape(3,4,2))
+    >>> unfolded_matrix = ops.unfold(tensor, 1)
+    >>> tf.Session().run(unfolded_matrix)
+    array([[ 0,  8, 16,  1,  9, 17],
+       [ 2, 10, 18,  3, 11, 19],
+       [ 4, 12, 20,  5, 13, 21],
+       [ 6, 14, 22,  7, 15, 23]])
+
     """
     perm = _gen_perm(tensor.get_shape().ndims, mode)
     return tf.reshape(tf.transpose(tensor, perm), (tensor.get_shape().as_list()[mode], -1))
 
 
 def fold(unfolded_tensor, mode, shape):
-    """Fold the mode-``mode`` unfolding tensor into a tensor of shape `shape`.
+    """Fold the mode-``mode`` unfolding tensor into a tensor of specific shape ``shape``.
 
     Parameters
     ----------
     unfolded_tensor : tf.Tensor
-        matrix-like tensor
-    mode : int, default is 0
-        indexing starts at 0, therefore mode is in ``range(0, tensor.ndim)``
+        matrix-shape tensor
+    mode : int
+        default is 0, indexing starts at 0, therefore mode is in ``range(0, len(shape))``
     shape : list, tuple
+        the shape of folded tensor
 
     Returns
     -------
     tf.Tensor
-        unfolded_tensor of shape ``(tensor.shape[mode], -1)``
+        a full tensor of shape ``shape``
+
+    Examples
+    --------
+    >>> import tensorflow as tf
+    >>> import numpy as np
+    >>> import factorizer.base.ops as ops
+    >>> tensor = tf.constant(np.arange(24).reshape(2,3,4))
+    >>> unfolded_tensor = ops.unfold(tensor, 1)
+    >>> folded_tensor = ops.fold(unfolded_tensor, 1, (2,3,4))
+    >>> tf.Session().run(folded_tensor)
+    array([[[ 0,  1,  2,  3],
+        [ 4,  5,  6,  7],
+        [ 8,  9, 10, 11]],
+       [[12, 13, 14, 15],
+        [16, 17, 18, 19],
+        [20, 21, 22, 23]]])
     """
     perm = _gen_perm(len(shape), mode)
     shape_now = [shape[_] for _ in perm]
@@ -76,15 +115,34 @@ def fold(unfolded_tensor, mode, shape):
 
 def t2mat(tensor, r_axis, c_axis):
     """
-    Transfer a tensor to a matrix by given row axis and column axis
+    Flat the tensor according to ``r_axis`` and ``c_axis``. Should be careful of the order
+    of r_axis and c_axis.
 
-    Args:
-        tensor (tf.Tensor): given tensor
-        r_axis (int, list): row axis
-        c_axis (int, list): column axis
+    Parameters
+    ----------
+    tensor : tf.Tensor
+        full-shape tensor
+    r_axis : int, list
+        row axis, must be equal or greater than 0
+    c_axis : int, list
+        column axis. If given as -1, the column axis is inferred from the remaining axis.
 
-    Returns:
-        tf.Tensor: matrix-like tensor
+    Returns
+    -------
+    tf.Tensor
+        matrix-shape of tensor
+
+    Examples
+    --------
+    >>> import tensorflow as tf
+    >>> import numpy as np
+    >>> import factorizer.base.ops as ops
+    >>> tensor = tf.constant(np.arange(24).reshape(2,3,4))
+    >>> mat1 = ops.t2mat(tensor, 1, -1)     # matrix shape is 3x(2*4)=3x8
+    >>> mat2 = ops.t2mat(tensor, [0,2], -1) # matrix shape is (2*4)x3=8x3
+    >>> mat3 = ops.t2mat(tensor, 1, [2, 0]) # Kolda-type mode-2 unfolding
+    >>> mat4 = ops.t2mat(tensor, 1, [0, 2]) #
+
     """
     if isinstance(r_axis, int):
         indies = [r_axis]
