@@ -260,31 +260,56 @@ def mul(tensorA, tensorB, a_axis, b_axis):
 
 def ttm(tensor, matrices, axis=None, transpose=False, skip_matrices_index=None):
     """
-    ``\mathcal{Y} = \mathcal{X} \times_1 A \times_2 B \times_3 C``
+    Default is :math:`\\mathcal{Y} = \\mathcal{X} \\times_1 A \\times_2 B \\times_3 C`
 
     if transpose is True,
-    ``\mathcal{Y} = \mathcal{X} \times_1 A^T \times_2 B^T \times_3 C^T``
+    :math:`\\mathcal{Y} = \\mathcal{X} \\times_1 A^T \\times_2 B^T \\times_3 C^T`
 
-    if axis is given, such as axis=[2,0,1],
-    ``\mathcal{Y} = \mathcal{X} \times_3 C \times_1 A \times_2 B``
+    if ``axis`` is given, such as axis=[2,0,1],
+    :math:`\\mathcal{Y} = \\mathcal{X} \\times_3 C \\times_1 A \\times_2 B`
 
-    if skip_matrices_index is given, such as [0,1], and matrices = [A, B, C]
-    \mathcal{Y} = \mathcal{X} \times_3 C
+    if ``skip_matrices_index`` is given, such as [0,1], and matrices = [A, B, C],
+    :math:`\\mathcal{Y} = \\mathcal{X} \\times_3 C`
+
+    Should be noticed the ``axis`` and ``skip_matrices_index`` can not be set in same time!
 
     Parameters
     ----------
-    tensor
-    matrices
-    axis
-    transpose
-    skip_matrices_index
+    tensor : tf.Tensor
+        full-shape tensor
+    matrices : list
+        matrices to contract the tensor
+    axis : list
+        according axis of tensor to contract matrices.
+        If ``axis`` is None, in default it will be ``range(0, len(matrices))``
+    transpose : bool
+        if True, transpose all matrices
+    skip_matrices_index : int, list
+        skip one or more matrices in ``matrices``
 
     Returns
     -------
+    tf.Tensor
+        contracted tensor
 
-    .. math::
+    Raises
+    ------
+    ValueError
+        if axis and skip_matrices_index are given both
 
-    W^{3\beta}_{\delta_1 \rho_1 \sigma_2} \approx U^{3\beta}_{\delta_1 \rho_1}
+    Examples
+    --------
+    >>> tensorA = tf.constant(np.arange(24).reshape(2,4,3), dtype=tf.float64)
+    >>> mat1 = tf.constant(np.arange(10).reshape(5, 2), dtype=tf.float64)
+    >>> mat2 = tf.constant(np.arange(24).reshape(6, 4), dtype=tf.float64)
+    >>> mat3 = tf.constant(np.arange(21).reshape(7, 3), dtype=tf.float64)
+    >>> mats = [mat1, mat2, mat3]
+    >>> contracted1 = ops.ttm(tensorA, mats) # shape is 5x6x7
+    >>> contracted2 = ops.ttm(tensorA, [mat2, mat1, mat3], axis=[1,0,2]) # same as above
+    >>> contracted3 = ops.ttm(tensorA, mats, skip_matrices_index=1)  # shape is 5x4x7
+    >>> tensorB = tf.constant(np.arange(210).reshape(5,6,7), dtype=tf.float64)
+    >>> contracted4 = ops.ttm(tensorB, mats, transpose=True) # shape is 2x4x3
+
     """
     # the axis and skip_matrices_index can not be set both, or will make it confused
     if axis is not None and skip_matrices_index is not None:
@@ -329,47 +354,64 @@ def ttm(tensor, matrices, axis=None, transpose=False, skip_matrices_index=None):
 
 def inner(tensorA, tensorB):
     """
-    Inner product or tensor A and tensor B. The shape of A and B must be equal.
-    :param tensorA: tf.Tensor
-    :param tensorB: tf.Tensor
-    :return: constant-like tf.Tensor
-    :raise: ValueError
-    raise if the shape of A and B not equal
+    Inner product of two tensors with same shape.
+
+    Parameters
+    ----------
+    tensorA : tf.Tensor
+    tensorB : tf.Tensor
+
+    Returns
+    -------
+    tf.Tensor
+
+    Raises
+    ------
+    ValueError
+        raise if the shapes are not equal
     """
     if tensorA.get_shape() != tensorB.get_shape():
         raise ValueError('the shape of tensor A and B must be equal')
     return tf.reduce_sum(vectorize(tensorA) * vectorize(tensorB))
 
 
-def hadamard(matrices, skip_matrices_index=None, reverse=False):
+def hadamard(matrices, skip_matrices_index=None):
     """
     Hadamard product of given matrices, which is the element product of matrix.
-    :param matrices: List
 
-    :param skip_matrices_index: List
-    skip some matrices
+    Parameters
+    ----------
+    matrices : list of tf.Tensor
+        matrices in same shape
+    skip_matrices_index : int, list
+        skip one or more matrices in ``matrices``
 
-    :param reverse: bool
-    reverse the matrices order
-
-    :return: tf.Tensor
+    Returns
+    -------
+    tf.Tensor
+        result of hadamard product
     """
     matrices = _skip(matrices, skip_matrices_index)
-    if reverse:
-        matrices = matrices[::-1]
     return reduce(lambda a, b: a * b, matrices)
 
 
 def kron(matrices, skip_matrices_index=None, reverse=False):
     """
     Kronecker product of given matrices.
-    :param matrices: List
 
-    :param skip_matrices_index: List
+    Parameters
+    ----------
+    matrices : list of tf.Tensor
+        a list of matrix-shape tensor
+    skip_matrices_index : int, list
+        skip one or more matrices in ``matrices``
+    reverse : bool
+        reverse matrices order
 
-    :param reverse: bool
-
-    :return: tf.Tensor
+    Returns
+    -------
+    tf.Tensor
+        a big matrix of kronecker product result
     """
     matrices = _skip(matrices, skip_matrices_index)
     if reverse:
@@ -388,14 +430,22 @@ def kron(matrices, skip_matrices_index=None, reverse=False):
 
 def khatri(matrices, skip_matrices_index=None, reverse=False):
     """
-    Khatri-Rao product
-    :param matrices: List
+    Khatri-Rao product of given matrices.
 
-    :param skip_matrices_index: List
+    Parameters
+    ----------
+    matrices : list of tf.Tensor
+        a list of matrix-shape tensor, the column size must be equal
+    skip_matrices_index : int, list
+        skip one or more matrices
+    reverse : bool
+        reverse matrices order
 
-    :param reverse: bool
+    Returns
+    -------
+    tf.Tensor
+        a matrix of khatri-rao result
 
-    :return: tf.Tensor
     """
     matrices = _skip(matrices, skip_matrices_index)
     if reverse:
