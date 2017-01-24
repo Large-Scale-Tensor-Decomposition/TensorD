@@ -40,7 +40,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.imgmath', # 'sphinx.ext.mathjax',
+    'sphinx.ext.mathjax',
     #'sphinxcontrib.napoleon',
 ]
 

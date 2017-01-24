@@ -70,16 +70,16 @@ def fold_Numpy(unfolded_tensor, mode, shape):
     Parameters
     ----------
     unfolded_tensor : tf.Tensor
-        matrix-like tensor
-    mode : int, default is 0
-        indexing starts at 0, therefore mode is in ``range(0, tensor.ndim)``
+                      matrix-like tensor
+    mode : int
+           indexing starts at 0, therefore mode is in ``range(0, tensor.ndim)``
     shape : list, tuple
-        Description of shape bla bla
+            Description of shape bla bla
 
     Returns
     -------
-    tf.Tensor
-        unfolded_tensor of shape ``(tensor.shape[mode], -1)``
+    vector : tf.Tensor
+             unfolded_tensor of shape ``(tensor.shape[mode], -1)``
     """
     perm = _gen_perm(len(shape), mode)
     shape_now = [shape[_] for _ in perm]
@@ -170,7 +170,19 @@ def mul_Sphinx(tensorA, tensorB, a_axis, b_axis):
 
 
 def ttm_None(tensor, matrices, axis=None, transpose=False, skip_matrices_index=None):
+    """
 
+       :math:`\\mathcal{Y} = \\mathcal{X} \\times_1 A \\times_2 B \\times_3 C`
+
+       if transpose is True,
+       :math:`\\mathcal{Y} = \\mathcal{X} \\times_1 A^T \\times_2 B^T \\times_3 C^T`
+
+       if ``axis`` is given, such as axis=[2,0,1],
+       :math:`\\mathcal{Y} = \\mathcal{X} \\times_3 C \\times_1 A \\times_2 B`
+
+       if ``skip_matrices_index`` is given, such as [0,1], and matrices = [A, B, C]
+       :math:`\\mathcal{Y} = \\mathcal{X} \\times_3 C`
+    """
     # the axis and skip_matrices_index can not be set both, or will make it confused
     if axis is not None and skip_matrices_index is not None:
         raise ValueError('axis and skip_matrices_index can not be set at the same time')
