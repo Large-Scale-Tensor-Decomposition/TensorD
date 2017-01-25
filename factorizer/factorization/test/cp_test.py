@@ -7,8 +7,8 @@ import tensorflow as tf
 import logging
 from factorizer.factorization.cp import cp
 from numpy.random import rand
-assert_array_equal = np.testing.assert_array_almost_equal
 
+assert_array_equal = np.testing.assert_array_almost_equal
 
 logger = logging.getLogger('TEST')
 
