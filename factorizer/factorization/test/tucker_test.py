@@ -8,6 +8,9 @@ from factorizer.factorization.tucker import HOSVD, HOOI
 from factorizer.validator import rmse
 import time
 from numpy.random import rand
+import logging
+
+logger = logging.getLogger('TEST')
 
 
 class MyTestCase(unittest.TestCase):
@@ -42,7 +45,7 @@ class MyTestCase(unittest.TestCase):
             ttensor = HOOI(X, [15, 15, 15], steps=20)
             res = ttensor.extract().eval()
         np.testing.assert_array_almost_equal(np_X, res, 2)
-        print(time.time() - ts)
+        logger.info('HOOI : run time %f' % (time.time() - ts))
 
 
 if __name__ == '__main__':

@@ -2,14 +2,14 @@
 import time
 import unittest
 from functools import reduce
-
+import logging
 import numpy as np
 import tensorflow as tf
-
 import factorizer.base.ops as ops
-
 from numpy.random import rand
 assert_array_equal = np.testing.assert_array_almost_equal
+
+logger = logging.getLogger('TEST')
 
 
 class MyTestCase(unittest.TestCase):
@@ -172,9 +172,9 @@ class MyTestCase(unittest.TestCase):
             for _ in range(10):
                 tf_res = ops.mul(tf_A, tf_B, [2, 1], [0, 1]).eval()
             ts5 = time.time()
-        print('np: %f' % (ts2 - ts1))
-        print('tf_einsum: %f' % (ts4 - ts3))
-        print('tf ops: %f' % (ts5 - ts4))
+        logger.info('np: %f' % (ts2 - ts1))
+        logger.info('tf_einsum: %f' % (ts4 - ts3))
+        logger.info('tf ops: %f' % (ts5 - ts4))
 
     def test_inner(self):
         np_A = rand(2, 3, 4)
