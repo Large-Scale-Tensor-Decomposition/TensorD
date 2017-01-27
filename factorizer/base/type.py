@@ -25,13 +25,22 @@ class DTensor:
 
     def mul(self, tensor, a_axis=0, b_axis=0):
         """
-        tensor multiply, or tensor contraction
-        :param tensor: DTensor
-        :param a_axis: List, int
-        axis to contract, belong to self
-        :param b_axis: List, int
-        axis to contract, belong to given tensor
-        :return: DTensor
+        Multiple(contract) with DTensor along given axis.
+
+        Parameters
+        ----------
+        tensor : DTensor
+            must be a DTensor
+        a_axis : int, list
+            axis belong to self DTensor
+        b_axis : int, list
+            axis belong to given tensor
+
+        Returns
+        -------
+        DTensor
+            the result DTensor of contraction
+
         """
         return DTensor(ops.mul(self.T, tensor.T, a_axis, b_axis))
 
@@ -76,9 +85,16 @@ class DTensor:
 
     def __mul__(self, other):
         """
-        Hadamard product with other tensor, an element-wise product
-        :param other: DTensor or ndarray
-        :return: DTensor
+        Hadamard product with other tensor, an element-wise product.
+
+        Parameters
+        ----------
+        other : tf.Tensor, DTensor
+
+        Returns
+        -------
+        DTensor
+            result of hadamard product
         """
         if isinstance(other, DTensor):
             return DTensor(self.T * other.T)
@@ -99,17 +115,19 @@ class KTensor:
     """
     Kruskal Tensor
 
-    \mathbf{\mathcal{X}} = \sum_r \sigma_r a_r \circ b_r \circ c_r
+    .. math::
+        \\mathbf{\\mathcal{X}} = \\sum_r \\sigma_r a_r \\circ b_r \\circ c_r
 
     """
 
     def __init__(self, factors, lambdas=None):
         """
-        :param factors: List
-        the factor matrix of Kruskal Tensor
-
-        :param lambdas: List
-        the weight of every axis of factors
+        Parameters
+        ----------
+        factors : list of [tf.Tensor, ndarray]
+            the factor matrix of Kruskal Tensor
+        lambdas : ndarray, tf.Tensor
+            vector-like, the weight of every axis of factors
         """
         if isinstance(factors[0], np.ndarray):
             self.U = [tf.constant(mat) for mat in factors]
@@ -132,8 +150,13 @@ class KTensor:
 
     def extract(self):
         """
-        \mathbf{\mathcal{X}} = \sum_r \sigma_r a_r \circ b_r \circ c_r = (A \odot B \odot C) \times \Sigma
-        :return: tf.Tensor
+        .. math::
+            \\mathbf{\\mathcal{X}} = \\sum_r \\sigma_r a_r \\circ b_r \\circ c_r = (A \\odot B \\odot C) \\times \\Sigma
+
+        Returns
+        -------
+        tf.Tensor
+            full-shape tensor
         """
         tmp = ops.khatri(self.U)
         back_shape = [U.get_shape()[0].value for U in self.U]
@@ -144,15 +167,19 @@ class TTensor:
     """
     Tucker Tensor
 
-    \mathcal{X} =  \mathcal{G} \times_1 \mathbf{A} \times_2 \mathbf{B} \times_3 \mathbf{C}
+    .. math::
+        \\mathcal{X} =  \\mathcal{G} \\times_1 \\mathbf{A} \\times_2 \\mathbf{B} \\times_3 \\mathbf{C}
 
     """
 
     def __init__(self, core, factors):
         """
-        construct the Tucker Tensor
-        :param core: tf.Tensor, ndarray
-        :param factors: List of tf.Tensor or ndarray
+        Parameters
+        ----------
+        core : tf.Tensor, ndarray
+            :math:`\\mathcal{G}`
+        factors : List of tf.Tensor or ndarray
+            factor matrix of Tucker Tensor
         """
         if isinstance(core, np.ndarray):
             self.g = tf.constant(core)
@@ -166,8 +193,11 @@ class TTensor:
 
     def extract(self):
         """
-        extract the full tensor of core and factors
-        :return: tf.Tensor
-        full tensor
+        Extract the full tensor of core and factors.
+
+        Returns
+        -------
+        tf.Tensor
+            full-shape of Tensor
         """
         return ops.ttm(self.g, self.U)
