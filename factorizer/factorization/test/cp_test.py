@@ -26,6 +26,15 @@ class MyTestCase(unittest.TestCase):
             logger.info(res)
 
         logger.info(time.time() - ts)
+        #
+        # ts = time.time()
+        # num_core = 12
+        # config = tf.ConfigProto(inter_op_parallelism_threads=num_core,
+        #                         intra_op_parallelism_threads=num_core)
+        # with tf.Session(config=config) as sess:
+        #     res, _ = cp(sess, tf.constant(x, dtype=tf.float64), 20, steps=20, get_rmse=True)
+        #     logger.info(res)
+        # logger.info(time.time() - ts)
 
 
 if __name__ == '__main__':

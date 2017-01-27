@@ -12,7 +12,11 @@ class DTensor:
 
     def __init__(self, tensor):
         """
-        :param tensor: tf.Tensor or ndarray
+
+        Parameters
+        ----------
+        tensor : tf.Tensor, ndarray
+
         """
         if isinstance(tensor, tf.Tensor):
             self.T = tensor
