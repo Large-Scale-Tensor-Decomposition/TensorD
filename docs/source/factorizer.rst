@@ -1,7 +1,8 @@
 factorizer package
 ==================
 
-
+Subpackages
+-----------
 
 .. toctree::
 
@@ -9,17 +10,19 @@ factorizer package
     factorizer.factorization
     factorizer.test
 
+Submodules
+----------
 
-factorizer.test_bench
----------------------
+factorizer.test_bench module
+----------------------------
 
 .. automodule:: factorizer.test_bench
     :members:
     :undoc-members:
     :show-inheritance:
 
-factorizer.validator
---------------------
+factorizer.validator module
+---------------------------
 
 .. automodule:: factorizer.validator
     :members:

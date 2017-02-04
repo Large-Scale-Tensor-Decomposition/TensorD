@@ -1,9 +1,11 @@
 factorizer.factorization.test package
 =====================================
 
+Submodules
+----------
 
-factorizer.factorization.test.cp_test
--------------------------------------
+factorizer.factorization.test.cp_test module
+--------------------------------------------
 
 .. automodule:: factorizer.factorization.test.cp_test
     :members:
