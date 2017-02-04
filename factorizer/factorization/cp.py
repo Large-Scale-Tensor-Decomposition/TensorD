@@ -68,25 +68,27 @@ def fake_cp(sess, tensor, rank, steps=100):
     AtA = [tf.matmul(A[_], A[_], transpose_a=True) for _ in range(order)]
     mats = [ops.unfold(tensor, _) for _ in range(order)]
 
-    mode = tf.placeholder(tf.int32)
+    V = list(range(order))
+    kAs = list(range(order))
+    XA = list(range(order))
 
-    V = ops.hadamard(AtA, skip_matrices_index=mode)
+    for mode in range(order):
+        V[mode] = ops.hadamard(AtA, skip_matrices_index=mode)
+        kAs[mode] = ops.khatri(A, mode, True)
 
-    kAs = ops.khatri(A, mode, True)
-
-    with graph.control_dependencies([mats, V, kAs]):
-        XA = tf.matmul(mats[mode], kAs)
-        new_A_mode = tf.transpose(tf.matrix_solve(tf.transpose(V), tf.transpose(XA)))
-        as_op = A[mode].assign(new_A_mode)
+        with graph.control_dependencies([mats, V, kAs]):
+            XA[mode] = tf.matmul(mats[mode], kAs[mode])
+            tmp = tf.transpose(tf.matrix_solve(tf.transpose(V[mode]), tf.transpose(XA[mode])))
+            as_op = A[mode].assign(tmp)
 
     P = KTensor(A)
     loss = rmse(tensor - P.extract())
 
-    e_step = tf.group(mode, V, kAs, new_A_mode, as_op)
+    e_step = tf.group(V, kAs, as_op)
 
     for step in range(steps):
         for m in range(order):
-            sess.run(e_step, feed_dict={mode:m})
+            sess.run(e_step)
 
     res = sess.run(loss)
     print(res)
