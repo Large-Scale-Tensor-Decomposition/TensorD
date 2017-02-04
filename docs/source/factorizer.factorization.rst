@@ -8,26 +8,27 @@ Subpackages
 
     factorizer.factorization.test
 
+Submodules
+----------
 
-
-factorizer.factorization.cp
----------------------------
+factorizer.factorization.cp module
+----------------------------------
 
 .. automodule:: factorizer.factorization.cp
     :members:
     :undoc-members:
     :show-inheritance:
 
-factorizer.factorization.factorization
---------------------------------------
+factorizer.factorization.factorization module
+---------------------------------------------
 
 .. automodule:: factorizer.factorization.factorization
     :members:
     :undoc-members:
     :show-inheritance:
 
-factorizer.factorization.tucker
--------------------------------
+factorizer.factorization.tucker module
+--------------------------------------
 
 .. automodule:: factorizer.factorization.tucker
     :members:
