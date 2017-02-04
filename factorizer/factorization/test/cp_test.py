@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import tensorflow as tf
 import logging
-from factorizer.factorization.cp import cp
+from factorizer.factorization.cp import cp, fake_cp
 from numpy.random import rand
 
 assert_array_equal = np.testing.assert_array_almost_equal
@@ -36,6 +36,17 @@ class MyTestCase(unittest.TestCase):
         #     logger.info(res)
         # logger.info(time.time() - ts)
 
+    def test_fake_cp(self):
+        x = rand(30, 40, 50)
+
+        ts = time.time()
+
+        sess = tf.Session()
+        with sess.as_default():
+            res, _ = fake_cp(sess, tf.constant(x, dtype=tf.float64), 20, steps=20)
+            logger.info(res)
+
+        logger.info(time.time() - ts)
 
 if __name__ == '__main__':
     unittest.main()

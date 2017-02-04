@@ -6,5 +6,5 @@ from logging.config import fileConfig
 if __name__ == "__main__":
     fileConfig('../conf/logging_config.ini')
     # logging.getLogger().setLevel(logging.ERROR)
-    suite = unittest.TestLoader().discover('.', pattern="*_test.py")
+    suite = unittest.TestLoader().discover('.', pattern="cp_test.py")
     unittest.TextTestRunner(verbosity=2).run(suite)
