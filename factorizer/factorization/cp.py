@@ -52,41 +52,60 @@ def cp(sess, tensor, rank, steps=100, tol=10e-4, ignore_tol=True, get_lambdas=Fa
 
     P = KTensor(A, lambdas)
     if get_rmse:
-        res = sess.run(rmse(tensor - P.extract()))
+        res = rmse(tensor - P.extract())
+        tf.summary.histogram('loss', res)
+        op = tf.merge_all_summaries()
+        res = sess.run(res)
+
+        tf.summary.FileWriter('/tmp/cp', sess.graph).add_summary(sess.run(op))
+
         return res, P
     else:
         return P
 
 
+# Try to build the graph before run session, but failed.
+# This function has errors!!!
 def fake_cp(sess, tensor, rank, steps=100):
     shape = tensor.get_shape().as_list()
     order = len(shape)
 
-    graph = tf.get_default_graph()
+    # graph = tf.get_default_graph()
 
-    A = [tf.Variable(tf.truncated_normal([dim, rank])) for dim in shape]
-    AtA = [tf.matmul(A[_], A[_], transpose_a=True) for _ in range(order)]
+    A = [tf.Variable(rand(dim, rank), dtype=tf.float64) for dim in shape]
+    AtA = [tf.matmul(A[i], A[i], transpose_a=True) for i in range(order)]
     mats = [ops.unfold(tensor, _) for _ in range(order)]
 
-    mode = tf.placeholder(tf.int32)
+    as_ops = list(range(order))
 
-    V = ops.hadamard(AtA, skip_matrices_index=mode)
-
-    kAs = ops.khatri(A, mode, True)
-
-    with graph.control_dependencies([mats, V, kAs]):
-        XA = tf.matmul(mats[mode], kAs)
-        new_A_mode = tf.transpose(tf.matrix_solve(tf.transpose(V), tf.transpose(XA)))
-        as_op = A[mode].assign(new_A_mode)
+    for mode in range(order):
+        V = ops.hadamard(AtA, skip_matrices_index=mode)
+        XA = tf.matmul(mats[mode], ops.khatri(A, mode, True))
+        tmp = tf.transpose(tf.matrix_solve(tf.transpose(V), tf.transpose(XA)))
+        as_ops[mode] = A[mode].assign(tmp)
+        with sess.graph.control_dependencies([as_ops[mode]]):
+            AtA[mode] = tf.matmul(A[mode], A[mode], transpose_a=True)
+            tf.summary.histogram('AtA', AtA[mode])
 
     P = KTensor(A)
     loss = rmse(tensor - P.extract())
 
-    e_step = tf.group(mode, V, kAs, new_A_mode, as_op)
+    tf.summary.histogram('loss', loss)
+
+    e_step = tf.group(*as_ops)
+
+    merge_op = tf.merge_all_summaries()
+    sum_writer = tf.summary.FileWriter('/tmp/fake_cp', sess.graph)
+
+    init = tf.global_variables_initializer()
+    sess.run(init)
 
     for step in range(steps):
-        for m in range(order):
-            sess.run(e_step, feed_dict={mode:m})
+        print('step %d' % step)
+        sess.run(e_step)
+        res = sess.run(loss)
+        print(res)
 
-    res = sess.run(loss)
-    print(res)
+        sum_str = sess.run(merge_op)
+        sum_writer.add_summary(sum_str)
+

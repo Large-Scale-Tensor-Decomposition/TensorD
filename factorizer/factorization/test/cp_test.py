@@ -43,8 +43,8 @@ class MyTestCase(unittest.TestCase):
 
         sess = tf.Session()
         with sess.as_default():
-            res, _ = fake_cp(sess, tf.constant(x, dtype=tf.float64), 20, steps=20)
-            logger.info(res)
+            fake_cp(sess, tf.constant(x, dtype=tf.float64), 20, steps=20)
+            # logger.info(res)
 
         logger.info(time.time() - ts)
 
