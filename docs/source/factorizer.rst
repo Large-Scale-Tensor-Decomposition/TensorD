@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
     factorizer.base
+    factorizer.dataproc
     factorizer.factorization
     factorizer.test
 
