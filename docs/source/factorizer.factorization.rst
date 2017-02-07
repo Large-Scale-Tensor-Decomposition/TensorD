@@ -19,10 +19,10 @@ factorizer.factorization.cp module
     :undoc-members:
     :show-inheritance:
 
-factorizer.factorization.factorization module
----------------------------------------------
+factorizer.factorization.fact module
+------------------------------------
 
-.. automodule:: factorizer.factorization.factorization
+.. automodule:: factorizer.factorization.fact
     :members:
     :undoc-members:
     :show-inheritance:
