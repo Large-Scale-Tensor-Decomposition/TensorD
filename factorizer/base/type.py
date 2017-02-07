@@ -5,7 +5,7 @@ import tensorflow as tf
 import factorizer.base.ops as ops
 
 
-class DTensor:
+class DTensor(object):
     """
     Dense Tensor
     """
@@ -115,7 +115,7 @@ class DTensor:
         return self.T[index]
 
 
-class KTensor:
+class KTensor(object):
     """
     Kruskal Tensor
 
@@ -167,7 +167,7 @@ class KTensor:
         return tf.reshape(tf.matmul(tmp, self.lambdas), back_shape)
 
 
-class TTensor:
+class TTensor(object):
     """
     Tucker Tensor
 
