@@ -16,10 +16,10 @@ class TensorReader(object):
         Parameters
         ----------
         file_path: file path
-        fmt: line format of data, see parse_link_ for more details
+        fmt: line format of data, see parse package_ for more details
         encoding: file encoding
 
-        .. _parse_link: https://pypi.python.org/pypi/parse
+        .. _parse package: https://pypi.python.org/pypi/parse
         """
         self.file = open(file_path, mode='r', encoding=encoding)
         self.fmt = parse.compile(fmt)
