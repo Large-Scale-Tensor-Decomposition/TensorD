@@ -30,6 +30,8 @@ class OrdProvider(Provider):
 
         self._split_size = int(self.shape[self._order] / self._split_cnt)
 
+        self._offset = self._task_id * self._split_size
+
     def next_batch(self, size):
         """
 
@@ -42,9 +44,9 @@ class OrdProvider(Provider):
         ndarray
             batch of data
         """
-        cur_index = self._task_id * self._split_size
-        while cur_index < self.shape[self._order]:
-            end = min(cur_index + size, self.shape[self._order])
+        cur_index = 0
+        while cur_index < self._split_size:
+            end = min(cur_index + size, self._split_size)
             yield self.data[cur_index:end]
             cur_index += size
         raise StopIteration()
@@ -54,11 +56,17 @@ class OrdProvider(Provider):
         if not self.shape:
             self.shape = [np.max(input_data, axis) for axis in range(len(input_data[0]))]
 
-        self.data = np.zeros(self.shape)
+        split_shape = self.shape.copy()
+        split_shape[self._order] = self._split_size
+        self.data = np.zeros(split_shape)
         for row in input_data:
-            self.data.itemset(row[:-1], row[-1])
+            if self._offset <= row[self._order] < self._offset + self._split_size:
+                row[self._order] -= self._offset
+                self.data.itemset(row[:-1], row[-1])
 
     def _read_dense(self):
-        self.data = np.asarray([row for row in self._reader.next()])
+        self.data = np.asarray(
+            [row for (i, row) in enumerate(self._reader.next()) if
+             self._offset <= i < self._offset + self._split_size])
         if not self.shape:
             self.shape = self.data.shape
