@@ -6,7 +6,7 @@ A *tensor* is a multidimensional array. For the sake of different applications, 
 
 Dense Tensor
 ------------
-Dense tensor class :class:`factorizer.base.DTensor` is used to store a general high-order tensor, especially dense tensor. This data type accepts 2 kinds of tensor data, both :class:`tf.Tensor` and :class:`np.ndarray`.
+:class:`factorizer.base.DTensor` Class is used to store general high-order tensors, especially dense tensors. This data type accepts 2 kinds of tensor data, both :class:`tf.Tensor` and :class:`np.ndarray`.
 
 Let's take for this example the tensor :math:`\mathcal{X} \in \mathbb{R}^{3 \times 4 \times 2}` defined by its frontal slices:
 
@@ -46,13 +46,20 @@ Creating :class:`DTensor` with :class:`tf.Tensor`
 
 Kruskal Tensor
 --------------
+:class:`factorizer.base.KTensor` Class is designed for Kruskal tensors.
 
+Refer to [1]_ for more mathematical details.
 
 
 Tucker Tensor
 -------------
 
 
+
+
+References
+----------
+.. [1]
 
 
 
