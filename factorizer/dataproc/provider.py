@@ -12,13 +12,14 @@ class OrdProvider(Provider):
     Data Provider, split data in given order(mode).
     """
 
-    def __init__(self, reader, order, task_id=0, split_cnt=1, sparse=False, shape=None):
+    def __init__(self, reader, order, task_id=0, split_cnt=1, batch_size=1, sparse=False, shape=None):
         self._reader = reader
         self._order = order
         self._task_id = task_id
         self._split_cnt = split_cnt
         self._sparse = sparse
         self.shape = shape
+        self._batch_size = batch_size
 
         # store in dense
         self.data = None
@@ -32,12 +33,11 @@ class OrdProvider(Provider):
 
         self._offset = self._task_id * self._split_size
 
-    def next_batch(self, size):
-        """
+    def __iter__(self):
+        return self
 
-        Parameters
-        ----------
-        size: batch size
+    def __next__(self):
+        """
 
         Yields
         ------
@@ -46,9 +46,9 @@ class OrdProvider(Provider):
         """
         cur_index = 0
         while cur_index < self._split_size:
-            end = min(cur_index + size, self._split_size)
+            end = min(cur_index + self._batch_size, self._split_size)
             yield self.data[cur_index:end]
-            cur_index += size
+            cur_index += self._batch_size
         raise StopIteration()
 
     def _read_sparse(self):
