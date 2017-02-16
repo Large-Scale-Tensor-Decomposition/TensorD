@@ -49,6 +49,18 @@ Kruskal Tensor
 :class:`factorizer.base.KTensor` Class is designed for Kruskal tensors.
 
 Refer to [1]_ for more mathematical details.
+Let's take a look at a 2-way tensor defined as below:
+
+.. math::
+   \mathcal{X} =
+   \left[
+   \begin{matrix}
+   1  & 2  & 3  & 4\\
+   5  & 6  & 7  & 8\\
+   9  & 10 & 11 & 12
+   \end{matrix}
+   \right]
+
 
 
 Tucker Tensor
