@@ -96,6 +96,8 @@ def main(_):
             summary_op = tf.summary.merge_all()
             init_op = tf.global_variables_initializer()
 
+            print(FLAGS.task_index)
+
         sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
                                  init_op=init_op,
                                  summary_op=summary_op,
@@ -107,7 +109,9 @@ def main(_):
                 writer = tf.summary.FileWriter('/code/log', sess.graph)
             old_ts = time.time()
             step = 0
+            print(FLAGS.task_index)
             while step < 5000:
+                # print(FLAGS.task_index)
                 _, loss_v, step = sess.run([train_op, loss_value, global_step],
                                            feed_dict={X: tensor})
                 if step % steps_to_validate == 0:
