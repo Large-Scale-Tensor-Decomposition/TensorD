@@ -3,6 +3,13 @@
 User Guide
 ==========
 
+To start with this guidance, basic modules are needed:
+
+.. code-block:: python
+
+   >>> import tensorflow as tf
+   >>> import numpy as np
+
 .. toctree:: 2
    :numbered: 2
 

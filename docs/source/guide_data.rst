@@ -1,14 +1,17 @@
 Data Types
 ==========
 
-A *tensor* is a multidimensional array. For the sake of different applications, we will introduce 4 different data types to store tensors.
+A *tensor* is a multidimensional array. For the sake of different applications, we will introduce 4 different data
+types to store tensors.
 
 
 Dense Tensor
 ------------
-:class:`factorizer.base.DTensor` Class is used to store general high-order tensors, especially dense tensors. This data type accepts 2 kinds of tensor data, both :class:`tf.Tensor` and :class:`np.ndarray`.
+:class:`factorizer.base.DTensor` Class is used to store general high-order tensors, especially dense tensors.
+This data type accepts 2 kinds of tensor data, both :class:`tf.Tensor` and :class:`np.ndarray`.
 
-Let's take for this example the tensor :math:`\mathcal{X} \in \mathbb{R}^{3 \times 4 \times 2}` defined by its frontal slices:
+Let's take for this example the tensor :math:`\mathcal{X} \in \mathbb{R}^{3 \times 4 \times 2}` defined by its
+frontal slices:
 
 .. math::
    X_1 =
@@ -30,7 +33,6 @@ Creating :class:`DTensor` with :class:`np.ndarray`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: python
 
-   >>> import numpy as np
    >>> from factorizer.base.type import DTensor
    >>> tensor = np.array([[[1, 13], [4, 16], [7, 19], [10, 22]], [[2, 14], [5, 17], [8, 20], [11, 23]], [[3, 15], [6, 18], [9, 21], [12, 24]]])
    >>> dense_tensor = DTensor(tensor)
@@ -39,10 +41,10 @@ Creating :class:`DTensor` with :class:`tf.Tensor`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: python
 
-   >>> import tensorflow as tf
    >>> from factorizer.base.type import DTensor
    >>> tensor = tf.constant([[[1, 13], [4, 16], [7, 19], [10, 22]], [[2, 14], [5, 17], [8, 20], [11, 23]], [[3, 15], [6, 18], [9, 21], [12, 24]]])
    >>> dense_tensor = DTensor(tensor)
+
 
 Kruskal Tensor
 --------------
@@ -63,7 +65,8 @@ Let's take a look at a 2-way tensor defined as below:
 
    >>> X = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])    # create the 2-way tensor
 
-This CP decomposition can factorize :math:`\mathcal{X}` into 2 component rank-one tensors, and the CP model can be expressed as
+This CP decomposition can factorize :math:`\mathcal{X}` into 2 component rank-one tensors, and the CP model can be
+expressed as
 
 .. math::
    \mathcal{X} \approx
@@ -71,24 +74,66 @@ This CP decomposition can factorize :math:`\mathcal{X}` into 2 component rank-on
    \equiv
    \sum\limits_{r=1}^\mathit{R} \mathbf{a}_r \circ \mathbf{b}_r.
 
-If we assume the columns of :math:`\mathbf{A}` and :math:`\mathbf{B}` are normalized to length one with the weights absorbed
-into the vector :math:`\boldsymbol{\lambda}  \in \mathbb{R}^\mathit{R}` so that
+If we assume the columns of :math:`\mathbf{A}` and :math:`\mathbf{B}` are normalized to length one with the weights
+absorbed into the vector :math:`\boldsymbol{\lambda}  \in \mathbb{R}^\mathit{R}` so that
 
 .. math::
    \mathcal{X} \approx
    [\![ \boldsymbol{\lambda};\mathbf{A}, \mathbf{B} ]\!]
    \equiv
    \sum\limits_{r=1}^\mathit{R} \lambda_r \: \mathbf{a}_r \circ \mathbf{b}_r.
+where :math:`\mathbf{A} = [ \mathbf{a}_1, \cdots, \mathbf{a}_\mathit{R} ], \, \mathbf{B} = [ \mathbf{b}_1, \cdots, \mathbf{b}_\mathit{R} ]`.
 
-Here we use singular value decomposition (SVD) to obtain the factor matrices (CP decomposition actually can be considered
-higher-order generation of matrix SVD) :
+Here we use singular value decomposition (SVD) to obtain the factor matrices (CP decomposition actually can be
+considered higher-order generation of matrix SVD):
 
 .. code-block:: python
 
+   >>> from factorizer.base.type import KTensor
    >>> u,s,v = np.linalg.svd(X, full_matrices=False)    # perform matrix SVD on tensor X
 
+Then we use 2 factor matrices and :math:`\boldsymbol{\lambda}` to create a :class:`factorizer.base.KTensor` object:
 
+.. code-block:: python
 
+   >>> A = u
+   >>> B = v.T
+   >>> kruskal_tensor = KTensor([A, B], s)    # create Kruscal tensor with factor matrices and vector
+
+Notice that the first argument ``factors`` is a list of :class:`tf.Tensor` objects or :class:`np.ndarray` objects
+representing factor matrices, and the order of these matrices must be fixed.
+
+If you want to get the factor matrices with :class:`factorizer.base.KTensor` object:
+
+.. code-block:: python
+
+   >>> kruskal_tensor.U
+   [<tf.Tensor 'Const:0' shape=(3, 3) dtype=float64>,
+    <tf.Tensor 'Const_1:0' shape=(4, 3) dtype=float64>]
+
+If you want to get the vector :math:`\boldsymbol{\lambda}` with :class:`factorizer.base.KTensor` object:
+
+.. code-block:: python
+
+   >>> kruskal_tensor.lambdas
+   <tf.Tensor 'Reshape:0' shape=(3, 1) dtype=float64>
+
+If you want to get the original tensor with :class:`factorizer.base.KTensor` object:
+
+.. code-block:: python
+
+   >>> original_tensor = tf.Session().run(kruskal_tensor.extract())
+   >>> original_tensor
+   array([[  1.,   2.,   3.,   4.],
+          [  5.,   6.,   7.,   8.],
+          [  9.,  10.,  11.,  12.]])
+
+To make sure ``original_tensor`` is equal to the tensor :math:`\mathcal{X}`, you just need to run:
+
+.. code-block:: python
+
+   >>> np.testing.assert_array_almost_equal(X, original_tensor)
+   # no Traceback means these two np.ndarray objects are exactly the same
 Refer to [1]_ for more mathematical details.
 
 Tucker Tensor
