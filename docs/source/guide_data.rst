@@ -63,9 +63,9 @@ Let's take a look at a 2-way tensor defined as below:
 
 .. code-block:: python
 
-   >>> X = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])    # create the 2-way tensor
+   >>> X = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])    # the shape of tensor X is (3,4)
 
-This CP decomposition can factorize :math:`\mathcal{X}` into 2 component rank-one tensors, and the CP model can be
+The CP decomposition can factorize :math:`\mathcal{X}` into 2 component rank-one tensors, and the CP model can be
 expressed as
 
 .. math::
@@ -81,7 +81,7 @@ absorbed into the vector :math:`\boldsymbol{\lambda}  \in \mathbb{R}^\mathit{R}`
    \mathcal{X} \approx
    [\![ \boldsymbol{\lambda};\mathbf{A}, \mathbf{B} ]\!]
    \equiv
-   \sum\limits_{r=1}^\mathit{R} \lambda_r \: \mathbf{a}_r \circ \mathbf{b}_r.
+   \sum\limits_{r=1}^\mathit{R} \lambda_r \: \mathbf{a}_r \circ \mathbf{b}_r
 where :math:`\mathbf{A} = [ \mathbf{a}_1, \cdots, \mathbf{a}_\mathit{R} ], \, \mathbf{B} = [ \mathbf{b}_1, \cdots, \mathbf{b}_\mathit{R} ]`.
 
 Here we use singular value decomposition (SVD) to obtain the factor matrices (CP decomposition actually can be
@@ -90,15 +90,15 @@ considered higher-order generation of matrix SVD):
 .. code-block:: python
 
    >>> from factorizer.base.type import KTensor
-   >>> u,s,v = np.linalg.svd(X, full_matrices=False)    # perform matrix SVD on tensor X
+   >>> u,s,v = np.linalg.svd(X, full_matrices=False)    # X is equal to np.dot(u, np.dot(np.diag(s), v)), that is X = u * diag(s) * v
 
 Then we use 2 factor matrices and :math:`\boldsymbol{\lambda}` to create a :class:`factorizer.base.KTensor` object:
 
 .. code-block:: python
 
-   >>> A = u
-   >>> B = v.T
-   >>> kruskal_tensor = KTensor([A, B], s)    # create Kruscal tensor with factor matrices and vector
+   >>> A = u    # the shape of A is (3,3)
+   >>> B = v.T    # the shape of B is (4,3)
+   >>> kruskal_tensor = KTensor([A, B], s)    # the shape of s is (3,)
 
 Notice that the first argument ``factors`` is a list of :class:`tf.Tensor` objects or :class:`np.ndarray` objects
 representing factor matrices, and the order of these matrices must be fixed.
@@ -134,6 +134,7 @@ To make sure ``original_tensor`` is equal to the tensor :math:`\mathcal{X}`, you
 
    >>> np.testing.assert_array_almost_equal(X, original_tensor)
    # no Traceback means these two np.ndarray objects are exactly the same
+
 Refer to [1]_ for more mathematical details.
 
 Tucker Tensor
@@ -144,7 +145,8 @@ Tucker Tensor
 
 References
 ----------
-.. [1]
+.. [1] Tamara G. Kolda and Brett W. Bader, "Tensor Decompositions and Applications",
+       SIAM REVIEW, vol. 51, n. 3, pp. 455-500, 2009.
 
 
 
