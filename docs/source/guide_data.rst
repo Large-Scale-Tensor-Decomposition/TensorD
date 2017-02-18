@@ -10,7 +10,7 @@ Dense Tensor
 :class:`factorizer.base.DTensor` Class is used to store general high-order tensors, especially dense tensors.
 This data type accepts 2 kinds of tensor data, both :class:`tf.Tensor` and :class:`np.ndarray`.
 
-Let's take for this example the tensor :math:`\mathcal{X} \in \mathbb{R}^{3 \times 4 \times 2}` defined by its
+Let's take for this example the tensor :math:`\mathcal{X} \in \mathbb{R}^\mathit{3 \times 4 \times 2}` defined by its
 frontal slices:
 
 .. math::
@@ -118,7 +118,8 @@ If you want to get the vector :math:`\boldsymbol{\lambda}` with :class:`factoriz
    >>> kruskal_tensor.lambdas
    <tf.Tensor 'Reshape:0' shape=(3, 1) dtype=float64>
 
-If you want to get the original tensor with :class:`factorizer.base.KTensor` object:
+We also offer class method :func:`factorizer.base.KTensor.extract()` to retrieve original tensor
+with :class:`factorizer.base.KTensor` object:
 
 .. code-block:: python
 
@@ -135,7 +136,32 @@ To make sure ``original_tensor`` is equal to the tensor :math:`\mathcal{X}`, you
    >>> np.testing.assert_array_almost_equal(X, original_tensor)
    # no Traceback means these two np.ndarray objects are exactly the same
 
-Refer to [1]_ for more mathematical details.
+
+
+Following Kolda [1]_, for a general *N* th-order tensor, :math:`\mathcal{X} \in \mathbb{R}^{\mathit{I}_1 \times \mathit{I}_2 \times \cdots \times \mathit{I}_N}`,
+the CP decomposition is
+
+.. math::
+   \mathcal{X} \approx
+   [\![ \boldsymbol{\lambda};\mathbf{A}^{(1)}, \mathbf{A}^{(2)}, \dots, \mathbf{A}^{(N)} ]\!]
+   \equiv
+   \sum\limits_{r=1}^\mathit{R} \lambda_r \: \mathbf{a}_r^{(1)} \circ \mathbf{a}_r^{(2)} \circ \cdots \circ \mathbf{a}_r^{(N)}
+
+where :math:`\boldsymbol{\lambda}  \in \mathbb{R}^\mathit{R}` and :math:`\mathbf{A}^{(n)} \in \mathbb{R}^{\mathit{I}_1 \times \mathit{R}}`
+for :math:`n = 1, \dots, N`.
+
+The following code can be used to create a *N* th-order Kruskal tensor object:
+
+.. code-block:: python
+
+   >>> lambdas = tf.constant([l1, l2, ..., lR],shape=(n,1))
+   >>> U1 = np.random.rand(I1, R)
+   >>> U2 = np.random.rand(I2, R)
+   ...
+   >>> UN = np.random.rand(IN, R)
+   >>> factors = [U1, U2, ..., UN]
+   >>> N_kruskal_tensor = KTensor(factors, lambdas)
+
 
 Tucker Tensor
 -------------
