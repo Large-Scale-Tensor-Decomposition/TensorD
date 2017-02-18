@@ -120,7 +120,7 @@ class KTensor(object):
     Kruskal Tensor
 
     .. math::
-        \\mathbf{\\mathcal{X}} = \\sum_r \\sigma_r a_r \\circ b_r \\circ c_r
+        \\mathcal{X} = \\sum_r \\sigma_r a_r \\circ b_r \\circ c_r
 
     """
 
@@ -155,7 +155,7 @@ class KTensor(object):
     def extract(self):
         """
         .. math::
-            \\mathbf{\\mathcal{X}} = \\sum_r \\sigma_r a_r \\circ b_r \\circ c_r = (A \\odot B \\odot C) \\times \\Sigma
+            \\mathcal{X} = \\sum_r \\sigma_r a_r \\circ b_r \\circ c_r = (A \\odot B \\odot C) \\times \\Sigma
 
         Returns
         -------
@@ -172,7 +172,7 @@ class TTensor(object):
     Tucker Tensor
 
     .. math::
-        \\mathcal{X} =  \\mathcal{G} \\times_1 \\mathbf{A} \\times_2 \\mathbf{B} \\times_3 \\mathbf{C}
+        \\mathcal{X} =  \\mathcal{G} \\times_1 A \\times_2 B \\times_3 C
 
     """
 
