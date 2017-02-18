@@ -48,7 +48,7 @@ Creating :class:`DTensor` with :class:`tf.Tensor`
 
 Kruskal Tensor
 --------------
-:class:`factorizer.base.KTensor` Class is designed for Kruskal tensors.
+:class:`factorizer.base.KTensor` Class is designed for Kruskal tensors in CP model.
 Let's take a look at a 2-way tensor defined as below:
 
 .. math::
@@ -103,6 +103,9 @@ Then we use 2 factor matrices and :math:`\boldsymbol{\lambda}` to create a :clas
 Notice that the first argument ``factors`` is a list of :class:`tf.Tensor` objects or :class:`np.ndarray` objects
 representing factor matrices, and the order of these matrices must be fixed.
 
+.. important::
+   Elements in ``factors`` should either all be :class:`tf.Tensor` objects, or all be :class:`np.ndarray` objects.
+
 If you want to get the factor matrices with :class:`factorizer.base.KTensor` object:
 
 .. code-block:: python
@@ -118,7 +121,7 @@ If you want to get the vector :math:`\boldsymbol{\lambda}` with :class:`factoriz
    >>> kruskal_tensor.lambdas
    <tf.Tensor 'Reshape:0' shape=(3, 1) dtype=float64>
 
-We also offer class method :func:`factorizer.base.KTensor.extract()` to retrieve original tensor
+We also offer class method :func:`factorizer.base.KTensor.extract` to retrieve original tensor
 with :class:`factorizer.base.KTensor` object:
 
 .. code-block:: python
@@ -154,20 +157,41 @@ The following code can be used to create a *N* th-order Kruskal tensor object:
 
 .. code-block:: python
 
-   >>> lambdas = tf.constant([l1, l2, ..., lR],shape=(n,1))
-   >>> U1 = np.random.rand(I1, R)
-   >>> U2 = np.random.rand(I2, R)
+   >>> lambdas = tf.constant([l1, l2, ..., lR],shape=(R,1))    # lambdas must be a column vector
+   >>> A1 = np.random.rand(I1, R)
+   >>> A2 = np.random.rand(I2, R)
    ...
-   >>> UN = np.random.rand(IN, R)
-   >>> factors = [U1, U2, ..., UN]
+   >>> AN = np.random.rand(IN, R)
+   >>> factors = [A1, A2, ..., AN]
    >>> N_kruskal_tensor = KTensor(factors, lambdas)
 
 
 Tucker Tensor
 -------------
+:class:`factorizer.base.TTensor` Class is designed for Tucker tensors in Tucker decomposition.
 
+Given an *N* -way tensor :math:`\mathcal{X} \in \mathbb{R}^{\mathit{I}_1 \times \mathit{I}_2 \times \cdots \times \mathit{I}_N}`,
+the Tucker model can be expressed as
 
+.. math::
+   \mathcal{X} = \mathcal{G} \times_1 \mathbf{A}^{(1)} \times_2 \mathbf{A}^{(2)} \cdots \times_N \mathbf{A}^{(N)}
+               = [\![  \mathcal{G}; \mathbf{A}^{(1)}, \mathbf{A}^{(2)} , \dots \mathbf{A}^{(N)} ]\!],
 
+where :math:`\mathcal{G} \in \mathbb{R}^{\mathit{R}_1 \times \mathit{R}_2 \times \cdots \times \mathit{R}_N}`, and
+:math:`\mathbf{A}^{(n)} \in \mathbb{R}^{\mathit{I}_n \times \mathit{R}_n}`.
+
+To create a such Tucker tensor, you just need to run:
+
+.. code-block:: python
+
+   >>> from factorizer.base.type import TTensor
+   >>> G = tf.constant(np.random.rand(R1, R2, ..., RN))
+   >>> A1 = np.random.rand(I1, R1)
+   >>> A2 = np.random.rand(I2, R2)
+   ...
+   >>> AN = np.random.rand(IN, RN)
+   >>> factors = [A1, A2, ..., AN]
+   >>> tucker_tensor = TTensor(G, factors)
 
 References
 ----------
