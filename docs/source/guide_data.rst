@@ -103,9 +103,6 @@ Then we use 2 factor matrices and :math:`\boldsymbol{\lambda}` to create a :clas
 Notice that the first argument ``factors`` is a list of :class:`tf.Tensor` objects or :class:`np.ndarray` objects
 representing factor matrices, and the order of these matrices must be fixed.
 
-.. important::
-   Elements in ``factors`` should either all be :class:`tf.Tensor` objects, or all be :class:`np.ndarray` objects.
-
 If you want to get the factor matrices with :class:`factorizer.base.KTensor` object:
 
 .. code-block:: python
@@ -180,7 +177,7 @@ the Tucker model can be expressed as
 where :math:`\mathcal{G} \in \mathbb{R}^{\mathit{R}_1 \times \mathit{R}_2 \times \cdots \times \mathit{R}_N}`, and
 :math:`\mathbf{A}^{(n)} \in \mathbb{R}^{\mathit{I}_n \times \mathit{R}_n}`.
 
-To create a such Tucker tensor, you just need to run:
+To create the corresponding Tucker tensor, you just need to run:
 
 .. code-block:: python
 
@@ -192,6 +189,40 @@ To create a such Tucker tensor, you just need to run:
    >>> AN = np.random.rand(IN, RN)
    >>> factors = [A1, A2, ..., AN]
    >>> tucker_tensor = TTensor(G, factors)
+
+.. important::
+   Elements in ``factors`` should either all be :class:`tf.Tensor` objects, or all be :class:`np.ndarray` objects.
+
+If you want to get core tensor :math:`\mathcal{G}` given a :class:`factorizer.base.TTensor` object:
+
+.. code-block:: python
+
+   >>> tucker_tensor.g
+   # <tf.Tensor 'Const_1:0' shape=(R1, R2, ..., RN) dtype=float64>
+
+If you want to get factor matrices given a :class:`factorizer.base.TTensor` object:
+
+.. code-block:: python
+
+   >>> tucker_tensor.U
+   #[<tf.Tensor 'Const_2:0' shape=(I1, R1) dtype=float64>,
+   # <tf.Tensor 'Const_3:0' shape=(I2, R2) dtype=float64>,
+   # ...
+   # <tf.Tensor 'Const_{N-1}:0' shape=(IN, RN) dtype=float64>]
+
+If you want to know the order of the tensor:
+
+.. code-block:: python
+
+   >>> tucker_tensor.order
+   # N
+
+To retrieve original tensor, you just need to run:
+
+.. code-block:: python
+
+    >>> tf.Session().run(tucker_tensor.extract())
+    # an np.ndarray with shape (I1, I2, ..., IN)
 
 References
 ----------
