@@ -191,16 +191,16 @@ To create the corresponding Tucker tensor, you just need to run:
    >>> tucker_tensor = TTensor(G, factors)
 
 .. important::
-   Elements in ``factors`` should either all be :class:`tf.Tensor` objects, or all be :class:`np.ndarray` objects.
+   All elements in ``factors`` as a whole should be either :class:`tf.Tensor` objects or :class:`np.ndarray` objects.
 
-If you want to get core tensor :math:`\mathcal{G}` given a :class:`factorizer.base.TTensor` object:
+To get core tensor :math:`\mathcal{G}` given a :class:`factorizer.base.TTensor` object:
 
 .. code-block:: python
 
    >>> tucker_tensor.g
    # <tf.Tensor 'Const_1:0' shape=(R1, R2, ..., RN) dtype=float64>
 
-If you want to get factor matrices given a :class:`factorizer.base.TTensor` object:
+To get factor matrices given a :class:`factorizer.base.TTensor` object:
 
 .. code-block:: python
 
@@ -210,7 +210,7 @@ If you want to get factor matrices given a :class:`factorizer.base.TTensor` obje
    # ...
    # <tf.Tensor 'Const_{N-1}:0' shape=(IN, RN) dtype=float64>]
 
-If you want to know the order of the tensor:
+To get the order of the tensor:
 
 .. code-block:: python
 
