@@ -54,7 +54,7 @@ def cp(sess, tensor, rank, steps=100, tol=10e-4, ignore_tol=True, get_lambdas=Fa
     if get_rmse:
         res = rmse(tensor - P.extract())
         tf.summary.histogram('loss', res)
-        op = tf.merge_all_summaries()
+        op = tf.summary.merge_all()
         res = sess.run(res)
 
         tf.summary.FileWriter('/tmp/cp', sess.graph).add_summary(sess.run(op))
@@ -94,7 +94,7 @@ def fake_cp(sess, tensor, rank, steps=100):
 
     e_step = tf.group(*as_ops)
 
-    merge_op = tf.merge_all_summaries()
+    merge_op = tf.summary.merge_all()
     sum_writer = tf.summary.FileWriter('/tmp/fake_cp', sess.graph)
 
     init = tf.global_variables_initializer()

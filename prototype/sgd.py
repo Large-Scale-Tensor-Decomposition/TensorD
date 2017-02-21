@@ -1,4 +1,6 @@
 # Created by ay27 at 17/2/9
+import pickle
+
 import tensorflow as tf
 import numpy as np
 import time
@@ -11,7 +13,7 @@ python train.py --ps_hosts=172.17.0.3:2222 --worker_hosts=172.17.0.4:2223 --job_
 
 # Define parameters
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_float('learning_rate', 0.003, 'Initial learning rate.')
+tf.app.flags.DEFINE_float('learning_rate', 0.004, 'Initial learning rate.')
 tf.app.flags.DEFINE_integer('steps_to_validate', 100,
                             'Steps to validate and print loss')
 
@@ -65,9 +67,10 @@ def main(_):
     cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
     server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
 
-    I = 10
-    J = 20
-    K = 30
+    I = 100
+    J = 100
+    K = 100
+    STEP = 1000
     tensor = np.random.rand(I, J, K)
     R = 20
 
@@ -104,20 +107,21 @@ def main(_):
                                  save_model_secs=60)
         with sv.managed_session(server.target) as sess:
             if FLAGS.task_index == 0:
-                writer = tf.summary.FileWriter('/code/log', sess.graph)
+                summary = []
             old_ts = time.time()
             step = 0
-            while step < 5000:
+            while step < STEP:
                 _, loss_v, step = sess.run([train_op, loss_value, global_step],
                                            feed_dict={X: tensor})
-                if step % steps_to_validate == 0:
-                    print('step %d, loss=%f' % (step, loss_v))
-                    if FLAGS.task_index == 0:
-                        sum_str = sess.run(summary_op, feed_dict={X: tensor})
-                        writer.add_summary(sum_str)
+                if FLAGS.task_index == 0:
+                    summary.append([time.time() - old_ts, loss_v])
+                # if step % steps_to_validate == 0:
+                #     print('step %d, loss=%f' % (step, loss_v))
 
-            print('task %d, cost time : %f' % (FLAGS.task_index, time.time() - old_ts))
             print('cost time : %f' % (time.time() - old_ts))
+            if FLAGS.task_index == 0:
+                with open('/home/ay27/tf/prototype/log/m_%d%d%d' % (I, J, K), 'wb') as file:
+                    pickle.dump(summary, file)
 
         sv.stop()
 
