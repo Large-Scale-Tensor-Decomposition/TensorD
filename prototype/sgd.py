@@ -99,6 +99,8 @@ def main(_):
             summary_op = tf.summary.merge_all()
             init_op = tf.global_variables_initializer()
 
+            print(FLAGS.task_index)
+
         sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
                                  init_op=init_op,
                                  summary_op=summary_op,
