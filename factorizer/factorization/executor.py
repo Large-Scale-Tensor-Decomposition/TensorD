@@ -36,7 +36,7 @@ class Executor(object):
         if self.role == 'ps':
             self.server.join()
         else:
-            self.strategy.prepare()
+            self.strategy.prepare(self.cluster)
             with self.strategy.supervisor.managed_session(self.server) as sess:
                 for step in range(self.steps):
                     for batch in self.provider:

@@ -37,3 +37,4 @@ class TensorReader(object):
             items = list(self.fmt.parse(line))
             if items:
                 yield items
+        yield StopIteration
