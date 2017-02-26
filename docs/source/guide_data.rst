@@ -29,16 +29,17 @@ frontal slices:
                          \end{matrix}
                          \right]
 
-Creating :class:`DTensor` with :class:`np.ndarray`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To create :class:`DTensor` with :class:`np.ndarray`:
+
 .. code-block:: python
 
    >>> from factorizer.base.type import DTensor
    >>> tensor = np.array([[[1, 13], [4, 16], [7, 19], [10, 22]], [[2, 14], [5, 17], [8, 20], [11, 23]], [[3, 15], [6, 18], [9, 21], [12, 24]]])
    >>> dense_tensor = DTensor(tensor)
 
-Creating :class:`DTensor` with :class:`tf.Tensor`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To create :class:`DTensor` with :class:`tf.Tensor`:
+
 .. code-block:: python
 
    >>> from factorizer.base.type import DTensor
