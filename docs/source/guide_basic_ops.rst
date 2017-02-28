@@ -260,6 +260,8 @@ Basic Operations with Tensors
 
 Addition & Subtraction
 ^^^^^^^^^^^^^^^^^^^^^^
+
+
 DTensor:
 
 tf.Tensor:
@@ -269,8 +271,61 @@ tf.Tensor:
 
 Inner Products
 ^^^^^^^^^^^^^^
-tf.Tensor:
+The *inner product* of two same-sized tensor :math:`\mathcal{X}, \mathcal{Y} \in \mathbb{R}^{\mathit{I}_1 \times \mathit{I}_2 \times \cdots \times \mathit{I}_N}`
+is the sum of products of their entries, which can be denoted as :math:`\langle \mathcal{X} , \mathcal{Y} \rangle`.
 
+Given tensor :math:`\mathcal{X}, \mathcal{Y} \in \mathbb{R}^\mathit{3 \times 3 \times 2}` defined by their
+frontal slices:
+
+.. math::
+   X_1 =
+   \left[
+   \begin{matrix}
+   1  & 4  & 7\\
+   2  & 5  & 8\\
+   3  & 6  & 9
+   \end{matrix}
+   \right] , \quad X_2 = \left[
+                         \begin{matrix}
+   10 & 13 & 16\\
+   11 & 14 & 17\\
+   12 & 15 & 18
+                         \end{matrix}
+                         \right]
+
+.. math::
+   Y_1 =
+   \left[
+   \begin{matrix}
+   1  & 1  & 1\\
+   1  & 1  & 1\\
+   1  & 1  & 1
+   \end{matrix}
+   \right] , \quad Y_2 = \left[
+                         \begin{matrix}
+   1 & 1 & 1\\
+   1 & 1 & 1\\
+   1 & 1 & 1
+                         \end{matrix}
+                         \right]
+
+.. code-block:: python
+
+   >>> X = tf.constant(np.array([[[1,10],[4,13],[7,16]], [[2,11],[5,14],[8,17]], [[3,12],[6,15],[9,18]]]))    # the shape of X is (3, 3, 2)
+   >>> Y = tf.constant(np.array([[[1,1],[1,1],[1,1]], [[1,1],[1,1],[1,1]], [[1,1],[1,1],[1,1]]]))    # the shape of Y is (3, 3, 2)
+
+To calculate :math:`\langle \mathcal{X} , \mathcal{Y} \rangle`:
+
+.. code-block:: python
+
+   >>> tf.Session().run(ops.inner(X, Y))
+   171
+
+
+
+.. warning::
+   Notice that :func:`ops.inner` function does not support implicit type-casting, so be careful when using tensors
+   of different ``dtype`` !
 
 
 Vectorization & Reconstruction
@@ -288,7 +343,7 @@ tf.Tensor:
 Unfolding & Folding
 ^^^^^^^^^^^^^^^^^^^
 *Unfolding*, also known as *matricization*, is the process of reordering the elements of an *N* -way array into a matrix.
-Here, we call operation **mode-n matricize** as **unfold** in default.
+Here we call operation **mode-n matricization** as **unfolding** in default.
 
 DTensor:
 
