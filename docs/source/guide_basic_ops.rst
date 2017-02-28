@@ -72,13 +72,104 @@ Using :class:`tf.Tensor` to store matrices, :math:`\, \mathbf{A} \ast \mathbf{B}
           [ 4, 15, 32],
           [ 6, 18, 36]], dtype=int32)
 
+:func:`hadamard` also supports the Hadamard products of more than two matrices:
 
+.. code-block:: python
+
+   >>> C = tf.constant(np.random.rand(3,3))
+   >>> D = tf.constant(np.random.rand(3,3))
+   >>> tf.Session().run(ops.hadamard([A, B, C, D], skip_matrices_index=[1]))
+       # the result is equal to tf.Session().run(ops.hadamard([A, C, D]))
 
 Kronecker Products
 ^^^^^^^^^^^^^^^^^^
-DTensor:
+The *Kronecker product* of matrices :math:`\, \mathbf{A} \in \mathbb{R}^{\mathit{I} \times \mathit{J}}`
+and :math:`\mathbf{B} \in \mathbb{R}^{\mathit{K} \times \mathit{L}}` is denoted by :math:`\mathbf{A} \otimes \mathbf{B}`.
+The result is a matrix of size :math:`(\mathit{IK}) \times (\mathit{JL})`.
 
-tf.Tensor:
+For example, matrices :math:`\mathbf{A}` and :math:`\mathbf{B}` is defined as
+
+.. math::
+   \mathbf{A} =
+   \left[
+   \begin{matrix}
+   1   & 2   & 3   & 4\\
+   5   & 6   & 7   & 8\\
+   9   & 10  & 11  & 12
+   \end{matrix}
+   \right] , \quad \mathbf{B} = \left[
+                                \begin{matrix}
+   1 & 1 & 1 & 1 & 1\\
+   2 & 2 & 2 & 2 & 2
+                                \end{matrix}
+                                \right]
+To perform :math:`\mathbf{A} \otimes \mathbf{B}` with :class:`tf.Tensor` objects:
+
+.. code-block:: python
+
+   >>> A = tf.constant([[1,2,3,4],[5,6,7,8],[9,10,11,12]])    # the shape of A is (3, 4)
+   >>> B = tf.constant([[1,1,1,1,1],[2,2,2,2,2]])    # the shape of B is (2, 5)
+   >>> tf.Session().run(ops.kron([A, B]))
+   # the shape of result is (6, 20)
+   array([[ 1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4],
+          [ 2,  2,  2,  2,  2,  4,  4,  4,  4,  4,  6,  6,  6,  6,  6,  8,  8,  8,  8,  8],
+          [ 5,  5,  5,  5,  5,  6,  6,  6,  6,  6,  7,  7,  7,  7,  7,  8,  8,  8,  8,  8],
+          [10, 10, 10, 10, 10, 12, 12, 12, 12, 12, 14, 14, 14, 14, 14, 16, 16, 16, 16, 16],
+          [ 9,  9,  9,  9,  9, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12],
+          [18, 18, 18, 18, 18, 20, 20, 20, 20, 20, 22, 22, 22, 22, 22, 24, 24, 24, 24, 24]], dtype=int32)
+
+To perform :math:`\mathbf{B} \otimes \mathbf{A}`:
+
+.. code-block:: python
+
+   >>> tf.Session().run(ops.kron([A, B], reverse=True))
+   # the shape of result is (6, 20)
+   array([[ 1,  2,  3,  4,  1,  2,  3,  4,  1,  2,  3,  4,  1,  2,  3,  4,  1,  2,  3,  4],
+          [ 5,  6,  7,  8,  5,  6,  7,  8,  5,  6,  7,  8,  5,  6,  7,  8,  5,  6,  7,  8],
+          [ 9, 10, 11, 12,  9, 10, 11, 12,  9, 10, 11, 12,  9, 10, 11, 12,  9, 10, 11, 12],
+          [ 2,  4,  6,  8,  2,  4,  6,  8,  2,  4,  6,  8,  2,  4,  6,  8,  2,  4,  6,  8],
+          [10, 12, 14, 16, 10, 12, 14, 16, 10, 12, 14, 16, 10, 12, 14, 16, 10, 12, 14, 16],
+          [18, 20, 22, 24, 18, 20, 22, 24, 18, 20, 22, 24, 18, 20, 22, 24, 18, 20, 22, 24]], dtype=int32)
+
+It might seem useless when using ``reverse=True`` to calculate the Kronecker product of two matrices, considering ``ops.kron([B, A])``
+also do the same work, but it is considerable efficient to perform :math:`X_1 \otimes X_2 \otimes \cdots \otimes X_N` using ``reverse=True`` when
+given a list of :class:`tf.Tensor` objects ``matrices = [X_1, X_2, ..., X_N]``:
+
+.. code-block:: python
+
+   >>> tf.Session().run(ops.kron(matrices, reverse=True))
+
+If the matrices are given in :class:`DTensor` form:
+
+.. code-block:: python
+
+   >>> A = DTensor(tf.constant([[1,2,3,4],[5,6,7,8],[9,10,11,12]]))
+   >>> dtensor_B = DTensor(tf.constant([[1,1,1,1,1],[2,2,2,2,2]]))
+   >>> tf_B = tf.constant([[1,1,1,1,1],[2,2,2,2,2]])
+
+Then :math:`\mathbf{A} \otimes \mathbf{B}` can be performed as:
+
+.. code-block:: python
+
+   >>> tf.Session().run(A.kron(dtensor_B).T)    # A.kron(dtensor_B) returns a DTensor
+   array([[ 1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4],
+          [ 2,  2,  2,  2,  2,  4,  4,  4,  4,  4,  6,  6,  6,  6,  6,  8,  8,  8,  8,  8],
+          [ 5,  5,  5,  5,  5,  6,  6,  6,  6,  6,  7,  7,  7,  7,  7,  8,  8,  8,  8,  8],
+          [10, 10, 10, 10, 10, 12, 12, 12, 12, 12, 14, 14, 14, 14, 14, 16, 16, 16, 16, 16],
+          [ 9,  9,  9,  9,  9, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12],
+          [18, 18, 18, 18, 18, 20, 20, 20, 20, 20, 22, 22, 22, 22, 22, 24, 24, 24, 24, 24]], dtype=int32)
+
+or
+
+.. code-block:: python
+
+   >>> tf.Session().run(A.kron(tf_B).T)    # A.kron(tf_B) returns a DTensor
+   array([[ 1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4],
+          [ 2,  2,  2,  2,  2,  4,  4,  4,  4,  4,  6,  6,  6,  6,  6,  8,  8,  8,  8,  8],
+          [ 5,  5,  5,  5,  5,  6,  6,  6,  6,  6,  7,  7,  7,  7,  7,  8,  8,  8,  8,  8],
+          [10, 10, 10, 10, 10, 12, 12, 12, 12, 12, 14, 14, 14, 14, 14, 16, 16, 16, 16, 16],
+          [ 9,  9,  9,  9,  9, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12],
+          [18, 18, 18, 18, 18, 20, 20, 20, 20, 20, 22, 22, 22, 22, 22, 24, 24, 24, 24, 24]], dtype=int32)
 
 
 
