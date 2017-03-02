@@ -360,12 +360,73 @@ To reconstruct the vector:
            [ 9, 18]]])
 
 
-
-
 Unfolding & Folding
 ^^^^^^^^^^^^^^^^^^^
 *Unfolding*, also known as *matricization*, is the process of reordering the elements of an *N* -way array into a matrix.
 Here we call operation **mode-n matricization** as **unfolding** in default.
+
+Let the frontal slices of :math:`\mathcal{X} \in \mathbb{R}^{\mathit{3} \times \mathit{4} \times \mathit{2}}` be
+
+.. math::
+   X_1 =
+   \left[
+   \begin{matrix}
+   1  & 4  & 7  & 10\\
+   2  & 5  & 8  & 11\\
+   3  & 6  & 9  & 12
+   \end{matrix}
+   \right] , \quad X_2 = \left[
+                         \begin{matrix}
+   13 & 16 & 19 & 22\\
+   14 & 17 & 20 & 23\\
+   15 & 18 & 21 & 24
+                         \end{matrix}
+                         \right]
+
+.. code-block:: python
+
+   >>> X = tf.constant([[[1, 13], [4, 16], [7, 19], [10, 22]], [[2, 14], [5, 17], [8, 20], [11, 23]], [[3, 15], [6, 18], [9, 21], [12, 24]]])    # the shape of X is (3, 4, 2)
+
+To get the mode-1 matricization of tensor :math:`\mathcal{X}`:
+
+.. code-block:: python
+
+   >>> tf.Session().run(ops.unfold(X, 0))
+   array([[ 1,  4,  7, 10, 13, 16, 19, 22],
+          [ 2,  5,  8, 11, 14, 17, 20, 23],
+          [ 3,  6,  9, 12, 15, 18, 21, 24]], dtype=int32)
+
+To get the mode-2 matricization of tensor :math:`\mathcal{X}`:
+
+.. code-block:: python
+
+   >>> tf.Session().run(ops.unfold(X, 1))
+   array([[ 1,  2,  3, 13, 14, 15],
+          [ 4,  5,  6, 16, 17, 18],
+          [ 7,  8,  9, 19, 20, 21],
+          [10, 11, 12, 22, 23, 24]], dtype=int32)
+
+To get the mode-3 matricization of tensor :math:`\mathcal{X}`:
+
+.. code-block:: python
+
+   >>> tf.Session().run(ops.unfold(X, 2))
+   array([[ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12],
+          [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]], dtype=int32)
+
+For a :class:`DTensor` object, class method :func:`DTensor.unfold` is available:
+
+.. code-block:: python
+
+   >>> X = DTensor(tf.constant([[[1, 13], [4, 16], [7, 19], [10, 22]], [[2, 14], [5, 17], [8, 20], [11, 23]], [[3, 15], [6, 18], [9, 21], [12, 24]]]))
+   >>> tf.Session().run(X.unfold(mode=0).T)    # mode-1 matricization, X.unfold(mode=0) return a DTensor
+   array([[ 1,  4,  7, 10, 13, 16, 19, 22],
+          [ 2,  5,  8, 11, 14, 17, 20, 23],
+          [ 3,  6,  9, 12, 15, 18, 21, 24]], dtype=int32)
+   
+
+
+
 
 DTensor:
 
