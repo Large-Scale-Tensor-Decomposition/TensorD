@@ -10,6 +10,7 @@ class TensorReader(object):
     file: opening file with given file_path
 
     """
+
     def __init__(self, file_path, fmt='{:f} {:f} {:f} {:f}', encoding=None):
         """
 
