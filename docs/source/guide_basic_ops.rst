@@ -330,13 +330,35 @@ To calculate :math:`\langle \mathcal{X} , \mathcal{Y} \rangle`:
 
 Vectorization & Reconstruction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-tf.Tensor:
+The *vectorization* of a tensor is ordering the tensor into a vector. And the process transforming the vector back to the
+tensor is called *reconstruction* or reshaping.
 
+Take the tensor :math:`\mathcal{X} \in \mathbb{R}^{\mathit{3} \times \mathit{3} \times \mathit{2}}` defined before as example.
 
+.. code-block:: python
 
-Vector to Tensor
-^^^^^^^^^^^^^^^^
-tf.Tensor:
+   >>> X = tf.constant(np.array([[[1,10],[4,13],[7,16]], [[2,11],[5,14],[8,17]], [[3,12],[6,15],[9,18]]]))    # the shape of X is (3, 3, 2)
+   >>> vec = ops.vectorize(X)
+   >>> tf.Session().run(vec)
+   array([ 1, 10,  4, 13,  7, 16,  2, 11,  5, 14,  8, 17,  3, 12,  6, 15,  9, 18])
+
+To reconstruct the vector:
+
+.. code-block:: python
+
+   >>> tf.Session().run(ops.vec_to_tensor(vec,(3,3,2)))
+   array([[[ 1, 10],
+           [ 4, 13],
+           [ 7, 16]],
+
+          [[ 2, 11],
+           [ 5, 14],
+           [ 8, 17]],
+
+          [[ 3, 12],
+           [ 6, 15],
+           [ 9, 18]]])
+
 
 
 
