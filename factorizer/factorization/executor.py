@@ -36,9 +36,8 @@ class Executor(object):
         if self.role == 'ps':
             self.server.join()
         else:
-            self.strategy.prepare(self.cluster)
+            self.strategy.create_graph(self.cluster)
             with self.strategy.supervisor.managed_session(self.server) as sess:
                 for step in range(self.steps):
                     for batch in self.provider:
-                        self.strategy.update(feed_data=batch)
-                        self.strategy.sync()
+                        self.strategy.train(feed_data=batch)

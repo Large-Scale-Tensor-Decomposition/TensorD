@@ -24,14 +24,14 @@ class OrdProvider(Provider):
         # store in dense
         self.data = None
 
+        self._split_size = None
+
+        self._offset = None
+
         if self.is_sparse:
             self._read_sparse()
         else:
             self._read_dense()
-
-        self._split_size = int(self.shape[self.order] / self.task_cnt)
-
-        self._offset = self.task_index * self._split_size
 
     def __iter__(self):
         return self
@@ -56,6 +56,9 @@ class OrdProvider(Provider):
         if not self.shape:
             self.shape = [np.max(input_data, axis) for axis in range(len(input_data[0]))]
 
+        self._split_size = int(self.shape[self.order] / self.task_cnt)
+        self._offset = self.task_index * self._split_size
+
         split_shape = self.shape.copy()
         split_shape[self.order] = self._split_size
         self.data = np.zeros(split_shape)
@@ -70,3 +73,6 @@ class OrdProvider(Provider):
              self._offset <= i < self._offset + self._split_size])
         if not self.shape:
             self.shape = self.data.shape
+
+        self._split_size = int(self.shape[self.order] / self.task_cnt)
+        self._offset = self.task_index * self._split_size

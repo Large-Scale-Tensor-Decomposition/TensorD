@@ -72,7 +72,7 @@ def fake_cp(sess, tensor, rank, steps=100):
 
     # graph = tf.get_default_graph()
 
-    A = [tf.Variable(rand(dim, rank), dtype=tf.float64) for dim in shape]
+    A = [tf.get_variable('A%d' % dim, shape=rand(dim, rank), dtype=tf.float64) for dim in shape]
     AtA = [tf.matmul(A[i], A[i], transpose_a=True) for i in range(order)]
     mats = [ops.unfold(tensor, _) for _ in range(order)]
 
@@ -81,18 +81,22 @@ def fake_cp(sess, tensor, rank, steps=100):
     for mode in range(order):
         V = ops.hadamard(AtA, skip_matrices_index=mode)
         XA = tf.matmul(mats[mode], ops.khatri(A, mode, True))
-        tmp = tf.transpose(tf.matrix_solve(tf.transpose(V), tf.transpose(XA)))
-        as_ops[mode] = A[mode].assign(tmp)
+        with sess.graph.control_dependencies([V, XA]):
+            tmp = tf.transpose(tf.matrix_solve(tf.transpose(V), tf.transpose(XA)))
+        with sess.graph.control_dependencies([tmp]):
+            as_ops[mode] = A[mode].assign(tmp)
+            # A[mode] = tmp
         with sess.graph.control_dependencies([as_ops[mode]]):
             AtA[mode] = tf.matmul(A[mode], A[mode], transpose_a=True)
             tf.summary.histogram('AtA', AtA[mode])
 
-    P = KTensor(A)
-    loss = rmse(tensor - P.extract())
+    with sess.graph.control_dependencies(*as_ops):
+        P = KTensor(A)
+        loss = rmse(tensor - P.extract())
 
     tf.summary.histogram('loss', loss)
 
-    e_step = tf.group(*as_ops)
+    # e_step = tf.group(loss)
 
     merge_op = tf.summary.merge_all()
     sum_writer = tf.summary.FileWriter('/tmp/fake_cp', sess.graph)
@@ -101,11 +105,10 @@ def fake_cp(sess, tensor, rank, steps=100):
     sess.run(init)
 
     for step in range(steps):
-        print('step %d' % step)
-        sess.run(e_step)
+        # sess.run(loss)
         res = sess.run(loss)
-        print(res)
+        print('step %d, loss=%f' % (step, res))
 
         sum_str = sess.run(merge_op)
         sum_writer.add_summary(sum_str)
-
+    print(sess.run(tensor - P.extract()))
