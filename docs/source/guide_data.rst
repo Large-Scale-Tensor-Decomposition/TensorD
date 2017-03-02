@@ -29,22 +29,25 @@ frontal slices:
                          \end{matrix}
                          \right]
 
-Creating :class:`DTensor` with :class:`np.ndarray`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To create :class:`DTensor` with :class:`np.ndarray`:
+
 .. code-block:: python
 
    >>> from factorizer.base.type import DTensor
    >>> tensor = np.array([[[1, 13], [4, 16], [7, 19], [10, 22]], [[2, 14], [5, 17], [8, 20], [11, 23]], [[3, 15], [6, 18], [9, 21], [12, 24]]])
    >>> dense_tensor = DTensor(tensor)
 
-Creating :class:`DTensor` with :class:`tf.Tensor`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To create :class:`DTensor` with :class:`tf.Tensor`:
+
 .. code-block:: python
 
    >>> from factorizer.base.type import DTensor
    >>> tensor = tf.constant([[[1, 13], [4, 16], [7, 19], [10, 22]], [[2, 14], [5, 17], [8, 20], [11, 23]], [[3, 15], [6, 18], [9, 21], [12, 24]]])
    >>> dense_tensor = DTensor(tensor)
 
+.. important::
+   ``DTensor.T`` is the tensor data stored in :class:`tf.Tensor` form, rather than the transpose of the original tensor.
 
 Kruskal Tensor
 --------------
@@ -63,7 +66,7 @@ Let's take a look at a 2-way tensor defined as below:
 
 .. code-block:: python
 
-   >>> X = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])    # the shape of tensor X is (3,4)
+   >>> X = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])    # the shape of tensor X is (3, 4)
 
 The CP decomposition can factorize :math:`\mathcal{X}` into 2 component rank-one tensors, and the CP model can be
 expressed as
@@ -96,14 +99,14 @@ Then we use 2 factor matrices and :math:`\boldsymbol{\lambda}` to create a :clas
 
 .. code-block:: python
 
-   >>> A = u    # the shape of A is (3,3)
-   >>> B = v.T    # the shape of B is (4,3)
+   >>> A = u    # the shape of A is (3, 3)
+   >>> B = v.T    # the shape of B is (4, 3)
    >>> kruskal_tensor = KTensor([A, B], s)    # the shape of s is (3,)
 
 Notice that the first argument ``factors`` is a list of :class:`tf.Tensor` objects or :class:`np.ndarray` objects
 representing factor matrices, and the order of these matrices must be fixed.
 
-If you want to get the factor matrices with :class:`factorizer.base.KTensor` object:
+If you want to get the factor matrices with :class:`KTensor` object:
 
 .. code-block:: python
 
@@ -111,15 +114,15 @@ If you want to get the factor matrices with :class:`factorizer.base.KTensor` obj
    [<tf.Tensor 'Const:0' shape=(3, 3) dtype=float64>,
     <tf.Tensor 'Const_1:0' shape=(4, 3) dtype=float64>]
 
-If you want to get the vector :math:`\boldsymbol{\lambda}` with :class:`factorizer.base.KTensor` object:
+If you want to get the vector :math:`\boldsymbol{\lambda}` with :class:`KTensor` object:
 
 .. code-block:: python
 
    >>> kruskal_tensor.lambdas
    <tf.Tensor 'Reshape:0' shape=(3, 1) dtype=float64>
 
-We also offer class method :func:`factorizer.base.KTensor.extract` to retrieve original tensor
-with :class:`factorizer.base.KTensor` object:
+We also offer class method :func:`KTensor.extract` to retrieve original tensor
+with :class:`KTensor` object:
 
 .. code-block:: python
 
@@ -200,7 +203,7 @@ To get core tensor :math:`\mathcal{G}` given a :class:`factorizer.base.TTensor` 
    >>> tucker_tensor.g
    # <tf.Tensor 'Const_1:0' shape=(R1, R2, ..., RN) dtype=float64>
 
-To get factor matrices given a :class:`factorizer.base.TTensor` object:
+To get factor matrices given a :class:`TTensor` object:
 
 .. code-block:: python
 
