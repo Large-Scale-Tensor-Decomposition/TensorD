@@ -11,7 +11,7 @@ class TensorReader(object):
 
     """
 
-    def __init__(self, file_path, fmt='{:f} {:f} {:f} {:f}', encoding=None):
+    def __init__(self, file_path, fmt='{:d} {:d} {:d} {:f}', encoding=None):
         """
 
         Parameters
@@ -35,7 +35,8 @@ class TensorReader(object):
             list of one row data
         """
         for line in self.file:
+            if not line:
+                continue
             items = list(self.fmt.parse(line))
             if items:
                 yield items
-        yield StopIteration

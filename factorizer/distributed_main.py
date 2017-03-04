@@ -27,7 +27,7 @@ tf.app.flags.DEFINE_string("worker_hosts", "",
 tf.app.flags.DEFINE_string("job_name", "", "One of 'ps', 'worker'")
 tf.app.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 
-tensor_data_file = '../data/dat'
+tensor_data_file = '../data/tmp'
 
 # Hyperparameters
 # learning_rate = FLAGS.learning_rate
@@ -42,7 +42,7 @@ def main(_):
     task_cnt = len(worker_hosts)
 
     strategy = PPTTF(task_cnt, task_index, 3, 0.002, 0.002, 0.01)
-    data_provider = OrdProvider(TensorReader(tensor_data_file), 3, task_cnt, task_index, 20)
+    data_provider = OrdProvider(TensorReader(tensor_data_file), 3, task_cnt, task_index, 20, sparse=True)
     executor = Executor(ps_hosts, worker_hosts, FLAGS.job_name, FLAGS.task_index, data_provider, strategy, steps=200)
 
     executor.train()

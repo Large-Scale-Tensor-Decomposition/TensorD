@@ -52,9 +52,11 @@ class OrdProvider(Provider):
         raise StopIteration()
 
     def _read_sparse(self):
-        input_data = np.asarray([row for row in self.reader.next()])
+        input_data = np.array([row for row in self.reader.next()])
         if not self.shape:
-            self.shape = [np.max(input_data, axis) for axis in range(len(input_data[0]))]
+            self.shape = np.max(input_data, axis=0)[:self.order]
+        for _ in range(self.order):
+            self.shape[_] = int(self.shape[_])
 
         self._split_size = int(self.shape[self.order] / self.task_cnt)
         self._offset = self.task_index * self._split_size

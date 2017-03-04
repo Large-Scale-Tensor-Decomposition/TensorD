@@ -33,11 +33,9 @@ class Executor(object):
         self.steps = steps
 
     def train(self):
-        if self.role == 'ps':
-            self.server.join()
-        else:
-            self.strategy.create_graph(self.cluster)
-            with self.strategy.supervisor.managed_session(self.server) as sess:
-                for step in range(self.steps):
-                    for batch in self.provider:
-                        self.strategy.train(feed_data=batch)
+        self.strategy.create_graph(self.cluster)
+        with self.strategy.supervisor.managed_session(self.server) as sess:
+            for step in range(self.steps):
+                for batch in self.provider:
+                    self.strategy.train(sess, feed_data=batch)
+                    self.strategy.sync(sess)
