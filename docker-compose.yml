@@ -1,0 +1,43 @@
+version:  '2'
+services:
+  tfserver:
+    image: "tensorflow/tensorflow:latest-py3"
+    command:
+      python3 distributed_main.py --ps_hosts=tfserver:4444 --worker_hosts=tfworker1:4444,tfworker2:4445,tfworker3:4556 --job_name=ps --task_index=0
+    volumes:
+      - .:/code
+    working_dir:
+      /code
+
+  tfworker1:
+    image: "tensorflow/tensorflow:latest-py3"
+    command:
+      python3 distributed_main.py --ps_hosts=tfserver:4444 --worker_hosts=tfworker1:4444,tfworker2:4445,tfworker3:4556 --job_name=worker --task_index=0
+    volumes:
+      - .:/code
+    links:
+      - tfserver
+    working_dir:
+      /code
+
+  tfworker2:
+    image: "tensorflow/tensorflow:latest-py3"
+    command:
+      python3 distributed_main.py --ps_hosts=tfserver:4444 --worker_hosts=tfworker1:4444,tfworker2:4445,tfworker3:4556 --job_name=worker --task_index=1
+    volumes:
+      - .:/code
+    links:
+      - tfserver
+    working_dir:
+      /code
+
+  tfworker3:
+    image: "tensorflow/tensorflow:latest-py3"
+    command:
+      python3 distributed_main.py --ps_hosts=tfserver:4444 --worker_hosts=tfworker1:4444,tfworker2:4445,tfworker3:4556 --job_name=worker --task_index=2
+    volumes:
+      - .:/code
+    links:
+      - tfserver
+    working_dir:
+      /code

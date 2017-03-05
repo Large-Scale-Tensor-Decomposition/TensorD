@@ -1,5 +1,8 @@
 # Created by ay27 at 17/2/22
 import tensorflow as tf
+from factorizer.base.logger import create_logger
+
+logger = create_logger()
 
 
 class Executor(object):
@@ -20,7 +23,8 @@ class Executor(object):
         -------
 
         """
-        if role != 'ps' or role != 'worker':
+        logger.debug('role=%s,type is %s' % (role, type(role)))
+        if role != 'ps' and role != 'worker':
             raise ValueError("Role must be 'ps' or 'worker'")
 
         self.cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})

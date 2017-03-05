@@ -1,11 +1,12 @@
 # Created by ay27 at 17/2/24
-import tensorflow as tf
 import numpy as np
-import time
+import tensorflow as tf
+from factorizer.dataproc.provider import Provider
 from factorizer.factorization.executor import Executor
-from factorizer.dataproc.provider import OrdProvider
-from factorizer.dataproc.reader import TensorReader
 from factorizer.factorization.strategy import PPTTF
+from factorizer.base.logger import create_logger
+
+logger = create_logger()
 
 """
 run:
@@ -29,9 +30,21 @@ tf.app.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 
 tensor_data_file = '../data/tmp'
 
+
 # Hyperparameters
 # learning_rate = FLAGS.learning_rate
 # steps_to_validate = FLAGS.steps_to_validate
+
+class FakeProvider(Provider):
+    def __init__(self):
+        self.I = 10
+        self.J = 20
+        self.K = 30
+        self.tensor = np.random.rand(self.I, self.J, self.K)
+
+    def next_batch(self, size):
+        for ii in range(int(self.I / size)):
+            yield self.tensor[ii * size: (ii + 1) * size]
 
 
 def main(_):
@@ -41,11 +54,14 @@ def main(_):
     task_index = FLAGS.task_index
     task_cnt = len(worker_hosts)
 
-    strategy = PPTTF(task_cnt, task_index, 3, 0.002, 0.002, 0.01)
-    data_provider = OrdProvider(TensorReader(tensor_data_file), 3, task_cnt, task_index, 20, sparse=True)
+    strategy = PPTTF(task_cnt, task_index, (10,20,30), 10, 0.002, 0.002, 0.01)
+    # data_provider = OrdProvider(TensorReader(tensor_data_file), 3, task_cnt, task_index, 20, sparse=True)
+    data_provider = FakeProvider()
+    logger.debug('job name %s, task index %s' % (FLAGS.job_name, FLAGS.task_index))
     executor = Executor(ps_hosts, worker_hosts, FLAGS.job_name, FLAGS.task_index, data_provider, strategy, steps=200)
 
     executor.train()
+
 
 if __name__ == "__main__":
     tf.app.run()

@@ -20,12 +20,13 @@ class Strategy(object):
 
 
 class PPTTF(Strategy):
-    def __init__(self, task_cnt, task_index, order, lamb, tao, rho):
+    def __init__(self, task_cnt, task_index, shape, R, lamb, tao, rho):
         self.grads = []
         self.cluster = None
         self.task_cnt = task_cnt
         self.task_index = task_index
-        self.order = order
+        self.shape = shape
+        self.R = R
 
         self.lamb = lamb
         self.tao = tao
@@ -47,18 +48,21 @@ class PPTTF(Strategy):
             self.global_step = tf.Variable(0, name='global_step', trainable=False)
 
         for i in range(self.task_cnt):
-            with tf.device('/job/worker/task:%d' % i):
-                self.X = tf.placeholder(tf.float64)
-                localA = tf.get_variable("A-%d" % self.task_index, dtype=tf.float64,
-                                         initializer=tf.random_uniform_initializer)
-                localB = tf.get_variable("B-%d" % self.task_index, dtype=tf.float64,
-                                         initializer=tf.random_uniform_initializer)
-                localC = tf.get_variable("C-%d" % self.task_index, dtype=tf.float64,
-                                         initializer=tf.random_uniform_initializer)
+            with tf.device('/job:worker/task:%d' % i):
+                self.X = tf.placeholder(tf.float64, shape=self.shape)
+                localA = tf.get_variable("A-%d" % self.task_index, shape=(self.shape[0], self.R), dtype=tf.float64,
+                                         initializer=tf.random_uniform_initializer(minval=0.0, maxval=1.0,
+                                                                                   dtype=tf.float64))
+                localB = tf.get_variable("B-%d" % self.task_index, shape=(self.shape[1], self.R), dtype=tf.float64,
+                                         initializer=tf.random_uniform_initializer(minval=0.0, maxval=1.0,
+                                                                                   dtype=tf.float64))
+                localC = tf.get_variable("C-%d" % self.task_index, shape=(self.shape[2], self.R), dtype=tf.float64,
+                                         initializer=tf.random_uniform_initializer(minval=0.0, maxval=1.0,
+                                                                                   dtype=tf.float64))
 
                 ktensor = type.KTensor([localA, localB, localC])
 
-                self.loss_op = ltp.l2(X, ktensor.extract())
+                self.loss_op = ltp.l2(self.X, ktensor.extract())
 
                 self.train_op = tf.train.GradientDescentOptimizer(0.0002)
 
