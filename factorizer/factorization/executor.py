@@ -38,8 +38,10 @@ class Executor(object):
 
     def train(self):
         self.strategy.create_graph(self.cluster)
-        with self.strategy.supervisor.managed_session(self.server) as sess:
+        if self.role == "ps":
+            self.server.join()
+        with self.strategy.supervisor.managed_session(self.server.target) as sess:
             for step in range(self.steps):
-                for batch in self.provider:
-                    self.strategy.train(sess, feed_data=batch)
+                for batch in self.provider.next_batch(2):
+                    self.strategy.train(sess, feed_dict=batch)
                     self.strategy.sync(sess)

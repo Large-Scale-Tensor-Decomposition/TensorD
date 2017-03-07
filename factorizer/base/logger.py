@@ -21,4 +21,4 @@ def create_logger(level=DEFAULT_TYPE):
     logger
 
     """
-    return logging.getLogger(level).log()
+    return logging.getLogger(level)
