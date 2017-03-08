@@ -5,6 +5,9 @@ from factorizer.dataproc.provider import Provider
 from factorizer.factorization.executor import Executor
 from factorizer.factorization.strategy import PPTTF
 from factorizer.base.logger import create_logger
+import factorizer.base.logger
+
+factorizer.base.logger.DEFAULT_TYPE = 'RELEASE'
 
 logger = create_logger()
 
@@ -37,7 +40,7 @@ tensor_data_file = '../data/tmp'
 
 class FakeProvider(Provider):
     def __init__(self):
-        self.I = 100
+        self.I = 20
         self.J = 20
         self.K = 30
         self.tensor = np.random.rand(self.I, self.J, self.K)
@@ -54,11 +57,11 @@ def main(_):
     task_index = FLAGS.task_index
     task_cnt = len(worker_hosts)
 
-    strategy = PPTTF(task_cnt, task_index, (2,20,30), 10, 0.002, 0.002, 0.01)
+    strategy = PPTTF(task_cnt, task_index, (20,20,30), 10, 0.002, 0.002, 0.01)
     # data_provider = OrdProvider(TensorReader(tensor_data_file), 3, task_cnt, task_index, 20, sparse=True)
     data_provider = FakeProvider()
     logger.debug('job name %s, task index %s' % (FLAGS.job_name, FLAGS.task_index))
-    executor = Executor(ps_hosts, worker_hosts, FLAGS.job_name, FLAGS.task_index, data_provider, strategy, steps=200)
+    executor = Executor(ps_hosts, worker_hosts, FLAGS.job_name, FLAGS.task_index, data_provider, strategy, steps=100)
 
     executor.train()
 

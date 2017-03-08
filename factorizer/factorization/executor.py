@@ -1,8 +1,19 @@
 # Created by ay27 at 17/2/22
+import threading
+
 import tensorflow as tf
 from factorizer.base.logger import create_logger
-
+from factorizer.base.barrier import Barrier
 logger = create_logger()
+
+
+def default_config():
+    optimizer_options = tf.OptimizerOptions(opt_level=tf.OptimizerOptions.L0)
+    config = tf.ConfigProto(
+        graph_options=tf.GraphOptions(optimizer_options=optimizer_options))
+    config.log_device_placement = False
+    config.allow_soft_placement = False
+    return config
 
 
 class Executor(object):
@@ -31,17 +42,30 @@ class Executor(object):
         self.server = tf.train.Server(self.cluster, job_name=role, task_index=task_index)
         self.provider = data_provider
         self.strategy = strategy
+        self.workers = worker_hosts
         self.role = role
         self.task_index = task_index
 
         self.steps = steps
 
     def train(self):
+        self.barrier = Barrier(self.task_index)
         self.strategy.create_graph(self.cluster)
         if self.role == "ps":
             self.server.join()
-        with self.strategy.supervisor.managed_session(self.server.target) as sess:
+        self.run()
+        # [threading.Thread(target=self.run()) for _ in range(self.strategy.task_cnt)]
+
+    def run(self):
+        # with self.strategy.supervisor.managed_session(self.server.target) as sess:
+        sess = tf.Session('grpc://' + self.workers[self.task_index])
+        with sess:
+            sess.run(self.strategy.init_op)
+            self.barrier(sess)
+            logger.error('run step, worker %d' % self.task_index)
             for step in range(self.steps):
-                for batch in self.provider.next_batch(2):
-                    self.strategy.train(sess, feed_dict=batch)
-                    self.strategy.sync(sess)
+                # for batch in self.provider.next_batch(2):
+                logger.debug('fetch batch success')
+                self.strategy.train(sess, feed_data=self.provider.tensor)
+                self.barrier(sess)
+                self.strategy.sync(sess, feed_data=self.provider.tensor)

@@ -2,6 +2,7 @@
 import logging
 from logging.config import fileConfig
 from os import path
+
 DEFAULT_TYPE = 'DEBUG'
 
 config_file = path.join(path.dirname(path.abspath(__file__)), '../conf/logging_config.ini')
@@ -21,4 +22,6 @@ def create_logger(level=DEFAULT_TYPE):
     logger
 
     """
-    return logging.getLogger(level)
+    tmp =logging.getLogger(level)
+    tmp.setLevel(logging.ERROR)
+    return tmp
