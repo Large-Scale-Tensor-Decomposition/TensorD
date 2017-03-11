@@ -463,19 +463,88 @@ For a :class:`DTensor` object, class method :func:`DTensor.unfold` is available:
 
 
 
-
 DTensor:
-
-tf.Tensor:
 
 
 
 
 General Matricization
 ^^^^^^^^^^^^^^^^^^^^^
-DTensor:
+According to Kolda's [2]_, *general matricization* can flatten a high-order tensor into a matrix with size defined
+with row indices and column indices.
 
-tf.Tensor:
+Given tensor :math:`\mathcal{X} \in \mathbb{R}^{\mathit{I}_1 \times \mathit{I}_2 \times \cdots \times \mathit{I}_N}`,
+if we want to rearrange it into a matrix with size :math:`\mathit{J}_1 \times \mathit{J}_2`,
+
+.. math::
+   where \quad \mathit{J}_1 = \prod_{k=1}^{K} \mathit{I}_{r_k} \quad and \quad \mathit{J}_2 = \prod_{\ell=1}^{L}\mathit{I}_{c_\ell}.
+
+The set :math:`\{ r_1, \cdots, r_K \}` defines those indices that will mapped to the row indices of the resulting matrix and
+the set :math:`\{ c_1, \cdots, c_L \}` defines those indices that will mapped to the column indices.
+
+.. note::
+   The order of :math:`\{ r_1, \cdots, r_K \}` or :math:`\{ c_1, \cdots, c_L \}` is not necessarily ascending or descending.
+
+Take a look at tensor :math:`\mathcal{X}` defined as:
+
+.. code-block:: python
+
+   >>> X = tf.constant([[[1, 13], [4, 16], [7, 19], [10, 22]], [[2, 14], [5, 17], [8, 20], [11, 23]], [[3, 15], [6, 18], [9, 21], [12, 24]]])    # the shape of X is (3, 4, 2)
+
+To mapped :math:`\mathcal{X}` into matrix of size :math:`(4 \times 3) \times 2 = 12 \times 2`:
+
+.. code-block:: python
+
+   >>> r_axis = [1,0]    # indices of row
+   >>> c_axis = 2    # indices of column
+   >>> mat = ops.t2mat(X, r_axis, c_axis)    # mat is a tf.Tensor
+   >>> tf.Session().run(mat)
+   array([[ 1, 13],
+          [ 2, 14],
+          [ 3, 15],
+          [ 4, 16],
+          [ 5, 17],
+          [ 6, 18],
+          [ 7, 19],
+          [ 8, 20],
+          [ 9, 21],
+          [10, 22],
+          [11, 23],
+          [12, 24]], dtype=int32)
+
+function :func:`ops.t2mat` can also perform *mode-n matricization* mapping indices appropriately:
+
+To perform Kolda-type mode-2 unfolding:
+
+.. code-block:: python
+
+   >>> mat1 = ops.t2mat(X, 1, [2,0])
+
+To perform LMV-type mode-2 unfolding:
+
+.. code-block:: python
+
+   >>> mat2 = ops.t2mat(X, 1, [0,2])
+
+:class:`DTensor` also offers class method:
+
+.. code-block:: python
+
+   >>> X = DTensor(tf.constant([[[1, 13], [4, 16], [7, 19], [10, 22]], [[2, 14], [5, 17], [8, 20], [11, 23]], [[3, 15], [6, 18], [9, 21], [12, 24]]]))    # the shape of X is (3, 4, 2)
+   >>> mat3 = X.t2mat([1,0], 2)    # mat3 is a DTensor
+   >>> tf.Session().run(mat3.T)
+   array([[ 1, 13],
+          [ 2, 14],
+          [ 3, 15],
+          [ 4, 16],
+          [ 5, 17],
+          [ 6, 18],
+          [ 7, 19],
+          [ 8, 20],
+          [ 9, 21],
+          [10, 22],
+          [11, 23],
+          [12, 24]], dtype=int32)
 
 
 
@@ -497,6 +566,8 @@ References
 ----------
 .. [1] Tamara G. Kolda and Brett W. Bader, "Tensor Decompositions and Applications",
        SIAM REVIEW, vol. 51, n. 3, pp. 455-500, 2009.
+.. [2] Tamara G. Kolda and Brett W. Bader, "Algorithm 862: MATLAB tensor classes for fast algorithm prototyping",
+       ACM Trans. Math. Softw, 32 (4): 635-653 (2006)
 
 
 
