@@ -260,11 +260,47 @@ Basic Operations with Tensors
 
 Addition & Subtraction
 ^^^^^^^^^^^^^^^^^^^^^^
+Given a :class:`DTensor` object, it is easy to perform addition and subtraction.
+
+.. code-block:: python
+
+   >>> X = DTensor(tf.constant([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]]))    # the shape of tensor X is (2, 2, 3)
+   >>> Y = DTensor(tf.constant([[[-1,-2,-3],[-4,-5,-6]],[[-7,-8,-9],[-10,-11,-12]]]))    # the shape of tensor Y is (2, 2, 3)
+   >>> sum_X_Y = X + Y    # sum_X_Y is a DTensor
+   >>> sub_X_Y = X - Y    # sub_X_Y is a DTensor
+   >>> tf.Session().run(sum_X_Y.T)
+   array([[[0, 0, 0],
+           [0, 0, 0]],
+
+          [[0, 0, 0],
+           [0, 0, 0]]], dtype=int32)
+   >>> tf.Session().run(sub_X_Y.T)
+   array([[[ 2,  4,  6],
+           [ 8, 10, 12]],
+
+          [[14, 16, 18],
+           [20, 22, 24]]], dtype=int32)
 
 
-DTensor:
+The second operand can also be a :class:`tf.Tensor` object:
 
-tf.Tensor:
+.. code-block:: python
+
+   >>> Z = tf.constant([[[-1,-2,-3],[-4,-5,-6]],[[-7,-8,-9],[-10,-11,-12]]])    # the shape of tensor Z is (2, 2, 3)
+   >>> sum_X_Z = X + Z    # sum_X_Z is a DTensor
+   >>> sub_X_Z = X - Z    # sub_X_Z is a DTensor
+   >>> tf.Session().run(sum_X_Z.T)
+   array([[[0, 0, 0],
+           [0, 0, 0]],
+
+          [[0, 0, 0],
+           [0, 0, 0]]], dtype=int32)
+   >>> tf.Session().run(sub_X_Z.T)
+   array([[[ 2,  4,  6],
+           [ 8, 10, 12]],
+
+          [[14, 16, 18],
+           [20, 22, 24]]], dtype=int32)
 
 
 
