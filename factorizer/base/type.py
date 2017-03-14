@@ -134,7 +134,7 @@ class KTensor(object):
             vector-like, the weight of every axis of factors
         """
         if isinstance(factors[0], np.ndarray):
-            self.U = [tf.constant(mat) for mat in factors]
+            self.U = [tf.constant(mat, dtype=tf.float64) for mat in factors]
         else:
             self.U = factors
 
@@ -148,7 +148,8 @@ class KTensor(object):
             else:
                 self.lambdas = lambdas
             if self.lambdas.get_shape().ndims == 1:
-                self.lambdas = tf.reshape(self.lambdas, (self.lambdas.get_shape()[0].value, 1))
+                self.lambdas = tf.expand_dims(self.lambdas, -1)
+                # self.lambdas = tf.reshape(self.lambdas, (self.lambdas.get_shape()[0].value, 1))
 
         self.order = len(self.U)
 
