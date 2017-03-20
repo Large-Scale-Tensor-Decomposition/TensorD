@@ -13,7 +13,7 @@ python train.py --ps_hosts=172.17.0.3:2222 --worker_hosts=172.17.0.4:2223 --job_
 
 # Define parameters
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_float('learning_rate', 0.0005, 'Initial learning rate.')
+tf.app.flags.DEFINE_float('learning_rate', 0.005, 'Initial learning rate.')
 tf.app.flags.DEFINE_integer('steps_to_validate', 100,
                             'Steps to validate and print loss')
 
@@ -97,9 +97,13 @@ def main(_):
     I = 3
     J = 4
     K = 5
-    STEP = 10000
-    # tensor = np.random.rand(I, J, K)
-    tensor = np.arange(I*J*K).reshape(I,J,K)
+    STEP = 1000
+    rho = 0.01
+    tensor = np.random.rand(I, J, K)
+    # tensor = np.arange(I * J * K).reshape(I, J, K)
+    # tensor1 = tensor[0:10]
+    # tensor2 = tensor[10:20]
+    # tensor3 = tensor[20:30]
     R = 2
 
     if FLAGS.job_name == 'ps':
@@ -112,11 +116,11 @@ def main(_):
 
             X = tf.placeholder(dtype=tf.float32)
 
-            A = tf.get_variable("A", [I, R], tf.float32, initializer=tf.random_normal_initializer())
+            A = tf.get_variable("A", [I, R], tf.float32, initializer=tf.uniform_unit_scaling_initializer())
             B = tf.get_variable("B", [J, R], tf.float32, initializer=tf.uniform_unit_scaling_initializer())
             C = tf.get_variable("C", [K, R], tf.float32, initializer=tf.uniform_unit_scaling_initializer())
 
-        opt = tf.train.GradientDescentOptimizer(learning_rate)
+        opt = tf.train.MomentumOptimizer(learning_rate, 0.9)
         grads = []
 
         print("before construct model %d" % FLAGS.task_index)
@@ -124,9 +128,11 @@ def main(_):
         for ii in range(int(FLAGS.task_cnt)):
             with tf.device("/job:worker/task:%d" % ii):
                 with tf.name_scope("worker%d" % ii):
+                    print('worker %d, init graph' % FLAGS.task_index)
                     pred = extract([A, B, C])
+                    regular = rho * tf.sqrt(tf.reduce_sum(tf.square(A))) * tf.sqrt(tf.reduce_sum(tf.square(B))) * tf.sqrt(tf.reduce_sum(tf.square(C)))
 
-                    loss = tf.sqrt(tf.reduce_sum(tf.square(X - pred)))
+                    loss = tf.sqrt(tf.reduce_sum(tf.square(X - pred - regular)))
                     tf.summary.histogram("loss", loss)
 
                     grad = opt.compute_gradients(loss)
@@ -136,7 +142,7 @@ def main(_):
         aver_grad = average_grads(grads)
 
         apply_gradient_op = opt.apply_gradients(aver_grad, global_step=global_step)
-        variable_averages = tf.train.ExponentialMovingAverage(0.01, global_step)
+        variable_averages = tf.train.ExponentialMovingAverage(0.8, global_step)
         variables_averages_op = variable_averages.apply(tf.trainable_variables())
 
         g_loss = tf.sqrt(tf.reduce_sum(tf.square(X - extract([A, B, C]))))
@@ -159,27 +165,19 @@ def main(_):
                                  global_step=global_step,
                                  save_model_secs=60)
         with sv.managed_session(server.target) as sess:
-            # with tf.Session(server.target) as sess:
-            # if FLAGS.task_index == 0:
-            #     summary = []
             summary = []
             step = 0
             print('start train, worker %d, job as %s' % (FLAGS.task_index, FLAGS.job_name))
-            while step < STEP:
-                # print("step %d, worker %d" % (step, FLAGS.task_index))
-                _, step, loss_v, loss_g = sess.run([train_op, global_step, loss, g_loss], feed_dict={X: tensor})
+            for step in range(STEP):
+                _, _, loss_v, loss_g = sess.run([train_op, global_step, loss, g_loss], feed_dict={X: tensor})
                 sum_str = sess.run(summary_op, feed_dict={X: tensor})
                 summary_writer.add_summary(sum_str)
                 summary.append([time.time(), loss_g, loss_v])
-                if step % 50 == 0:
-                    print('loss = %f, global loss = %f' % (loss_v, loss_g))
-                    # if FLAGS.task_index == 0:
-                    # summary.append([time.time() - old_ts, loss_v])
-                    # if step % steps_to_validate == 0:
-                    #     print('step %d, loss=%f' % (step, loss_v))
+                if step % 10 == 0:
+                    print('%d iter, loss = %f, global loss = %f' % (step,loss_v, loss_g))
 
-            # print('cost time : %f' % (time.time() - old_ts))
-            # if FLAGS.task_index == 0:
+            with open('/code/log/tensor', 'wb') as file:
+                pickle.dump(tensor, file)
             with open('/code/log/w_%d' % FLAGS.task_index, 'wb') as file:
                 pickle.dump(summary, file)
             with open('/code/log/wa_%d' % FLAGS.task_index, 'wb') as file:
