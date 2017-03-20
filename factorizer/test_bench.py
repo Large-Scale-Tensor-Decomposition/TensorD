@@ -2,6 +2,8 @@
 import unittest
 import logging
 from logging.config import fileConfig
+import sys
+sys.path.append('..')
 
 if __name__ == "__main__":
     fileConfig('factorizer/conf/logging_config.ini')

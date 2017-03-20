@@ -1,6 +1,6 @@
 # Created by ay27 at 17/2/23
 import tensorflow as tf
-import factorizer.loss_template as ltp
+import factorizer.loss as ltp
 import factorizer.base.type as type
 from factorizer.base.barrier import Barrier
 from factorizer.base.logger import create_logger

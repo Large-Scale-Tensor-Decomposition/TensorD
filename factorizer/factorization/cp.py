@@ -4,7 +4,7 @@ import tensorflow as tf
 from factorizer.base.type import KTensor
 
 import factorizer.base.ops as ops
-from factorizer.validator import rmse
+from factorizer.loss import rmse
 from numpy.random import rand
 
 
@@ -72,7 +72,7 @@ def fake_cp(sess, tensor, rank, steps=100):
 
     # graph = tf.get_default_graph()
 
-    A = [tf.get_variable('A%d' % dim, shape=rand(dim, rank), dtype=tf.float64) for dim in shape]
+    A = [tf.get_variable('A%d' % dim, shape=(dim, rank), dtype=tf.float64) for dim in shape]
     AtA = [tf.matmul(A[i], A[i], transpose_a=True) for i in range(order)]
     mats = [ops.unfold(tensor, _) for _ in range(order)]
 
@@ -90,7 +90,7 @@ def fake_cp(sess, tensor, rank, steps=100):
             AtA[mode] = tf.matmul(A[mode], A[mode], transpose_a=True)
             tf.summary.histogram('AtA', AtA[mode])
 
-    with sess.graph.control_dependencies(*as_ops):
+    with sess.graph.control_dependencies(as_ops):
         P = KTensor(A)
         loss = rmse(tensor - P.extract())
 

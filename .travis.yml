@@ -1,7 +1,6 @@
 language: python
 python:
   - "3.6"
-# command to install dependencies
 
 dist: trusty
 sudo: false
@@ -12,6 +11,14 @@ install:
   - pip install coverage
 # command to run tests
 script:
-  coverage run test_bench.py
+  coverage run factorizer/test_bench.py
 after_success:
   coveralls
+
+notifications:
+  email: false
+#    recipients:
+#      - one@example.com
+#      - other@example.com
+#    on_success: never # default: change
+#    on_failure: always # default: always

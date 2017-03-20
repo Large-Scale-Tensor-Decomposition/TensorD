@@ -5,7 +5,7 @@ import numpy as np
 from factorizer.base import type
 from factorizer.base import ops
 from factorizer.factorization.tucker import HOSVD, HOOI
-from factorizer.validator import rmse
+from factorizer.loss import rmse
 import time
 from numpy.random import rand
 import logging
