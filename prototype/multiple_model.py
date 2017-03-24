@@ -62,9 +62,15 @@ def extract(U):
     return tf.reshape(tf.matmul(tmp, lambdas), back_shape)
 
 
+# there exists error!!!
 def average_grads(grads):
     average_grads = []
+    print('len of grads=%d' % len(grads))
+    cnt = 0
     for grad_and_vars in zip(*grads):
+        cnt += 1
+        print('%d grads and vars %d' % (FLAGS.task_index, cnt))
+        # print(grad_and_vars)
         # Note that each grad_and_vars looks like the following:
         #   ((grad0_gpu0, var0_gpu0), ... , (grad0_gpuN, var0_gpuN))
         grads = []
@@ -75,6 +81,7 @@ def average_grads(grads):
             # Append on a 'tower' dimension which we will average over below.
             grads.append(expanded_g)
 
+        print(grads)
         # Average over the 'tower' dimension.
         grad = tf.concat(grads, 0)
         grad = tf.reduce_mean(grad, 0)
@@ -97,7 +104,7 @@ def main(_):
     I = 3
     J = 4
     K = 5
-    STEP = 1000
+    STEP = 100
     rho = 0.01
     tensor = np.random.rand(I, J, K)
     # tensor = np.arange(I * J * K).reshape(I, J, K)
@@ -165,6 +172,7 @@ def main(_):
                                  global_step=global_step,
                                  save_model_secs=60)
         with sv.managed_session(server.target) as sess:
+            print('sess = ', sess)
             summary = []
             step = 0
             print('start train, worker %d, job as %s' % (FLAGS.task_index, FLAGS.job_name))

@@ -13,7 +13,7 @@ python train.py --ps_hosts=172.17.0.3:2222 --worker_hosts=172.17.0.4:2223 --job_
 
 # Define parameters
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_float('learning_rate', 0.004, 'Initial learning rate.')
+tf.app.flags.DEFINE_float('learning_rate', 0.04, 'Initial learning rate.')
 tf.app.flags.DEFINE_integer('steps_to_validate', 100,
                             'Steps to validate and print loss')
 
@@ -67,12 +67,14 @@ def main(_):
     cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
     server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
 
-    I = 100
-    J = 100
-    K = 100
-    STEP = 1000
+    I = 3
+    J = 4
+    K = 5
+    STEP = 100
     tensor = np.random.rand(I, J, K)
-    R = 20
+    R = 2
+
+    print('haha')
 
     if FLAGS.job_name == "ps":
         server.join()
@@ -80,6 +82,7 @@ def main(_):
         with tf.device(tf.train.replica_device_setter(
                 worker_device="/job:worker/task:%d" % FLAGS.task_index,
                 cluster=cluster)):
+            print('build graph')
             global_step = tf.Variable(0, name='global_step', trainable=False)
 
             X = tf.placeholder(dtype=tf.float32)
@@ -92,7 +95,9 @@ def main(_):
 
             loss_value = tf.sqrt(tf.reduce_sum(tf.square(X - pred)))
 
-            train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_value, global_step=global_step)
+            opt = tf.train.GradientDescentOptimizer(learning_rate*3)
+            opt = tf.train.SyncReplicasOptimizer(opt, 2, 3, variables_to_average=[A, B, C])
+            train_op = opt.minimize(loss_value, global_step=global_step)
 
             saver = tf.train.Saver()
             tf.summary.histogram('loss', loss_value)
@@ -101,29 +106,38 @@ def main(_):
 
             print(FLAGS.task_index)
 
-        sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
-                                 init_op=init_op,
-                                 summary_op=summary_op,
-                                 saver=saver,
-                                 global_step=global_step,
-                                 save_model_secs=60)
-        with sv.managed_session(server.target) as sess:
-            if FLAGS.task_index == 0:
-                summary = []
-            old_ts = time.time()
-            step = 0
-            while step < STEP:
-                _, loss_v, step = sess.run([train_op, loss_value, global_step],
-                                           feed_dict={X: tensor})
-                if FLAGS.task_index == 0:
-                    summary.append([time.time() - old_ts, loss_v])
-                # if step % steps_to_validate == 0:
-                #     print('step %d, loss=%f' % (step, loss_v))
+            if (FLAGS.task_index == 0):
+                chief_queue_runner = opt.get_chief_queue_runner()
+                init_tokens = opt.get_init_tokens_op(0)
 
-            print('cost time : %f' % (time.time() - old_ts))
-            if FLAGS.task_index == 0:
-                with open('/home/ay27/tf/prototype/log/m_%d%d%d' % (I, J, K), 'wb') as file:
-                    pickle.dump(summary, file)
+            sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
+                                     init_op=init_op,
+                                     summary_op=summary_op,
+                                     saver=saver,
+                                     global_step=global_step,
+                                     save_model_secs=60)
+            with sv.managed_session(server.target) as sess:
+                if FLAGS.task_index == 0:
+                    sv.start_queue_runners(sess, [chief_queue_runner])
+                    sess.run(init_tokens)
+                    summary = []
+                old_ts = time.time()
+                step = 0
+                writer = tf.summary.FileWriter('/code/tmp/', tf.get_default_graph())
+                while step < STEP:
+                    _, loss_v, step = sess.run([train_op, loss_value, global_step],
+                                               feed_dict={X: tensor})
+                    sum_str = sess.run(summary_op, feed_dict={X: tensor})
+                    writer.add_summary(sum_str)
+                    if FLAGS.task_index == 0:
+                        summary.append([time.time() - old_ts, loss_v])
+                    # if step % steps_to_validate == 0:
+                    print('step %d, loss=%f' % (step, loss_v))
+
+                print('cost time : %f' % (time.time() - old_ts))
+                # if FLAGS.task_index == 0:
+                #     with open('/code/log/m_%d%d%d' % (I, J, K), 'wb') as file:
+                #         pickle.dump(summary, file)
 
         sv.stop()
 

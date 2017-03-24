@@ -56,7 +56,9 @@ def main():
 
     loss_value = tf.sqrt(tf.reduce_sum(tf.square(X - pred)))
 
-    train_op = tf.train.GradientDescentOptimizer(0.003).minimize(loss_value, global_step=global_step)
+    gd_op = tf.train.GradientDescentOptimizer(0.003)
+    grad = gd_op.compute_gradients(loss_value)
+    train_op = gd_op.apply_gradients(grad)
 
     tf.summary.histogram('loss', loss_value)
     sum_op = tf.summary.merge_all()
