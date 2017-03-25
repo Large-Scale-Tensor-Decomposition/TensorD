@@ -550,7 +550,62 @@ To perform LMV-type mode-2 unfolding:
 
 The *n* -mode Products
 ^^^^^^^^^^^^^^^^^^^^^^
-tf.Tensor:
+The *n-mode product* of a tensor :math:`\mathcal{X} \in \mathbb{R}^{\mathit{I}_1 \times \mathit{I}_2 \times \cdots \times \mathit{I}_N}` with
+ a matrix :math:`\mathbf{A} \in \mathbb{R}^{\mathit{J} \times \mathit{I}_n}` is denoted by :math:`\mathcal{X} \times_n \mathbf{A}` and
+is of size :math:`\mathit{I}_1 \times \cdots \times \mathit{I}_{n-1} \times \mathit{J} \times \mathit{I}_{n+1} \times \cdots \times \mathit{I}_N`.
+
+Let the frontal slices of :math:`\mathcal{X} \in \mathbb{R}^{\mathit{3} \times \mathit{4} \times \mathit{2}}` be
+
+.. math::
+   X_1 =
+   \left[
+   \begin{matrix}
+   1  & 4  & 7  & 10\\
+   2  & 5  & 8  & 11\\
+   3  & 6  & 9  & 12
+   \end{matrix}
+   \right] , \quad X_2 = \left[
+                         \begin{matrix}
+   13 & 16 & 19 & 22\\
+   14 & 17 & 20 & 23\\
+   15 & 18 & 21 & 24
+                         \end{matrix}
+                         \right]
+
+.. code-block:: python
+
+   >>> X = tf.constant([[[1, 13], [4, 16], [7, 19], [10, 22]], [[2, 14], [5, 17], [8, 20], [11, 23]], [[3, 15], [6, 18], [9, 21], [12, 24]]])    # the shape of X is (3, 4, 2)
+
+And Let :math:`\mathbf{A}` be
+
+.. math::
+   \mathbf{A} =
+   \left[
+   \begin{matrix}
+   1 & 3 & 5\\
+   2 & 4 & 6
+   \end{matrix}
+   \right].
+
+Then the product :math:`\mathcal{Y} = \mathcal{X} \times_1 \mathbf{A} \in \mathbb{R}^{2 \times 4 \times 2}` is
+
+.. math::
+   Y_1 =
+   \left[
+   \begin{matrix}
+   22  & 49  & 76  & 103\\
+   28  & 64  & 100 & 136
+   \end{matrix}
+   \right] , \quad Y_2 = \left[
+                         \begin{matrix}
+   130 & 157 & 184 & 211\\
+   172 & 208 & 244 & 280
+                         \end{matrix}
+                         \right]
+
+.. code-block:: python
+
+   >>>
 
 
 
