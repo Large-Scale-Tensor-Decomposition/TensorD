@@ -587,6 +587,10 @@ And Let :math:`\mathbf{A}` be
    \end{matrix}
    \right].
 
+.. code-block:: python
+
+   >>> A = tf.constant([[1,3,5], [2,4,6]])
+
 Then the product :math:`\mathcal{Y} = \mathcal{X} \times_1 \mathbf{A} \in \mathbb{R}^{2 \times 4 \times 2}` is
 
 .. math::
@@ -603,10 +607,40 @@ Then the product :math:`\mathcal{Y} = \mathcal{X} \times_1 \mathbf{A} \in \mathb
                          \end{matrix}
                          \right]
 
+Now run code below to perform the calculation:
+
 .. code-block:: python
 
-   >>>
+   >>> Y = tf.Session().run(ops.ttm(X,[A],[0]))
+   >>> Y[:,:,0]    # the first frontal slice of Y
+   array([[ 22,  49,  76, 103],
+          [ 28,  64, 100, 136]], dtype=int32)
+   >>> Y[:,:,1]    # the second frontal slice of Y
+   array([[130, 157, 184, 211],
+          [172, 208, 244, 280]], dtype=int32)
 
+It is often desirable to calculate the prduct of a tensor and a sequence of matrices.
+Let :math:`\mathcal{X}` be an :math:`\mathbb{R}^{\mathit{I}_1 \times \mathit{I}_2 \times \cdots \times \mathit{I}_N}` tensor,
+and let :math:`\mathbf{A}^{(n)} \in \mathbb{R}^{\mathit{J}_n \times \mathit{I}_n}` for :math:`n = 1, 2, \cdots, N`. The
+the sequence of products
+
+.. math::
+   \mathcal{Y} = \mathcal{X} \times_1 \mathbf{A}^{(1)} \times_2 \mathbf{A}^{(2)} \cdots \times_N \mathbf{A}^{(N)}
+
+To perform this calculation:
+
+.. code-block:: python
+
+   >>> A1 = tf.constant(np.random.rand(J1,I1))
+   >>> A2 = tf.constant(np.random.rand(J2,I2))
+   ...
+   >>> AN = tf.constant(np.random.rand(JN,IN))
+   >>> X = tf.constant(np.random.rand(I1, I2, ..., IN))
+   >>> seq_A = [A1, A2, ..., AN]    # map all matrices into a list
+   >>> B = ops.ttm(X, seq_A, axis=range(N))
+   >>> tf.Session().run(B)
+
+If needed, arguments ``transpose`` and ``skip_matrices_index`` are also available.
 
 
 Tensor Contraction
