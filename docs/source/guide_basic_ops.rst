@@ -463,8 +463,6 @@ For a :class:`DTensor` object, class method :func:`DTensor.unfold` is available:
 
 
 
-DTensor:
-
 
 
 
@@ -645,11 +643,42 @@ If needed, arguments ``transpose`` and ``skip_matrices_index`` are also availabl
 
 Tensor Contraction
 ^^^^^^^^^^^^^^^^^^
-DTensor:
+The *tensor contraction* multiplies two tensors along the given axis. Let tensor :math:`\mathcal{X} \in \mathbb{R}^{\mathit{I}_1 \times \cdots \times \mathit{I}_M \times \mathit{J}_1 \times \cdots \times \mathit{J}_N}`,
+and tensor :math:`\mathcal{Y} \in \mathbb{R}^{\mathit{I}_1 \times \cdots \times \mathit{I}_M  \times \mathit{K}_1 \times \cdots \times \mathit{K}_P}`,
+then multiplying both tensors along the first :math:`M` modes can be denoted by :math:`\mathcal{Z} = \langle \mathcal{X} , \mathcal{Y} \rangle_{ \{ 1, \dots , M; 1, \dots, M \} }`.
+And the size of :math:`\mathcal{Z}` is :math:`\mathit{J}_1 \times \cdots \times \mathit{J}_N \times \mathit{K}_1 \times \cdots \times \mathit{K}_P`. See Cichocki’s [3]_ for more details.
 
-tf.Tensor:
+To perform tensor contraction:
 
+.. code-block:: python
 
+   >>> X = tf.constant(np.random.rand(I1, ..., IM, J1, ..., JN))
+   >>> Y = tf.constant(np.random.rand(I1, ..., IM, K1, ..., KP))
+   >>> Z = ops.mul(X, Y,  a_axis=[0,1,...,M-1], b_axis=[0,1,...,M-1])    # either a_axis or b_axis can also be tuple or a single integer
+   >>> tf.Session().run(Z)    # Z is a tf.Tensor object
+
+The arguments ``a_axis`` and ``b_axis`` specifying the modes of :math:`\mathcal{X}` and :math:`\mathcal{Y}` for contraction
+are not consecutive necessarily, but the sizes of corresponding dimensions must be equal.
+
+Classic matrix multiplication can also be performed with :func:`mul`:
+
+.. code-block:: python
+
+   >>> A = tf.constant(np.random.rand(4,5))    # matrix A with shape (4, 5)
+   >>> B = tf.constant(np.random.rand(5,4))    # matrix B with shape (5, 4)
+   >>> C = ops.mul(A, B, 1, 0)    # same as tf.matmul(A, B, transpose_a=False, transpose_b=False)
+   >>> D = ops.mul(A, B, 0, 1)    # same as tf.matmul(A, B, transpose_a=True, transpose_b=True)
+
+Class :class:`DTensor` also provides class method :func:`DTensor.mul`:
+
+.. code-block:: python
+
+   >>> X_dtensor = DTensor(np.random.rand(4,5))
+   >>> Y_dtensor = DTensor(np.random.rand(5,4))
+   >>> Z_dtensor = X_dtensor.mul(Y_dtensor, a_axis=1, b_axis=0)
+   # same as DTensor( tf.matmul(X_dtensor.T, Y_dtensor.T, transpose_a=False, transpose_b=False) )
+
+The argument ``tensor`` of :func:`DTensor.mul` only accepts :class:`DTensor` object.
 
 References
 ----------
@@ -657,6 +686,8 @@ References
        SIAM REVIEW, vol. 51, n. 3, pp. 455-500, 2009.
 .. [2] Tamara G. Kolda and Brett W. Bader, "Algorithm 862: MATLAB tensor classes for fast algorithm prototyping",
        ACM Trans. Math. Softw, 32 (4): 635-653 (2006)
+.. [3] Cichocki, Andrzej. "Era of big data processing: A new approach via tensor networks and tensor decompositions."
+     arXiv preprint arXiv:1403.2048 (2014).
 
 
 
