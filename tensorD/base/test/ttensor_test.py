@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 import tensorflow as tf
 
-from factorizer.base.type import TTensor
+from tensorD.base.type import TTensor
 
 from numpy.random import rand
 

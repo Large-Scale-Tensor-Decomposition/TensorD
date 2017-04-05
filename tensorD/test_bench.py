@@ -6,7 +6,7 @@ import sys
 sys.path.append('..')
 
 if __name__ == "__main__":
-    fileConfig('factorizer/conf/logging_config.ini')
+    fileConfig('tensorD/conf/logging_config.ini')
     # logging.getLogger().setLevel(logging.ERROR)
-    suite = unittest.TestLoader().discover('.', pattern="*_test.py")
+    suite = unittest.TestLoader().discover('.', pattern="giga_test.py")
     unittest.TextTestRunner(verbosity=2).run(suite)

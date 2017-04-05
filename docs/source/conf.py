@@ -61,7 +61,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'factorizer'
+project = 'tensorD'
 copyright = '2017, Siqi Liang'
 author = 'Siqi Liang'
 
@@ -280,7 +280,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'factorizer.tex', 'factorizer Documentation',
+    (master_doc, 'tensorD.tex', 'tensorD Documentation',
      'Siqi Liang', 'manual'),
 ]
 
@@ -322,7 +322,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'factorizer', 'factorizer Documentation',
+    (master_doc, 'tensorD', 'tensorD Documentation',
      [author], 1)
 ]
 
@@ -337,8 +337,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'factorizer', 'factorizer Documentation',
-     author, 'factorizer', 'One line description of project.',
+    (master_doc, 'tensorD', 'tensorD Documentation',
+     author, 'tensorD', 'One line description of project.',
      'Miscellaneous'),
 ]
 

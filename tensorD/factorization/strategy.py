@@ -1,9 +1,9 @@
 # Created by ay27 at 17/2/23
 import tensorflow as tf
-import factorizer.loss as ltp
-import factorizer.base.type as type
-from factorizer.base.barrier import Barrier
-from factorizer.base.logger import create_logger
+import tensorD.loss as ltp
+import tensorD.base.type as type
+from tensorD.base.barrier import Barrier
+from tensorD.base.logger import create_logger
 import numpy as np
 
 log = create_logger()

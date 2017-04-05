@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 
-import factorizer.base.ops as ops
+import tensorD.base.ops as ops
 
 
 class DTensor(object):

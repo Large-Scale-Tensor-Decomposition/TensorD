@@ -1,13 +1,13 @@
 # Created by ay27 at 17/2/24
 import numpy as np
 import tensorflow as tf
-from factorizer.dataproc.provider import Provider
-from factorizer.factorization.executor import Executor
-from factorizer.factorization.strategy import PPTTF
-from factorizer.base.logger import create_logger
-import factorizer.base.logger
+from tensorD.dataproc.provider import Provider
+from tensorD.factorization.executor import Executor
+from tensorD.factorization.strategy import PPTTF
+from tensorD.base.logger import create_logger
+import tensorD.base.logger
 
-factorizer.base.logger.DEFAULT_TYPE = 'RELEASE'
+tensorD.base.logger.DEFAULT_TYPE = 'RELEASE'
 
 logger = create_logger()
 

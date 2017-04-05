@@ -58,7 +58,7 @@ def unfold(tensor, mode=0):
 
     Examples
     --------
-    >>> import factorizer.base.ops as ops
+    >>> import tensorD.base.ops as ops
     >>> import tensorflow as tf
     >>> import numpy as np
     >>> tensor = tf.constant(np.arange(24).reshape(3,4,2))
@@ -95,7 +95,7 @@ def fold(unfolded_tensor, mode, shape):
     --------
     >>> import tensorflow as tf
     >>> import numpy as np
-    >>> import factorizer.base.ops as ops
+    >>> import tensorD.base.ops as ops
     >>> tensor = tf.constant(np.arange(24).reshape(2,3,4))
     >>> unfolded_tensor = ops.unfold(tensor, 1)
     >>> folded_tensor = ops.fold(unfolded_tensor, 1, (2,3,4))
@@ -136,7 +136,7 @@ def t2mat(tensor, r_axis, c_axis):
     --------
     >>> import tensorflow as tf
     >>> import numpy as np
-    >>> import factorizer.base.ops as ops
+    >>> import tensorD.base.ops as ops
     >>> tensor = tf.constant(np.arange(24).reshape(2,3,4))
     >>> mat1 = ops.t2mat(tensor, 1, -1)     # matrix shape is 3x(2*4)=3x8
     >>> mat2 = ops.t2mat(tensor, [0,2], -1) # matrix shape is (2*4)x3=8x3

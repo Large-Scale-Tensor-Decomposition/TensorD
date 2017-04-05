@@ -2,8 +2,8 @@
 import threading
 
 import tensorflow as tf
-from factorizer.base.logger import create_logger
-from factorizer.base.barrier import Barrier
+from tensorD.base.logger import create_logger
+from tensorD.base.barrier import Barrier
 logger = create_logger()
 
 

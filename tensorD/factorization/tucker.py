@@ -2,9 +2,9 @@
 
 import tensorflow as tf
 import numpy as np
-from factorizer.loss import rmse
-from factorizer.base import type
-from factorizer.base import ops
+from tensorD.loss import rmse
+from tensorD.base import type
+from tensorD.base import ops
 
 
 def HOSVD(tensor, ranks):

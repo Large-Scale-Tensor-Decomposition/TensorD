@@ -1,7 +1,7 @@
 # Created by ay27 at 17/3/1
 import tensorflow as tf
 import time
-from factorizer.base.logger import create_logger
+from tensorD.base.logger import create_logger
 
 logger = create_logger()
 

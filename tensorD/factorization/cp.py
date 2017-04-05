@@ -1,10 +1,10 @@
 # Created by ay27 at 17/1/13
 import numpy as np
 import tensorflow as tf
-from factorizer.base.type import KTensor
+from tensorD.base.type import KTensor
 
-import factorizer.base.ops as ops
-from factorizer.loss import rmse
+import tensorD.base.ops as ops
+from tensorD.loss import rmse
 from numpy.random import rand
 
 
