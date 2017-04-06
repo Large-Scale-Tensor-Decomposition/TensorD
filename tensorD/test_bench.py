@@ -8,5 +8,5 @@ sys.path.append('..')
 if __name__ == "__main__":
     fileConfig('tensorD/conf/logging_config.ini')
     # logging.getLogger().setLevel(logging.ERROR)
-    suite = unittest.TestLoader().discover('.', pattern="giga_test.py")
+    suite = unittest.TestLoader().discover('.', pattern="ops_test.py")
     unittest.TextTestRunner(verbosity=2).run(suite)

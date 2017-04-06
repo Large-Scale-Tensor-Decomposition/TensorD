@@ -229,6 +229,23 @@ class MyTestCase(unittest.TestCase):
             tf_res = ops.khatri([tf_A, tf_B, tf_C]).eval()
         np.testing.assert_array_almost_equal(np_res, tf_res)
 
+    def test_xcb(self):
+        X = rand(70, 3000)
+        np_B = rand(50, 40)
+        np_C = rand(60, 40)
+
+        tfB = tf.constant(np_B, tf.float64)
+        tfC = tf.constant(np_C, tf.float64)
+        X = tf.constant(X)
+
+        with tf.Session().as_default():
+            t1 = time.time()
+            res = ops.xcb(X, tfC, tfB).eval()
+            print("t1 = ",time.time() - t1)
+            t2 = time.time()
+            res1 = (tf.matmul(X, ops.khatri([tfC, tfB]))).eval()
+            print("t2 = ", time.time() - t2)
+        np.testing.assert_array_almost_equal(res, res1)
 
 if __name__ == '__main__':
     unittest.main()

@@ -460,3 +460,30 @@ def khatri(matrices, skip_matrices_index=None, reverse=False):
     r_size = tf.reduce_prod([int(mat.get_shape()[0].value) for mat in matrices])
     back_shape = (r_size, int(matrices[0].get_shape()[1].value))
     return tf.reshape(tmp, back_shape)
+
+
+def xcb(X, C, B):
+    X = unfold(X, 0)
+    I = X.get_shape()[0].value
+    J = B.get_shape()[0].value
+    K = C.get_shape()[0].value
+    R = C.get_shape()[1].value
+
+    I1 = tf.ones((I, 1), X.dtype)
+    J1 = tf.ones((J, 1), X.dtype)
+    K1 = tf.ones((K, 1), X.dtype)
+    JK1 = tf.ones((J * K, 1), X.dtype)
+
+    binX = tf.cast(tf.not_equal(X, tf.zeros(X.get_shape(), X.dtype)), X.dtype)
+
+    res = []
+
+    for r in range(R):
+        Cr = tf.slice(C, [0, r], [K, 1])
+        Br = tf.slice(B, [0, r], [J, 1])
+        N1 = hadamard([X, tf.matmul(I1, kron([Cr, J1]), transpose_b=True)])
+        N2 = hadamard([binX, tf.matmul(I1, kron([K1, Br]), transpose_b=True)])
+        N3 = hadamard([N1, N2])
+
+        res.append(tf.matmul(N3, JK1))
+    return tf.reshape(tf.stack(res, axis=1), (I, R))
