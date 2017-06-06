@@ -6,6 +6,85 @@ from tensorD.base.type import KTensor
 import tensorD.base.ops as ops
 from tensorD.loss import rmse
 from numpy.random import rand
+from tensorD.factorization.factorization import Model, BaseFact
+from tensorD.factorization.env import Environment
+
+
+class CP_ALS(BaseFact):
+    class CP_Args(object):
+        def __init__(self,
+                     rank=20,
+                     tol=10e-6,
+                     validation_internal=-1,
+                     get_lambda=False,
+                     get_rmse=False,
+                     verbose=False):
+            self.rank = rank
+            self.tol = tol
+            self.validation_internal = validation_internal
+            self.get_lambda = get_lambda
+            self.get_rmse = get_rmse
+            self.verbose = verbose
+
+    def __init__(self, env):
+        assert isinstance(env, Environment)
+        self.env = env
+        self.model = None
+        self.is_train_finish = False
+
+    def build_model(self, args) -> Model:
+        assert isinstance(args, CP_ALS.CP_Args)
+
+        if self.env.is_distributed():
+            # TODO
+            pass
+        else:
+            input_data = self.env.full_data()
+            shape = input_data.get_shape().as_list()
+            order = len(shape)
+            A = [tf.Variable(rand(sp, args.rank)) for sp in shape]
+            mats = [ops.unfold(input_data, mode) for mode in range(order)]
+
+            assign_op = [None for _ in range(order)]
+            for mode in range(order):
+                AtA = [tf.matmul(A[ii], A[ii], transpose_a=True) for ii in range(order)]
+                V = ops.hadamard(AtA, skip_matrices_index=mode)
+                # Unew
+                XA = tf.matmul(mats[mode], ops.khatri(A, mode, True))
+                assign_op[mode] = A[mode] = A[mode].assign(
+                    tf.transpose(tf.matrix_solve(tf.transpose(V), tf.transpose(XA))))
+
+            P = KTensor(A)
+            full_op = P.extract()
+            loss_op = rmse(input_data - full_op)
+            train_op = tf.group(*assign_op)
+            var_list = A
+            init_op = tf.global_variables_initializer()
+
+        self.model = Model(self.env, train_op, loss_op, var_list, init_op, full_op, args)
+        return self.model
+
+    def predict(self, key):
+        pass
+
+    def train(self, steps):
+        self.is_train_finish = False
+        sess = self.env.sess
+        model = self.model
+        args = model.args
+
+        sess.run(model.init_op)
+        print('CP model initial finish')
+        for step in range(steps):
+            sess.run(model.train_op)
+            if args.verbose or step == 0 or step + 1 == steps or step % args.validation_internal == 0:
+                loss_v = sess.run(model.loss)
+                print('step=%d, loss=%f' % (step, loss_v))
+        print('CP model train finish, with loss = %f' % loss_v)
+        self.is_train_finish = True
+
+    def full(self):
+        pass
 
 
 def cp(sess, tensor, rank, steps=100, tol=10e-4, ignore_tol=True, get_lambdas=False, get_rmse=False, verbose=False):
