@@ -1,13 +1,11 @@
 # Created by ay27 at 17/1/13
 import numpy as np
 import tensorflow as tf
-from tensorD.base.type import KTensor
-
-import tensorD.base.ops as ops
+from tensorD.base import *
 from tensorD.loss import rmse
 from numpy.random import rand
-from tensorD.factorization.factorization import Model, BaseFact
-from tensorD.factorization.env import Environment
+from .factorization import Model, BaseFact
+from .env import Environment
 
 
 class CP_ALS(BaseFact):
@@ -50,14 +48,13 @@ class CP_ALS(BaseFact):
             for mode in range(order):
                 AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d' % ii) for ii in range(order)]
                 V = ops.hadamard(AtA, skip_matrices_index=mode)
-                # Unew
                 XA = tf.matmul(mats[mode], ops.khatri(A, mode, True))
                 assign_op[mode] = A[mode] = A[mode].assign(
                     tf.transpose(tf.matrix_solve(tf.transpose(V), tf.transpose(XA))))
 
             P = KTensor(A)
             full_op = P.extract()
-            loss_op = rmse(input_data - full_op)
+            loss_op = rmse(input_data, full_op)
 
             tf.summary.scalar('loss', loss_op)
 
@@ -69,8 +66,10 @@ class CP_ALS(BaseFact):
         self.model = Model(self.env, train_op, loss_op, var_list, init_op, full_op, args)
         return self.model
 
-    def predict(self, key):
-        pass
+    def predict(self, *key):
+        if not self.full_tensor:
+            raise TensorErr('improper stage to call predict before the model is trained')
+        return self.full_tensor.item(key)
 
     def train(self, steps):
         self.is_train_finish = False

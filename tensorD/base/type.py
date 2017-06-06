@@ -1,8 +1,7 @@
 # Created by ay27 at 17/1/11
 import numpy as np
 import tensorflow as tf
-
-import tensorD.base.ops as ops
+from . import ops
 
 
 class DTensor(object):
