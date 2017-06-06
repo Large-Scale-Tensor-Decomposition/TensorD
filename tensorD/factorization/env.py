@@ -21,7 +21,7 @@ class Environment(object):
         return self._data_provider.data_queue()
 
     def full_data(self):
-        return self._data_provider.full_data()
+        return self._data_provider.full_tensor()
 
     @property
     def summary_path(self):
