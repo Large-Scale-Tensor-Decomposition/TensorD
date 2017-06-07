@@ -162,9 +162,10 @@ class KTensor(object):
         tf.Tensor
             full-shape tensor
         """
-        tmp = ops.khatri(self.U)
-        back_shape = [U.get_shape()[0].value for U in self.U]
-        return tf.reshape(tf.matmul(tmp, self.lambdas), back_shape)
+        with tf.name_scope('KTensor-extract') as scope:
+            tmp = ops.khatri(self.U)
+            back_shape = [U.get_shape()[0].value for U in self.U]
+            return tf.reshape(tf.matmul(tmp, self.lambdas), back_shape)
 
 
 class TTensor(object):

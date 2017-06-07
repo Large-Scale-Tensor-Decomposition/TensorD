@@ -3,6 +3,9 @@ import pickle
 
 
 class Model(object):
+    """
+    The Model class holding the
+    """
     def __init__(self, env, train_op, loss_op, var_list, init_op, full_tensor_op, args):
         self.env = env
         self.train_op = train_op
@@ -12,22 +15,23 @@ class Model(object):
         self.full_tensor_op = full_tensor_op
         self.args = args
 
-    def save(self, save_path):
-        pickle.dump(self, open(save_path, 'wb'))
-
-    @staticmethod
-    def load(save_path):
-        return pickle.load(open(save_path, 'rb'))
+    # TODO : how to save and restore the model properly
+    # def save(self, save_path):
+    #     pickle.dump(self, open(save_path, 'wb'))
+    #
+    # @staticmethod
+    # def load(save_path):
+    #     return pickle.load(open(save_path, 'rb'))
 
 
 class BaseFact(object):
     def build_model(self, args) -> Model:
         raise NotImplementedError
 
-    def predict(self, key):
+    def train(self, steps=None):
         raise NotImplementedError
 
-    def train(self, steps):
+    def predict(self, *key):
         raise NotImplementedError
 
     def full(self):

@@ -70,8 +70,9 @@ def unfold(tensor, mode=0):
        [ 6, 14, 22,  7, 15, 23]])
 
     """
-    perm = _gen_perm(tensor.get_shape().ndims, mode)
-    return tf.reshape(tf.transpose(tensor, perm), (tensor.get_shape().as_list()[mode], -1))
+    with tf.name_scope('unfold') as scope:
+        perm = _gen_perm(tensor.get_shape().ndims, mode)
+        return tf.reshape(tf.transpose(tensor, perm), (tensor.get_shape().as_list()[mode], -1))
 
 
 def fold(unfolded_tensor, mode, shape):
@@ -107,10 +108,11 @@ def fold(unfolded_tensor, mode, shape):
         [16, 17, 18, 19],
         [20, 21, 22, 23]]])
     """
-    perm = _gen_perm(len(shape), mode)
-    shape_now = [shape[_] for _ in perm]
-    back_perm = [item[0] for item in sorted(enumerate(perm), key=lambda x: x[1])]
-    return tf.transpose(tf.reshape(unfolded_tensor, shape_now), back_perm)
+    with tf.name_scope('fold') as scope:
+        perm = _gen_perm(len(shape), mode)
+        shape_now = [shape[_] for _ in perm]
+        back_perm = [item[0] for item in sorted(enumerate(perm), key=lambda x: x[1])]
+        return tf.transpose(tf.reshape(unfolded_tensor, shape_now), back_perm)
 
 
 def t2mat(tensor, r_axis, c_axis):
@@ -144,21 +146,22 @@ def t2mat(tensor, r_axis, c_axis):
     >>> mat4 = ops.t2mat(tensor, 1, [0, 2]) # LMV-type mode-2 unfolding
 
     """
-    if isinstance(r_axis, int):
-        indies = [r_axis]
-        row_size = tensor.get_shape()[r_axis].value
-    else:
-        indies = r_axis
-        row_size = np.prod([tensor.get_shape()[i].value for i in r_axis])
-    if c_axis == -1:
-        c_axis = [_ for _ in range(tensor.get_shape().ndims) if _ not in indies]
-    if isinstance(c_axis, int):
-        indies.append(c_axis)
-        col_size = tensor.get_shape()[c_axis].value
-    else:
-        indies = indies + c_axis
-        col_size = np.prod([tensor.get_shape()[i].value for i in c_axis])
-    return tf.reshape(tf.transpose(tensor, indies), (int(row_size), int(col_size)))
+    with tf.name_scope('t2mat') as scope:
+        if isinstance(r_axis, int):
+            indies = [r_axis]
+            row_size = tensor.get_shape()[r_axis].value
+        else:
+            indies = r_axis
+            row_size = np.prod([tensor.get_shape()[i].value for i in r_axis])
+        if c_axis == -1:
+            c_axis = [_ for _ in range(tensor.get_shape().ndims) if _ not in indies]
+        if isinstance(c_axis, int):
+            indies.append(c_axis)
+            col_size = tensor.get_shape()[c_axis].value
+        else:
+            indies = indies + c_axis
+            col_size = np.prod([tensor.get_shape()[i].value for i in c_axis])
+        return tf.reshape(tf.transpose(tensor, indies), (int(row_size), int(col_size)))
 
 
 def vectorize(tensor):
@@ -182,7 +185,7 @@ def vectorize(tensor):
     array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
        17, 18, 19, 20, 21, 22, 23])
     """
-    return tf.reshape(tensor, [-1])
+    return tf.reshape(tensor, [-1], name='vectorize')
 
 
 def vec_to_tensor(vec, shape):
@@ -201,7 +204,7 @@ def vec_to_tensor(vec, shape):
     tf.Tensor
         full tensor with shape ``shape``
     """
-    return tf.reshape(vec, shape)
+    return tf.reshape(vec, shape, name='vec2tensor')
 
 
 def mul(tensorA, tensorB, a_axis, b_axis):
@@ -246,16 +249,17 @@ def mul(tensorA, tensorB, a_axis, b_axis):
     .. [1] Cichocki, Andrzej. "Era of big data processing: A new approach via tensor networks and tensor decompositions."
      arXiv preprint arXiv:1403.2048 (2014).
     """
-    if isinstance(a_axis, int):
-        a_axis = [a_axis]
-    if isinstance(b_axis, int):
-        b_axis = [b_axis]
-    A = t2mat(tensorA, a_axis, -1)
-    B = t2mat(tensorB, b_axis, -1)
-    mat_dot = tf.matmul(A, B, transpose_a=True)
-    back_shape = [tensorA.get_shape()[_].value for _ in range(tensorA.get_shape().ndims) if _ not in a_axis] + \
-                 [tensorB.get_shape()[_].value for _ in range(tensorB.get_shape().ndims) if _ not in b_axis]
-    return tf.reshape(mat_dot, back_shape)
+    with tf.name_scope('contraction') as scope:
+        if isinstance(a_axis, int):
+            a_axis = [a_axis]
+        if isinstance(b_axis, int):
+            b_axis = [b_axis]
+        A = t2mat(tensorA, a_axis, -1)
+        B = t2mat(tensorB, b_axis, -1)
+        mat_dot = tf.matmul(A, B, transpose_a=True)
+        back_shape = [tensorA.get_shape()[_].value for _ in range(tensorA.get_shape().ndims) if _ not in a_axis] + \
+                     [tensorB.get_shape()[_].value for _ in range(tensorB.get_shape().ndims) if _ not in b_axis]
+        return tf.reshape(mat_dot, back_shape)
 
 
 def ttm(tensor, matrices, axis=None, transpose=False, skip_matrices_index=None):
@@ -311,45 +315,46 @@ def ttm(tensor, matrices, axis=None, transpose=False, skip_matrices_index=None):
     >>> contracted4 = ops.ttm(tensorB, mats, transpose=True) # shape is 2x4x3
 
     """
-    # the axis and skip_matrices_index can not be set both, or will make it confused
-    if axis is not None and skip_matrices_index is not None:
-        raise ValueError('axis and skip_matrices_index can not be set at the same time')
+    with tf.name_scope('ttm') as scope:
+        # the axis and skip_matrices_index can not be set both, or will make it confused
+        if axis is not None and skip_matrices_index is not None:
+            raise ValueError('axis and skip_matrices_index can not be set at the same time')
 
-    order = tensor.get_shape().ndims
+        order = tensor.get_shape().ndims
 
-    if not isinstance(matrices, list):
-        matrices = [matrices]
-    matrices_cnt = len(matrices)
+        if not isinstance(matrices, list):
+            matrices = [matrices]
+        matrices_cnt = len(matrices)
 
-    if skip_matrices_index is not None:
-        # skip matrices, will remove some matrix in matrices
-        matrices = _skip(matrices, skip_matrices_index)
+        if skip_matrices_index is not None:
+            # skip matrices, will remove some matrix in matrices
+            matrices = _skip(matrices, skip_matrices_index)
 
-        # construct the correct axis
-        if isinstance(skip_matrices_index, int):
-            axis = [i for i in range(min(order, matrices_cnt)) if i != skip_matrices_index]
+            # construct the correct axis
+            if isinstance(skip_matrices_index, int):
+                axis = [i for i in range(min(order, matrices_cnt)) if i != skip_matrices_index]
+            else:
+                axis = [i for i in range(min(order, matrices_cnt)) if i not in skip_matrices_index]
+
+        if axis is None:
+            axis = [i for i in range(matrices_cnt)]
+
+        # example: xyz,by,cz->xbc
+        tensor_start = ord('z') - order + 1
+        mats_start = ord('a')
+        tensor_op = ''.join([chr(tensor_start + i) for i in range(order)])
+        if transpose:
+            mat_op = ','.join([chr(tensor_start + i) + chr(mats_start + i) for i in axis])
         else:
-            axis = [i for i in range(min(order, matrices_cnt)) if i not in skip_matrices_index]
+            mat_op = ','.join([chr(mats_start + i) + chr(tensor_start + i) for i in axis])
 
-    if axis is None:
-        axis = [i for i in range(matrices_cnt)]
+        target_op = [chr(tensor_start + i) for i in range(order)]
+        for i in axis:
+            target_op[i] = chr(mats_start + i)
+        target_op = ''.join(target_op)
 
-    # example: xyz,by,cz->xbc
-    tensor_start = ord('z') - order + 1
-    mats_start = ord('a')
-    tensor_op = ''.join([chr(tensor_start + i) for i in range(order)])
-    if transpose:
-        mat_op = ','.join([chr(tensor_start + i) + chr(mats_start + i) for i in axis])
-    else:
-        mat_op = ','.join([chr(mats_start + i) + chr(tensor_start + i) for i in axis])
-
-    target_op = [chr(tensor_start + i) for i in range(order)]
-    for i in axis:
-        target_op[i] = chr(mats_start + i)
-    target_op = ''.join(target_op)
-
-    operator = tensor_op + ',' + mat_op + '->' + target_op
-    return tf.einsum(operator, *([tensor] + matrices))
+        operator = tensor_op + ',' + mat_op + '->' + target_op
+        return tf.einsum(operator, *([tensor] + matrices))
 
 
 def inner(tensorA, tensorB):
@@ -370,9 +375,10 @@ def inner(tensorA, tensorB):
     ValueError
         raise if the shapes are not equal
     """
-    if tensorA.get_shape() != tensorB.get_shape():
-        raise ValueError('the shape of tensor A and B must be equal')
-    return tf.reduce_sum(vectorize(tensorA) * vectorize(tensorB))
+    with tf.name_scope('inner') as scope:
+        if tensorA.get_shape() != tensorB.get_shape():
+            raise ValueError('the shape of tensor A and B must be equal')
+        return tf.reduce_sum(vectorize(tensorA) * vectorize(tensorB))
 
 
 def hadamard(matrices, skip_matrices_index=None):
@@ -391,8 +397,9 @@ def hadamard(matrices, skip_matrices_index=None):
     tf.Tensor
         result of hadamard product
     """
-    matrices = _skip(matrices, skip_matrices_index)
-    return reduce(lambda a, b: a * b, matrices)
+    with tf.name_scope('hadamard') as scope:
+        matrices = _skip(matrices, skip_matrices_index)
+        return reduce(lambda a, b: a * b, matrices)
 
 
 def kron(matrices, skip_matrices_index=None, reverse=False):
@@ -413,19 +420,20 @@ def kron(matrices, skip_matrices_index=None, reverse=False):
     tf.Tensor
         a big matrix of kronecker product result
     """
-    matrices = _skip(matrices, skip_matrices_index)
-    if reverse:
-        matrices = matrices[::-1]
-    start = ord('a')
-    source = ','.join(chr(start + i) + chr(start + i + 1) for i in range(0, 2 * len(matrices), 2))
-    row = ''.join(chr(start + i) for i in range(0, 2 * len(matrices), 2))
-    col = ''.join(chr(start + i) for i in range(1, 2 * len(matrices), 2))
-    operation = source + '->' + row + col
-    tmp = tf.einsum(operation, *matrices)
-    r_size = np.prod([mat.get_shape()[0].value for mat in matrices])
-    c_size = np.prod([mat.get_shape()[1].value for mat in matrices])
-    back_shape = (r_size, c_size)
-    return tf.reshape(tmp, back_shape)
+    with tf.name_scope('kronecker') as scope:
+        matrices = _skip(matrices, skip_matrices_index)
+        if reverse:
+            matrices = matrices[::-1]
+        start = ord('a')
+        source = ','.join(chr(start + i) + chr(start + i + 1) for i in range(0, 2 * len(matrices), 2))
+        row = ''.join(chr(start + i) for i in range(0, 2 * len(matrices), 2))
+        col = ''.join(chr(start + i) for i in range(1, 2 * len(matrices), 2))
+        operation = source + '->' + row + col
+        tmp = tf.einsum(operation, *matrices)
+        r_size = np.prod([mat.get_shape()[0].value for mat in matrices])
+        c_size = np.prod([mat.get_shape()[1].value for mat in matrices])
+        back_shape = (r_size, c_size)
+        return tf.reshape(tmp, back_shape)
 
 
 def khatri(matrices, skip_matrices_index=None, reverse=False):
@@ -447,19 +455,20 @@ def khatri(matrices, skip_matrices_index=None, reverse=False):
         a matrix of khatri-rao result
 
     """
-    matrices = _skip(matrices, skip_matrices_index)
-    if reverse:
-        matrices = matrices[::-1]
-    start = ord('a')
-    common_dim = 'z'
+    with tf.name_scope('khatri-rao') as scope:
+        matrices = _skip(matrices, skip_matrices_index)
+        if reverse:
+            matrices = matrices[::-1]
+        start = ord('a')
+        common_dim = 'z'
 
-    target = ''.join(chr(start + i) for i in range(len(matrices)))
-    source = ','.join(i + common_dim for i in target)
-    operation = source + '->' + target + common_dim
-    tmp = tf.einsum(operation, *matrices)
-    r_size = tf.reduce_prod([int(mat.get_shape()[0].value) for mat in matrices])
-    back_shape = (r_size, int(matrices[0].get_shape()[1].value))
-    return tf.reshape(tmp, back_shape)
+        target = ''.join(chr(start + i) for i in range(len(matrices)))
+        source = ','.join(i + common_dim for i in target)
+        operation = source + '->' + target + common_dim
+        tmp = tf.einsum(operation, *matrices)
+        r_size = tf.reduce_prod([int(mat.get_shape()[0].value) for mat in matrices])
+        back_shape = (r_size, int(matrices[0].get_shape()[1].value))
+        return tf.reshape(tmp, back_shape)
 
 
 def xcb(X, C, B):
