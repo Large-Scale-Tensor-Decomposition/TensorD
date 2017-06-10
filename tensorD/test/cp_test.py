@@ -6,7 +6,6 @@ from tensorD.dataproc.provider import Provider
 import tensorflow as tf
 import numpy as np
 
-
 if __name__ == '__main__':
     data_provider = Provider()
     data_provider.full_tensor = lambda: tf.constant(np.arange(24).reshape(3, 4, 2), dtype=tf.float64)

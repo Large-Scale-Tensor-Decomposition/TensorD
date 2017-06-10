@@ -78,9 +78,24 @@ class HOOI(BaseFact):
 
     def build_model(self, args) -> Model:
         if self._env.is_distributed:
-            pass
+            return self._build_distributed_model(args)
         else:
             return self._build_single_model(args)
+
+    def train(self, steps=None):
+        if self._env.is_distributed:
+            self._train_in_distributed(steps)
+        else:
+            self._train_in_single(steps)
+
+    def full(self):
+        return self._full_tensor
+
+    def predict(self, *key):
+        return self._full_tensor.item(key)
+
+    def _build_distributed_model(self, args):
+        pass
 
     def _build_single_model(self, args):
         input_data = self._env.full_data()
@@ -109,31 +124,34 @@ class HOOI(BaseFact):
         loss_op = rmse_ignore_zero(input_data, full_tensor_op)
         var_list = A
 
+        tf.summary.scalar('loss', loss_op)
+
         self._model = Model(self._env, train_op, loss_op, var_list, init_op, full_tensor_op, args)
         return self._model
 
-    def train(self, steps=None):
+    def _train_in_distributed(self, steps):
+        pass
+
+    def _train_in_single(self, steps):
         sess = self._env.sess
         model = self._model
         args = model.args
+        sum_op = tf.summary.merge_all()
+        sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
 
         sess.run(model.init_op)
         for step in range(steps):
             sess.run(model.train_op)
             if step + 1 == steps:
                 loss_v, self._full_tensor = sess.run([model.loss_op, model.full_tensor_op])
-                print('step %d, RMSE=%f' % (step, loss_v))
+                sum_writer.add_summary(sess.run(sum_op), step)
+                print('step=%d, RMSE=%f' % (step, loss_v))
             elif args.verbose or step == 0 or step % args.validation_internal == 0:
                 loss_v = sess.run(model.loss_op)
-                print('step %d, RMSE=%f' % (step, loss_v))
+                sum_writer.add_summary(sess.run(sum_op), step)
+                print('step=%d, RMSE=%f' % (step, loss_v))
 
         self._is_train_finish = True
-
-    def full(self):
-        return self._full_tensor
-
-    def predict(self, *key):
-        return self._full_tensor.item(key)
 
 # def HOSVD(tensor, ranks):
 # """
