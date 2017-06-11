@@ -17,6 +17,9 @@ class Environment(object):
         # TODO
         return False
 
+    def worker_id(self):
+        pass
+
     def data_queue(self):
         return self._data_provider.data_queue()
 

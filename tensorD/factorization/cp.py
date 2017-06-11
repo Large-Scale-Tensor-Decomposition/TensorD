@@ -73,6 +73,7 @@ class CP_ALS(BaseFact):
 
         P = KTensor(A)
         full_op = P.extract()
+        # TODO : does it correct?
         loss_op = rmse_ignore_zero(input_data, full_op)
 
         tf.summary.scalar('loss', loss_op)
