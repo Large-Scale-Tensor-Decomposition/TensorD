@@ -20,7 +20,7 @@ def l2(f, h):
 
     """
     with tf.name_scope('L2-norm') as scope:
-        return tf.group(0.5 * tf.reduce_sum(tf.square(f - h)))
+        return 0.5 * tf.reduce_sum(tf.square(f - h))
 
 
 def rmse(A, B):

@@ -32,12 +32,13 @@ class HOSVD(BaseFact):
 
         init_op = tf.global_variables_initializer()
         train_op = tf.group(g, *A)
-        full_tensor_op = P.extract()
-        loss_op = rmse_ignore_zero(input_data, full_tensor_op)
+        full_op = P.extract()
+        loss_op = rmse_ignore_zero(input_data, full_op)
         var_list = A
 
-        self._model = Model(self._env, train_op, loss_op, var_list, init_op, full_tensor_op, args)
+        self._model = Model(self._env, train_op, loss_op, var_list, init_op, full_op, args)
         return self._model
+
 
     def train(self, steps=None):
         """
@@ -50,10 +51,18 @@ class HOSVD(BaseFact):
         -------
 
         """
+        self._is_train_finish = False
+        self._full_tensor = None
         sess = self._env.sess
         model = self._model
+
         sess.run(model.init_op)
+        print('HOSVD model initial finish')
         _, loss_v, self._full_tensor = sess.run([model.train_op, model.loss_op, model.full_tensor_op])
+        self._factors = sess.run(model.var_list)
+        g = ops.ttm(model.full_tensor_op, model.var_list, transpose=True)
+        self._core = sess.run(g)
+        print('HOSVD model train finish, with RMSE = %f' % loss_v)
         self._is_train_finish = True
 
     def full(self):
@@ -61,6 +70,15 @@ class HOSVD(BaseFact):
 
     def predict(self, *key):
         return self._full_tensor.item(key)
+
+    def factors(self):
+        return self._factors
+
+    def core(self):
+        return self._core
+
+    def train_finish(self):
+        return self._is_train_finish
 
 
 class HOOI(BaseFact):
@@ -77,16 +95,11 @@ class HOOI(BaseFact):
         self._is_train_finish = False
 
     def build_model(self, args) -> Model:
-        if self._env.is_distributed:
-            return self._build_distributed_model(args)
-        else:
-            return self._build_single_model(args)
+        assert isinstance(args, HOOI.HOOI_Args)
+        return self._build_single_model(args)
 
     def train(self, steps=None):
-        if self._env.is_distributed:
-            self._train_in_distributed(steps)
-        else:
-            self._train_in_single(steps)
+        self._train_in_single(steps)
 
     def full(self):
         return self._full_tensor
@@ -94,8 +107,15 @@ class HOOI(BaseFact):
     def predict(self, *key):
         return self._full_tensor.item(key)
 
-    def _build_distributed_model(self, args):
-        pass
+    def factors(self):
+        return self._factors
+
+    def core(self):
+        return self._core
+
+    def train_finish(self):
+        return self._is_train_finish
+
 
     def _build_single_model(self, args):
         input_data = self._env.full_data()
@@ -129,9 +149,6 @@ class HOOI(BaseFact):
         self._model = Model(self._env, train_op, loss_op, var_list, init_op, full_tensor_op, args)
         return self._model
 
-    def _train_in_distributed(self, steps):
-        pass
-
     def _train_in_single(self, steps):
         sess = self._env.sess
         model = self._model
@@ -140,50 +157,20 @@ class HOOI(BaseFact):
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
 
         sess.run(model.init_op)
+        print('HOOI model initial finish')
         for step in range(steps):
             sess.run(model.train_op)
             if step + 1 == steps:
                 loss_v, self._full_tensor = sess.run([model.loss_op, model.full_tensor_op])
                 sum_writer.add_summary(sess.run(sum_op), step)
+                self._factors = sess.run(model.var_list)
+                g = ops.ttm(model.full_tensor_op, model.var_list, transpose=True)
+                self._core = sess.run(g)
                 print('step=%d, RMSE=%f' % (step, loss_v))
             elif args.verbose or step == 0 or step % args.validation_internal == 0:
                 loss_v = sess.run(model.loss_op)
                 sum_writer.add_summary(sess.run(sum_op), step)
                 print('step=%d, RMSE=%f' % (step, loss_v))
-
+        print('HOOI model train finish, with RMSE = %f' % loss_v)
         self._is_train_finish = True
 
-# def HOSVD(tensor, ranks):
-# """
-#
-#     :param tensor: tf.Tensor
-#
-#     :param ranks: List
-#
-#     :return: TTensor
-#     """
-#     order = tensor.get_shape().ndims
-#     A = []
-#     for n in range(order):
-#         _, U, _ = tf.svd(ops.unfold(tensor, n), full_matrices=True)
-#         A.append(U[:, :ranks[n]])
-#     g = ops.ttm(tensor, A, transpose=True)
-#     return g, A
-
-
-# def HOOI(tensor, ranks, steps=100, verbose=False):
-#     order = tensor.get_shape().ndims
-#     _, A = HOSVD(tensor, ranks)
-#
-#     for step in range(steps):
-#         for n in range(order):
-#             Y = ops.ttm(tensor, A, skip_matrices_index=n, transpose=True)
-#             _, tmp, _ = tf.svd(ops.unfold(Y, n))
-#             A[n] = tmp[:, :ranks[n]]
-#         if verbose:
-#             g = ops.ttm(tensor, A, transpose=True)
-#             res = ops.ttm(g, A)
-#             err = rmse(tensor - res).eval()
-#             print('step %d, rmse=%f' % (step, err))
-#     g = ops.ttm(tensor, A, transpose=True)
-#     return type.TTensor(g, A)

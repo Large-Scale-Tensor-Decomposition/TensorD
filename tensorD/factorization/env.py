@@ -3,14 +3,9 @@ import tensorflow as tf
 
 
 class Environment(object):
-    def __init__(self, data_provider, summary_path=None, is_distributed=False, cluster_spec=None):
+    def __init__(self, data_provider, summary_path=None):
         self._data_provider = data_provider
-        self._is_distributed = is_distributed
         self._sum_path = summary_path
-
-    @property
-    def is_distributed(self):
-        return self._is_distributed
 
     @property
     def is_master(self):

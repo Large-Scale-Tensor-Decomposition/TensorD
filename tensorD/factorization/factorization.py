@@ -7,10 +7,11 @@ class Model(object):
     The Model class holding the
     """
 
-    def __init__(self, env, train_op, loss_op, var_list, init_op, full_tensor_op, args):
+    def __init__(self, env, train_op, loss_op, fit_op, var_list, init_op, full_tensor_op, args):
         self.env = env
         self.train_op = train_op
         self.loss_op = loss_op
+        self.fit_op = fit_op
         self.var_list = var_list
         self.init_op = init_op
         self.full_tensor_op = full_tensor_op
