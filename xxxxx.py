@@ -14,6 +14,7 @@ from factorization.env import Environment
 from factorization.cp import CP_ALS
 from dataproc.provider import Provider
 from factorization.tucker import *
+from DataBag import *
 
 
 #h = tf.constant([[0,1,2],[3,4,5],[6,7,8]],dtype=tf.float32)
@@ -183,9 +184,10 @@ def my_HOOI_test():
     print(seem_full - hooi.full())
 
 
-my_cp_test()
 
 
 
 
+
+print(gen_test_tensor([3,4,5],3))
 

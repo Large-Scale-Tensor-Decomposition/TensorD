@@ -7,7 +7,7 @@ def l2(f, h):
     """
     L2 norm
 
-    loss = \frac{1}{2} ||f - h||^2_2
+    loss = \\frac{1}{2} ||f - h||^2_2
     Parameters
     ----------
     f : tf.Tensor
@@ -27,8 +27,8 @@ def rmse(A, B):
     """
     Root Mean Square Error.
 
-    RMSE = \sqrt{ \frac{1}{c} \left \| A - B  \right \|_F^2}
-         = \sqrt{ \frac{1}{c} \sum (A_{ij} - B_{ij})^2}
+    RMSE = \\sqrt{ \\frac{1}{c} \\left \\| A - B  \\right \\|_F^2}
+         = \\sqrt{ \\frac{1}{c} \\sum (A_{ij} - B_{ij})^2}
 
     Parameters
     ----------

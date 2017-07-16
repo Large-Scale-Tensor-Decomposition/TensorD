@@ -14,6 +14,14 @@ Subpackages
 Submodules
 ----------
 
+tensorD.DataBag module
+----------------------
+
+.. automodule:: tensorD.DataBag
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 tensorD.loss module
 -------------------
 

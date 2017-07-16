@@ -27,14 +27,6 @@ tensorD.factorization.env module
     :undoc-members:
     :show-inheritance:
 
-tensorD.factorization.executor module
--------------------------------------
-
-.. automodule:: tensorD.factorization.executor
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 tensorD.factorization.factorization module
 ------------------------------------------
 
@@ -47,14 +39,6 @@ tensorD.factorization.giga module
 ---------------------------------
 
 .. automodule:: tensorD.factorization.giga
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-tensorD.factorization.strategy module
--------------------------------------
-
-.. automodule:: tensorD.factorization.strategy
     :members:
     :undoc-members:
     :show-inheritance:

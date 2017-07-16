@@ -4,4 +4,6 @@ TensorToolbox
 .. toctree::
    :maxdepth: 4
 
-   factorizer
+   distributed_main
+   tensorD
+   xxxxx

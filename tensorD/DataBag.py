@@ -7,6 +7,7 @@
 # @Software: PyCharm Community Edition
 import tensorflow as tf
 import numpy as np
+from tensorD.base.type import *
 
 def primesfrom3to(n):
     """ Returns a array of primes, 3 <= p < n """
@@ -52,7 +53,7 @@ def gen_ABC(I_list,R,number_list):
     """
 
     :param I_list: list of 3 int
-    :param R: int
+    :param R: int, the shapes of A,B,C is I_i \\times R
     :param number_list: to choose from, list or np.ndarray
     :return:
       a list of 3 matrices, each shape is I_i \\times R
@@ -75,21 +76,29 @@ def gen_ABC(I_list,R,number_list):
                 count += 1
             else:
                 ABC[i][row,:] = line[::-1]
-
     return ABC
 
 
+def gen_test_tensor(I_list, R, max_prime=10000):
+    # the default number list has 1228 prime numbers, enough for R=48
+    # but notice that max(I_list)/2 + R should be less than 1228
+    number_list = primesfrom3to(max_prime)
+    ABC = gen_ABC(I_list, R, number_list)
+    core = gen_core(R, number_list)
+    P = TTensor(core, ABC)
+    with tf.Session() as sess:
+        full_tensor = sess.run(P.extract())
+    return full_tensor
 
 
 
 
 
 
-number_list = primesfrom3to(200)
-print("core tensor:")
-print(gen_core(3, number_list))
-print("\n\nABC:")
-print(gen_ABC([3,4,5], 3, number_list))
+
+
+
+
 
 
 
