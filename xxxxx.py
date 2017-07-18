@@ -125,13 +125,14 @@ def my_cp_test():
     B = rand(6, 6)
     C = rand(15, 6)
     X = KTensor([A,B,C])
-
+    X_ = tf.Session().run(X.extract())
     data_provider.full_tensor = lambda: tf.constant(X_, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     cp = CP_ALS(env)
-    args = CP_ALS.CP_Args(rank=3, validation_internal=1000)
+    args = CP_ALS.CP_Args(rank=4, validation_internal=10)
     cp.build_model(args)
-    cp.train(10000)
+    cp.train(300)
+    print(cp.lambdas())
     #print("\nfactor matrices:")
     #factors = cp.factors()
     #for matrix in factors:
@@ -188,6 +189,15 @@ def my_HOOI_test():
 
 
 
+my_cp_test()
+#print(gen_test_tensor([3,4,5],3))
+#X = tf.constant(rand(3,4),dtype=tf.float64)
+#max_X = tf.reduce_max(X,axis=0)
+#maxnorm_X = tf.div(X,max_X)
 
-print(gen_test_tensor([3,4,5],3))
+#X_ = tf.Session().run(X)
+#max_X_ = tf.Session().run(max_X)
+#print(X_)
+#print(max_X_)
+
 
