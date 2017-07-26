@@ -57,7 +57,7 @@ def rmse(A, B):
 
 def rmse_ignore_zero(A, B):
     """
-    Root Mean Square Error, ignore zero term in tensor A.
+    Root Mean Square Error, ignore zero element in tensor A.
 
     RMSE = \sqrt{ \frac{1}{c} \left \| A - B  \right \|_F^2}
          = \sqrt{ \frac{1}{c} \sum (A_{ij} - B_{ij})^2}
@@ -80,6 +80,7 @@ def rmse_ignore_zero(A, B):
         if the shape of A and B are not equal
 
     """
+    # TODO : might have problem when A is all zero ...
     with tf.name_scope('RMSE-ignore-zero') as scope:
         if A.get_shape() != B.get_shape():
             raise TensorErr('the shape of tensor A and B must be equal')

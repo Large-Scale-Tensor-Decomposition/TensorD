@@ -11,32 +11,13 @@ from base.type import KTensor
 import loss as loss
 from numpy.random import rand
 from factorization.env import Environment
+from factorization import cp_xxx
 from factorization.cp import CP_ALS
 from dataproc.provider import Provider
 from factorization.tucker import *
 from DataBag import *
 
 
-#h = tf.constant([[0,1,2],[3,4,5],[6,7,8]],dtype=tf.float32)
-#f = tf.constant([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=tf.float32)
-#l2_op = loss.l2(h,f)
-#sess = tf.Session()
-#print(sess.run(l2_op))
-
-#A = tf.constant(np.random.rand(3,4))
-#B = tf.constant(np.random.rand(3,4))
-#rmse_op = loss.rmse(A, B)
-#print(sess.run(rmse_op))
-#A = tf.constant([[2.3, 4.3, 0],[2.3, 4.3, 0],[2.3, 4.3, 0]],dtype=tf.float64)
-#B = tf.constant(np.random.rand(3,3),dtype=tf.float64)
-#print(sess.run(B))
-#cast_A = tf.cast(tf.not_equal(A, 0), B.dtype)
-#print(sess.run(cast_A))
-#_B = B * tf.cast(tf.not_equal(A, 0), B.dtype)
-#print(sess.run(loss.rmse_ignore_zero(A,B)))
-#def pre(*keys):
-#    array = np.array([[1,2,3],[4,5,6]])
-#    print(array.item(keys))
 
 
 
@@ -70,25 +51,6 @@ def ex3():
         print(new_v_result)
 
 
-def build_single_model():
-    input_data = tf.constant(rand(3,4,5,3),dtype=tf.float64)
-    rank = 10
-    shape = input_data.get_shape().as_list()
-    order = len(shape)
-    A = [tf.Variable(rand(shape[ii], 10), name='A-%d' % ii) for ii in range(order)]
-    mats = [ops.unfold(input_data, mode) for mode in range(order)]
-
-    assign_op = [None for _ in range(order)]
-    for mode in range(order):
-        AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
-        V = ops.hadamard(AtA, skip_matrices_index=mode)
-        XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
-
-        # TODO : does it correct to assign A[mode] with the **assign op** ?
-        # But it's strangle to raise not invertible when remove the A[mode] assignment.
-        assign_op[mode] = A[mode].assign(
-            tf.transpose(tf.matrix_solve(tf.transpose(V), tf.transpose(XA)), name='TTT-%d' % mode))
-    print("build_single_mode ends========")
 
 
 def my_hosvd_test():
@@ -119,37 +81,59 @@ def my_hosvd_test():
     print(seem_full - hosvd.full())
 
 
-def my_cp_test():
+def my_cp_test(steps, print_info=False):
     data_provider = Provider()
-    A = rand(10, 6)
-    B = rand(6, 6)
-    C = rand(15, 6)
-    X = KTensor([A,B,C])
-    X_ = tf.Session().run(X.extract())
+    X_ = gen_test_tensor([3,4,5], 3)
     data_provider.full_tensor = lambda: tf.constant(X_, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     cp = CP_ALS(env)
-    args = CP_ALS.CP_Args(rank=4, validation_internal=10)
+    args = CP_ALS.CP_Args(rank=2, validation_internal=1)
     cp.build_model(args)
-    cp.train(300)
-    print(cp.lambdas())
-    #print("\nfactor matrices:")
-    #factors = cp.factors()
-    #for matrix in factors:
-    #    print(matrix)
-    #P = KTensor(factors)
-    #with tf.Session() as sess:
-    #    seem_full = sess.run(P.extract())
-    #print("\nseem full tensor:")
-    #print(seem_full)
-    #print("\nreal full:")
-    #print(cp.full())
+    cp.train(steps)
+    if print_info==True:
+        print(cp.lambdas)
+        print("\nfactor matrices:")
+        for matrix in cp.factors:
+            print(matrix)
+        P = KTensor(cp.factors)
+        with tf.Session() as sess:
+            seem_full = sess.run(P.extract())
+        print("\nseem full tensor:")
+        print(seem_full)
+        print("\nreal full:")
+        print(X_)
+        print("\nsubtraction:")
+        print(seem_full - X_)
 
-    #print("\nsubtraction:")
-    #print(seem_full - cp.full())
+
+def cp_xxx_test(print_info=False):
+    data_provider = Provider()
+    X_ = gen_test_tensor([3,4,5], 3)
+    data_provider.full_tensor = lambda: tf.constant(X_, dtype=tf.float64)
+    env = Environment(data_provider, summary_path='/tmp/tensord')
+    cp = cp_xxx.CP_ALS(env)
+    args = cp_xxx.CP_ALS.CP_Args(rank=2, validation_internal=1)
+    cp.build_model(args)
+    cp.train(150)
+    if print_info==True:
+        print(cp.lambdas)
+        print("\nfactor matrices:")
+        for matrix in cp.factors:
+            print(matrix)
+        P = KTensor(cp.factors)
+        with tf.Session() as sess:
+            seem_full = sess.run(P.extract())
+        print("\nseem full tensor:")
+        print(seem_full)
+        print("\nreal full:")
+        print(X_)
+        print("\nsubtraction:")
+        print(seem_full - X_)
 
 
-def my_HOOI_test():
+
+
+def my_HOOI_test(print_info=False):
     data_provider = Provider()
     g = rand(20, 20, 20)
     A = rand(30, 20)
@@ -157,47 +141,133 @@ def my_HOOI_test():
     C = rand(40, 20)
     X = TTensor(g, [A, B, C])
     X_ = tf.Session().run(X.extract())
-    file = open('full_tensor_out.txt','w')
-    print(X_,file=file)
-    file.close()
     data_provider.full_tensor = lambda: tf.constant(X_, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     hooi = HOOI(env)
-    args = HOOI.HOOI_Args(ranks=[10,10,10], validation_internal=1000)
+    args = HOOI.HOOI_Args(ranks=[10,10,10], validation_internal=10)
     hooi.build_model(args)
-    hooi.train(10000)
-    print("\nfactor matrices:")
-    factors = hooi.factors()
-    for matrix in factors:
-        print(matrix)
-    print("\ncore matrix:")
-    core = hooi.core()
-    print(core)
-    P = TTensor(core, factors)
-    print("\nfull tensor:")
+    hooi.train(10)
+    if print_info == True:
+        print("\nfactor matrices:")
+        factors = hooi.factors()
+        for matrix in factors:
+            print(matrix)
+        print("\ncore matrix:")
+        core = hooi.core()
+        print(core)
+        P = TTensor(core, factors)
+        print("\nfull tensor:")
+        with tf.Session() as sess:
+            seem_full = sess.run(P.extract())
+        print(seem_full)
+        print("\nreal full:")
+        print(hooi.full())
+
+        print("\nsubtraction:")
+        print(seem_full - hooi.full())
+
+def test1():
+    order = 5
+    init_op = tf.global_variables_initializer()
+    A = [tf.Variable(rand(3, 6), dtype=tf.float64) for _ in range(order)]
+    A_0 = tf.Variable(rand(2, 4), dtype=tf.float64)
+    init_op = tf.global_variables_initializer()
+    assign_op = [None for _ in range(order)]
+    for mode in range(order):
+        assign_op[mode] = A[mode] = A[mode].assign(tf.multiply(rand(3, 6), np.array([0, 0, 0, 0, 0, 0])))
+    train_op = tf.group(*A, A_0)
     with tf.Session() as sess:
-        seem_full = sess.run(P.extract())
-    print(seem_full)
-    print("\nreal full:")
-    print(hooi.full())
-
-    print("\nsubtraction:")
-    print(seem_full - hooi.full())
-
-
-
+        sess.run(init_op)
+        A_v, A_0_v = sess.run([A,A_0])
+        ass_v = sess.run(assign_op)
+        train_v = sess.run(train_op)
+    print(A_v,end='\n\n')
+    print(A_0_v,end='\n\n')
+    print(train_v,end='\n\n')
+    print(ass_v,end='\n\n')
 
 
 
-my_cp_test()
-#print(gen_test_tensor([3,4,5],3))
-#X = tf.constant(rand(3,4),dtype=tf.float64)
-#max_X = tf.reduce_max(X,axis=0)
-#maxnorm_X = tf.div(X,max_X)
 
-#X_ = tf.Session().run(X)
-#max_X_ = tf.Session().run(max_X)
-#print(X_)
-#print(max_X_)
+def test_rand_list():
+    print("first try")
+    init_mat = rand_list([3,4,5],2)
+    for mode in range(3):
+        print(init_mat[mode])
+
+    print("second try")
+    init_mat2 = rand_list([2, 3, 4], 2)
+    for mode in range(3):
+        print(init_mat2[mode])
+
+def test_gen_core(R):
+    max_prime = 10000
+    number_list = primesfrom3to(max_prime)
+    core = gen_core(R, number_list)
+    for i in range(R):
+        print(core[:,:,i])
+
+def test_genABC(I_list, R):
+    max_prime = 10000
+    number_list = primesfrom3to(max_prime)
+    U = gen_ABC(I_list, R, number_list)
+    for matrix in U:
+        print(matrix)
 
 
+
+def test_gen_test_tensor(I_list, R):
+    full_tensor = gen_test_tensor(I_list, R)
+    for i in range(I_list[-1]):
+        print(full_tensor[:,:,i])
+
+
+
+def test_assign_op():
+    order = 4
+    X = [tf.Variable(np.ones((ii,5))) for ii in range(order)]
+    assign_op1 = [None for _ in range(order)]
+    assign_op2 = [None for _ in range(order)]
+    # iter 1
+    for mode in range(order):
+        assign_op1[mode] = X[mode].assign(X[mode]*2)
+    train_op1 = tf.group(*assign_op1)
+
+    for mode in range(order):
+        assign_op2[mode] = X[mode].assign(X[mode]*3)
+
+    init_op = tf.global_variables_initializer()
+    steps = 5
+    sess = tf.Session()
+    sess.run(init_op)
+    print("initialize:")
+    res1 = sess.run(X)
+    print(res1)
+
+    print("==assign 1==")
+    sess.run(train_op1)
+    res1 = sess.run(assign_op1)
+    print(res1)
+    print("==run X now==")
+    print(sess.run(X))
+
+    #print("==assign 1-2==")
+    #res1_2 = sess.run(train_op1)
+    #print(res1_2)
+    #print("==run X now==")
+    #print(sess.run(X))
+
+    #for step in range(steps):
+    #    res2 = sess.run(assign_op2)
+    #    print("%d step train" % (step + 1))
+    #    print(res2)
+
+
+
+my_cp_test(10)
+#test_rand_list()
+#cp_xxx_test()
+#test_genABC([3,4,5],3)
+
+#test_gen_test_tensor([2,3,4],2)
+#test_assign_op()

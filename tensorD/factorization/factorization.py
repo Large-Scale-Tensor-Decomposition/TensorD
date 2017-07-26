@@ -7,16 +7,11 @@ class Model(object):
     The Model class holding the
     """
 
-    def __init__(self, env, train_op, loss_op, fit_op, var_list,lambda_op, init_op, full_tensor_op, args):
-        self.env = env
-        self.train_op = train_op
-        self.loss_op = loss_op
-        self.fit_op = fit_op
-        self.var_list = var_list
-        self.lambda_op = lambda_op
-        self.init_op = init_op
-        self.full_tensor_op = full_tensor_op
-        self.args = args
+    def __init__(self, before_train, in_train, after_train=None, metrics=None):
+        self.before_train = before_train    # containing env, init_op, norm_input_op, args
+        self.in_train = in_train    # containing train_op
+        self.metrics = metrics    # containing fit_op_not_zero, fit_op_zero, loss_op
+        self.after_train = after_train    # containing full_op_final, var_list_final
 
         # TODO : how to save and restore the model properly
         # def save(self, save_path):

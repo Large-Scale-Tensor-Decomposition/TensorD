@@ -38,12 +38,12 @@ def gen_core(coreR, number_list):
             if dim1 % 2 == 0:
                 row = number_list[count:count + coreR]
                 if dim2 % 2 == 0:
-                    core[dim1,dim2,:] = np.array(row)
+                    core[:,dim2,dim1] = np.array(row)
                     count += 2
                 else:
-                    core[dim1,dim2,:] = np.array(row[::-1])
+                    core[:,dim2,dim1] = np.array(row[::-1])
             else:
-                core[dim1,:,:] = np.transpose(core[dim1-1,:,:])
+                core[:,:,dim1] = np.transpose(core[:,:,dim1-1])
     return core
 
 
@@ -92,6 +92,20 @@ def gen_test_tensor(I_list, R, max_prime=10000):
 
 
 
+def rand_list(shape_list, rank):
+    # initial seed
+    seed = 11796
+    order = len(shape_list)
+    init_mat = [np.zeros(shape=(shape_list[ii], rank)) for ii in range(order)]
+    for mode in range(order):
+        if mode != 0:
+            I_i = shape_list[mode]
+            for ii in range(I_i):
+                for jj in range(rank):
+                    seed = (8121*seed + 28411) % 1334456
+                    init_mat[mode][ii,jj] = seed / 1334456 *10
+
+    return init_mat
 
 
 
@@ -100,6 +114,11 @@ def gen_test_tensor(I_list, R, max_prime=10000):
 
 
 
+def insert_test(tf_variable):
+    init_op = tf.global_variables_initializer()
+    with tf.Session() as sess:
+        sess.run(init_op)
+        print(sess.run(tf_variable))
 
 
 
