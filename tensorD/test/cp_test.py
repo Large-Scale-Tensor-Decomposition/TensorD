@@ -14,7 +14,7 @@ if __name__ == '__main__':
     args = CP_ALS.CP_Args(rank=2, validation_internal=1000)
     cp.build_model(args)
     cp.train(10000)
-    print(cp.full())
+    print(cp.full)
 
     # tucker = HOSVD(env)
     # args = HOSVD.HOSVD_Args([3,4,2])

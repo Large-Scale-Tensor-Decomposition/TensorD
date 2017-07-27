@@ -8,7 +8,6 @@ from .factorization import Model, BaseFact
 from .env import Environment
 
 
-
 class CP_ALS(BaseFact):
     class CP_Args(object):
         def __init__(self,
@@ -32,8 +31,6 @@ class CP_ALS(BaseFact):
         self._full_tensor = None
         self._is_train_finish = False
         self._lambdas = None
-
-
 
     def predict(self, *key):
         if not self._full_tensor:
@@ -59,7 +56,6 @@ class CP_ALS(BaseFact):
     def lambdas(self):
         return self._lambdas
 
-
     def build_model(self, args):
         assert isinstance(args, CP_ALS.CP_Args)
         input_data = self._env.full_data()
@@ -71,26 +67,24 @@ class CP_ALS(BaseFact):
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
             assign_op = [None for _ in range(order)]
 
-
         for mode in range(order):
             if mode != 0:
                 with tf.control_dependencies([assign_op[mode - 1]]):
-                    AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
+                    AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in
+                           range(order)]
                     XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
             else:
                 AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
                 XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
 
             V = ops.hadamard(AtA, skip_matrices_index=mode)
-            non_norm_A = tf.matmul(XA, tf.py_func(np.linalg.pinv, [V], tf.float64),name='XAV-%d' % mode)
-            lambda_op = tf.reduce_max(tf.reshape(non_norm_A,shape=(shape[mode], args.rank)), axis=0)
+            non_norm_A = tf.matmul(XA, tf.py_func(np.linalg.pinv, [V], tf.float64), name='XAV-%d' % mode)
+            lambda_op = tf.reduce_max(tf.reshape(non_norm_A, shape=(shape[mode], args.rank)), axis=0)
             assign_op[mode] = A[mode].assign(tf.div(non_norm_A, lambda_op))
-
 
         with tf.name_scope('full-tensor-in-train') as scope:
             P = KTensor(assign_op, lambda_op)
             full_op = P.extract()
-
 
         with tf.name_scope('loss-in-train') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
@@ -100,9 +94,10 @@ class CP_ALS(BaseFact):
         """
         with tf.name_scope('fitness-in-train') as scope:
             norm_input_data = tf.norm(input_data)
-            fit_op_not_zero = 1 - tf.sqrt(tf.square(norm_input_data) + tf.square(tf.norm(full_op)) - 2*ops.inner(input_data, full_op)) / norm_input_data
+            fit_op_not_zero = 1 - tf.sqrt(
+                tf.square(norm_input_data) + tf.square(tf.norm(full_op)) - 2 * ops.inner(input_data,
+                                                                                         full_op)) / norm_input_data
             fit_op_zero = tf.square(tf.norm(full_op)) - 2 * ops.inner(input_data, full_op)
-
 
         tf.summary.scalar('loss', loss_op)
         tf.summary.scalar('fitness', fit_op_not_zero)
@@ -139,30 +134,25 @@ class CP_ALS(BaseFact):
         fit_op_not_zero = model.metrics[1]
         loss_op = model.metrics[2]
 
-
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
 
         sess.run(init_op)
         print('CP model initial finish')
 
-
         if sess.run(norm_input_data) == 0:
             fit_op = fit_op_zero
         else:
             fit_op = fit_op_not_zero
 
-
-        for step in range(1, steps+1):
+        for step in range(1, steps + 1):
             if (step == steps) or (args.verbose) or (step == 1) or (step % args.validation_internal == 0):
-                self._factors, self._lambdas, self._full_tensor, loss_v, fitness, sum_msg = sess.run([factor_update_op, lambda_op, full_op, loss_op, fit_op, sum_op])
+                self._factors, self._lambdas, self._full_tensor, loss_v, fitness, sum_msg = sess.run(
+                    [factor_update_op, lambda_op, full_op, loss_op, fit_op, sum_op])
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%f, fit=%.10f' % (step, loss_v, fitness))
             else:
                 self._factors, self._lambdas = sess.run([factor_update_op, lambda_op])
-
-
-
 
         print('CP model train finish, with RMSE = %.10f, fit=%.10f' % (loss_v, fitness))
         self._is_train_finish = True
