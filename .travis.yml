@@ -18,10 +18,15 @@ script:
 after_success:
   coveralls
 
+branches:
+#  - master
+#  - build
+
 notifications:
-  email: false
-#    recipients:
-#      - one@example.com
-#      - other@example.com
-#    on_success: never # default: change
-#    on_failure: always # default: always
+  email:
+    recipients:
+      - jinmian.y@gmail.com
+      - zszx0259@me.com
+      - hhabc1995@qq.com
+    on_success: never
+    on_failure: always    # send a notification when build fail
