@@ -112,7 +112,7 @@ def cp_xxx_test(print_info=False):
     data_provider.full_tensor = lambda: tf.constant(X_, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     cp = cp_xxx.CP_ALS(env)
-    args = cp_xxx.CP_ALS.CP_Args(rank=2, validation_internal=1)
+    args = cp_xxx.CP_ALS.CP_Args(rank=2, validation_internal=5)
     cp.build_model(args)
     cp.train(150)
     if print_info==True:
@@ -144,9 +144,9 @@ def my_HOOI_test(print_info=False):
     data_provider.full_tensor = lambda: tf.constant(X_, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     hooi = HOOI(env)
-    args = HOOI.HOOI_Args(ranks=[10,10,10], validation_internal=10)
+    args = HOOI.HOOI_Args(ranks=[10,10,10], validation_internal=5)
     hooi.build_model(args)
-    hooi.train(10)
+    hooi.train(150)
     if print_info == True:
         print("\nfactor matrices:")
         factors = hooi.factors()
@@ -264,7 +264,7 @@ def test_assign_op():
 
 
 
-my_cp_test(10)
+my_cp_test(150)
 #test_rand_list()
 #cp_xxx_test()
 #test_genABC([3,4,5],3)

@@ -8,10 +8,10 @@ class Model(object):
     """
 
     def __init__(self, before_train, in_train, after_train=None, metrics=None):
-        self.before_train = before_train    # containing env, init_op, norm_input_op, args
-        self.in_train = in_train    # containing train_op
-        self.metrics = metrics    # containing fit_op_not_zero, fit_op_zero, loss_op
-        self.after_train = after_train    # containing full_op_final, var_list_final
+        self.before_train = before_train
+        self.in_train = in_train
+        self.metrics = metrics
+        self.after_train = after_train
 
         # TODO : how to save and restore the model properly
         # def save(self, save_path):

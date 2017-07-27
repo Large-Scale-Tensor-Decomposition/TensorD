@@ -109,11 +109,6 @@ def rand_list(shape_list, rank):
 
 
 
-
-
-
-
-
 def insert_test(tf_variable):
     init_op = tf.global_variables_initializer()
     with tf.Session() as sess:
