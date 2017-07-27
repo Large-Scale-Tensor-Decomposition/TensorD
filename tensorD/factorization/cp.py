@@ -6,7 +6,7 @@ from tensorD.loss import *
 from numpy.random import rand
 from .factorization import Model, BaseFact
 from .env import Environment
-from DataBag import *
+
 
 
 class CP_ALS(BaseFact):
@@ -68,8 +68,6 @@ class CP_ALS(BaseFact):
 
         with tf.name_scope('random-initial') as scope:
             A = [tf.Variable(rand(shape[ii], args.rank), name='A-%d' % ii) for ii in range(order)]
-            #Uinit = rand_list(shape, args.rank)
-            #A = [tf.Variable(Uinit[ii], name='A_1_iter-%d' % ii) for ii in range(order)]
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
             assign_op = [None for _ in range(order)]
 
