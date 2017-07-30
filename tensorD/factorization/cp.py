@@ -31,14 +31,21 @@ class CP_ALS(BaseFact):
         self._full_tensor = None
         self._is_train_finish = False
         self._lambdas = None
+        self._args = None
+        self._init_op = None
+        self._norm_input_data = None
+        self._lambda_op = None
+        self._full_op = None
+        self._factor_update_op = None
+        self._fit_op_zero = None
+        self._fit_op_not_zero = None
+        self._loss_op = None
 
     def predict(self, *key):
         if not self._full_tensor:
             raise TensorErr('improper stage to call predict before the model is trained')
         return self._full_tensor.item(key)
 
-    def train(self, steps=None):
-        self._train_in_single(steps)
 
     @property
     def full(self):
@@ -67,20 +74,21 @@ class CP_ALS(BaseFact):
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
             assign_op = [None for _ in range(order)]
 
-        for mode in range(order):
-            if mode != 0:
-                with tf.control_dependencies([assign_op[mode - 1]]):
-                    AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in
-                           range(order)]
-                    XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
-            else:
-                AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
-                XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
 
-            V = ops.hadamard(AtA, skip_matrices_index=mode)
-            non_norm_A = tf.matmul(XA, tf.py_func(np.linalg.pinv, [V], tf.float64), name='XAV-%d' % mode)
-            lambda_op = tf.reduce_max(tf.reshape(non_norm_A, shape=(shape[mode], args.rank)), axis=0)
-            assign_op[mode] = A[mode].assign(tf.div(non_norm_A, lambda_op))
+        for mode in range(order):
+            with tf.name_scope('A-%d' % mode) as scope:
+                if mode != 0:
+                    with tf.control_dependencies([assign_op[mode - 1]]):
+                        AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
+                        XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
+                else:
+                    AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
+                    XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
+
+                V = ops.hadamard(AtA, skip_matrices_index=mode)
+                non_norm_A = tf.matmul(XA, tf.py_func(np.linalg.pinv, [V], tf.float64), name='XAV-%d' % mode)
+                lambda_op = tf.reduce_max(tf.reshape(non_norm_A, shape=(shape[mode], args.rank)), axis=0)
+                assign_op[mode] = A[mode].assign(tf.div(non_norm_A, lambda_op))
 
         with tf.name_scope('full-tensor-in-train') as scope:
             P = KTensor(assign_op, lambda_op)
@@ -90,6 +98,7 @@ class CP_ALS(BaseFact):
             loss_op = rmse_ignore_zero(input_data, full_op)
 
         """
+        if \\left \\| X - X_{real}  \\right \\|_F \\neq
         fitness = 1 - \\frac{\\left \\| X - X_{real}  \\right \\|_F}{\\left \\| X  \\right \\|_F}
         """
         with tf.name_scope('fitness-in-train') as scope:
@@ -105,34 +114,36 @@ class CP_ALS(BaseFact):
 
         init_op = tf.global_variables_initializer()
 
-        before_train = [args, init_op, norm_input_data]
-        in_train = [lambda_op, full_op, A, assign_op]
-        after_train = [None]
-        metrics = [fit_op_zero, fit_op_not_zero, loss_op]
+        self._args = args
+        self._init_op = init_op
+        self._norm_input_data = norm_input_data
+        self._lambda_op = lambda_op
+        self._full_op = full_op
+        self._factor_update_op = assign_op
+        self._fit_op_zero = fit_op_zero
+        self._fit_op_not_zero = fit_op_not_zero
+        self._loss_op = loss_op
 
-        self._model = Model(before_train, in_train, after_train, metrics)
 
-        return self._model
 
-    def _train_in_single(self, steps):
+    def train(self, steps):
         self._is_train_finish = False
-        self._full_tensor = None
 
         sess = self._env.sess
-        model = self._model
+        args = self._args
 
-        args = model.before_train[0]
-        init_op = model.before_train[1]
-        norm_input_data = model.before_train[2]
+        init_op = self._init_op
+        norm_input_data = self._norm_input_data
 
-        lambda_op = model.in_train[0]
-        full_op = model.in_train[1]
-        A = model.in_train[2]
-        factor_update_op = model.in_train[3]
+        lambda_op = self._lambda_op
+        full_op = self._full_op
+        factor_update_op = self._factor_update_op
 
-        fit_op_zero = model.metrics[0]
-        fit_op_not_zero = model.metrics[1]
-        loss_op = model.metrics[2]
+        # if the l2-norm of input tensor is zero, then use fit_op_zero
+        # if not, then use fit_op_not_zero
+        fit_op_zero = self._fit_op_zero
+        fit_op_not_zero = self._fit_op_not_zero
+        loss_op = self._loss_op
 
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
