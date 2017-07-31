@@ -71,37 +71,38 @@ class CP_ALS(BaseFact):
 
         with tf.name_scope('random-initial') as scope:
             A = [tf.Variable(rand(shape[ii], args.rank), name='A-%d' % ii) for ii in range(order)]
+        with tf.name_scope('unfold-all-mode') as scope:
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
             assign_op = [None for _ in range(order)]
 
 
         for mode in range(order):
-            with tf.name_scope('A-%d' % mode) as scope:
-                if mode != 0:
-                    with tf.control_dependencies([assign_op[mode - 1]]):
-                        AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
-                        XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
-                else:
+            if mode != 0:
+                with tf.control_dependencies([assign_op[mode - 1]]):
                     AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
                     XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
+            else:
+                AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
+                XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
 
-                V = ops.hadamard(AtA, skip_matrices_index=mode)
-                non_norm_A = tf.matmul(XA, tf.py_func(np.linalg.pinv, [V], tf.float64), name='XAV-%d' % mode)
+            V = ops.hadamard(AtA, skip_matrices_index=mode)
+            non_norm_A = tf.matmul(XA, tf.py_func(np.linalg.pinv, [V], tf.float64, name='pinvV-%d' % mode), name='XApinvV-%d' % mode)
+            with tf.name_scope('max-norm-%d' % mode) as scope:
                 lambda_op = tf.reduce_max(tf.reshape(non_norm_A, shape=(shape[mode], args.rank)), axis=0)
                 assign_op[mode] = A[mode].assign(tf.div(non_norm_A, lambda_op))
 
-        with tf.name_scope('full-tensor-in-train') as scope:
+        with tf.name_scope('full-tensor') as scope:
             P = KTensor(assign_op, lambda_op)
             full_op = P.extract()
 
-        with tf.name_scope('loss-in-train') as scope:
+        with tf.name_scope('loss') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
 
         """
         if \\left \\| X - X_{real}  \\right \\|_F \\neq
         fitness = 1 - \\frac{\\left \\| X - X_{real}  \\right \\|_F}{\\left \\| X  \\right \\|_F}
         """
-        with tf.name_scope('fitness-in-train') as scope:
+        with tf.name_scope('fitness') as scope:
             norm_input_data = tf.norm(input_data)
             fit_op_not_zero = 1 - tf.sqrt(
                 tf.square(norm_input_data) + tf.square(tf.norm(full_op)) - 2 * ops.inner(input_data,
