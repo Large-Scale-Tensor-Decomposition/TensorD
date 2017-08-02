@@ -42,16 +42,12 @@ class HOSVD(BaseFact):
         with tf.name_scope('loss') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
 
-
         self._args = args
         self._init_op = init_op
         self._full_op = full_op
         self._factor_update_op = A
         self._core_op = g
         self._loss_op = loss_op
-
-
-
 
     def train(self, steps=None):
         """
@@ -70,10 +66,10 @@ class HOSVD(BaseFact):
         sess.run(self._init_op)
         print('HOSVD model initial finish')
 
-        loss_v, self._full_tensor, self._factors, self._core = sess.run([self._loss_op, self._full_op, self._factor_update_op, self._core_op])
+        loss_v, self._full_tensor, self._factors, self._core = sess.run(
+            [self._loss_op, self._full_op, self._factor_update_op, self._core_op])
         print('HOSVD model train finish, with RMSE = %f' % loss_v)
         self._is_train_finish = True
-
 
     def predict(self, *key):
         return self._full_tensor.item(key)
@@ -104,8 +100,6 @@ class HOOI(BaseFact):
 
     def __init__(self, env: Environment):
         self._env = env
-        self._model = None
-        self._full_tensor = None
         self._full_tensor = None
         self._factors = None
         self._core = None
@@ -113,8 +107,9 @@ class HOOI(BaseFact):
         self._init_op = None
         self._core_op = None
         self._factor_update_op = None
+        self._full_op = None
+        self._loss_op = None
         self._is_train_finish = False
-
 
     def build_model(self, args):
         assert isinstance(args, HOOI.HOOI_Args)
@@ -147,7 +142,6 @@ class HOOI(BaseFact):
         with tf.name_scope('core-tensor') as scope:
             g = ops.ttm(input_data, assign_op, transpose=True)
 
-
         init_op = tf.group(*init_ops)
 
         with tf.name_scope('full-tensor') as scope:
@@ -165,7 +159,6 @@ class HOOI(BaseFact):
         self._factor_update_op = assign_op
         self._core_op = g
         self._loss_op = loss_op
-
 
     @property
     def full(self):
@@ -186,7 +179,6 @@ class HOOI(BaseFact):
     def train_finish(self):
         return self._is_train_finish
 
-
     def train(self, steps):
         sess = self._env.sess
         args = self._args
@@ -202,30 +194,15 @@ class HOOI(BaseFact):
 
         sess.run(init_op)
         print('HOOI model initial finish')
-        for step in range(1, steps+1):
-            if (step == steps) or (args.verbose) or (step == 1) or (step % args.validation_internal == 0 and args.validation_internal != -1):
-                loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run([loss_op, full_op, factor_update_op, core_op, sum_op])
+        for step in range(1, steps + 1):
+            if (step == steps) or args.verbose or (step == 1) or (
+                                step % args.validation_internal == 0 and args.validation_internal != -1):
+                loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run(
+                    [loss_op, full_op, factor_update_op, core_op, sum_op])
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%.15f' % (step, loss_v))
-                #print("factor matrices:")
-                #for matrix in self._factors:
-                #    print(matrix, end='\n\n')
-                #print('core tensor:')
-                #for ii in range(2):
-                #    print(self._core[:,:,ii],end='\n\n')
-                #print('full tensor:')
-                #for ii in range(self._full_tensor.shape[-1]):
-                #    print(self._full_tensor[:,:,ii],end='\n\n')
-
             else:
                 self._factors, self._core = sess.run([factor_update_op, core_op])
-                #print('step=%d' % (step))
-                #print("factor matrices:")
-                #for matrix in self._factors:
-                #    print(matrix, end='\n\n')
-                #print('core tensor:')
-                #for ii in range(2):
-                #    print(self._core[:,:,ii],end='\n\n')
+
         print('HOOI model train finish, with RMSE = %.15f' % loss_v)
         self._is_train_finish = True
-
