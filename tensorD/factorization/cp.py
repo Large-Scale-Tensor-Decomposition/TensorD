@@ -157,7 +157,7 @@ class CP_ALS(BaseFact):
             fit_op = fit_op_not_zero
 
         for step in range(1, steps + 1):
-            if (step == steps) or (args.verbose) or (step == 1) or (step % args.validation_internal == 0):
+            if (step == steps) or (args.verbose) or (step == 1) or (step % args.validation_internal == 0 and args.validation_internal != -1):
                 self._factors, self._lambdas, self._full_tensor, loss_v, fitness, sum_msg = sess.run(
                     [factor_update_op, lambda_op, full_op, loss_op, fit_op, sum_op])
                 sum_writer.add_summary(sum_msg, step)
