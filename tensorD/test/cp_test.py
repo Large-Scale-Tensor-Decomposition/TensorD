@@ -16,14 +16,3 @@ if __name__ == '__main__':
     cp.train(10000)
     print(cp.full)
 
-    # tucker = HOSVD(env)
-    # args = HOSVD.HOSVD_Args([3,4,2])
-    # tucker.build_model(args)
-    # tucker.train(1000)
-    # print(tucker.full())
-
-    # tucker = HOOI(env)
-    # args = HOOI.HOOI_Args([3,4,2], verbose=True)
-    # tucker.build_model(args)
-    # tucker.train(1000)
-    # print(tucker.full())
