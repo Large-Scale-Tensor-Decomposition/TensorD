@@ -17,9 +17,15 @@ class HOSVD(BaseFact):
         self._env = env
         self._model = None
         self._full_tensor = None
+        self._factors = None
+        self._core = None
+        self._args = None
+        self._init_op = None
+        self._core_op = None
+        self._factor_update_op = None
         self._is_train_finish = False
 
-    def build_model(self, args) -> Model:
+    def build_model(self, args):
         input_data = self._env.full_data()
         order = input_data.get_shape().ndims
         A = []
@@ -31,13 +37,20 @@ class HOSVD(BaseFact):
         P = TTensor(g, A)
 
         init_op = tf.global_variables_initializer()
-        train_op = tf.group(g, *A)
-        full_op = P.extract()
-        loss_op = rmse_ignore_zero(input_data, full_op)
-        var_list = A
+        with tf.name_scope('full-tensor') as scope:
+            full_op = P.extract()
+        with tf.name_scope('loss') as scope:
+            loss_op = rmse_ignore_zero(input_data, full_op)
 
-        self._model = Model(self._env, train_op, loss_op, var_list, init_op, full_op, args)
-        return self._model
+
+        self._args = args
+        self._init_op = init_op
+        self._full_op = full_op
+        self._factor_update_op = A
+        self._core_op = g
+        self._loss_op = loss_op
+
+
 
 
     def train(self, steps=None):
@@ -52,31 +65,32 @@ class HOSVD(BaseFact):
 
         """
         self._is_train_finish = False
-        self._full_tensor = None
         sess = self._env.sess
-        model = self._model
 
-        sess.run(model.init_op)
+        sess.run(self._init_op)
         print('HOSVD model initial finish')
-        _, loss_v, self._full_tensor = sess.run([model.train_op, model.loss_op, model.full_tensor_op])
-        self._factors = sess.run(model.var_list)
-        g = ops.ttm(model.full_tensor_op, model.var_list, transpose=True)
-        self._core = sess.run(g)
+
+        loss_v, self._full_tensor, self._factors, self._core = sess.run([self._loss_op, self._full_op, self._factor_update_op, self._core_op])
         print('HOSVD model train finish, with RMSE = %f' % loss_v)
         self._is_train_finish = True
 
-    def full(self):
-        return self._full_tensor
 
     def predict(self, *key):
         return self._full_tensor.item(key)
 
+    @property
+    def full(self):
+        return self._full_tensor
+
+    @property
     def factors(self):
         return self._factors
 
+    @property
     def core(self):
         return self._core
 
+    @property
     def train_finish(self):
         return self._is_train_finish
 
@@ -92,32 +106,18 @@ class HOOI(BaseFact):
         self._env = env
         self._model = None
         self._full_tensor = None
+        self._full_tensor = None
+        self._factors = None
+        self._core = None
+        self._args = None
+        self._init_op = None
+        self._core_op = None
+        self._factor_update_op = None
         self._is_train_finish = False
 
-    def build_model(self, args) -> Model:
+
+    def build_model(self, args):
         assert isinstance(args, HOOI.HOOI_Args)
-        return self._build_single_model(args)
-
-    def train(self, steps=None):
-        self._train_in_single(steps)
-
-    def full(self):
-        return self._full_tensor
-
-    def predict(self, *key):
-        return self._full_tensor.item(key)
-
-    def factors(self):
-        return self._factors
-
-    def core(self):
-        return self._core
-
-    def train_finish(self):
-        return self._is_train_finish
-
-
-    def _build_single_model(self, args):
         input_data = self._env.full_data()
         shape = input_data.get_shape().as_list()
         order = input_data.get_shape().ndims
@@ -129,48 +129,93 @@ class HOOI(BaseFact):
             _, U, _ = tf.svd(ops.unfold(input_data, mode), full_matrices=True, name='svd-%d' % mode)
             init_ops[mode] = A[mode].assign(U[:, :args.ranks[mode]])
 
-        train_ops = [None for _ in range(order)]
+        assign_op = [None for _ in range(order)]
         for mode in range(order):
-            Y = ops.ttm(input_data, A, skip_matrices_index=mode, transpose=True)
+            if mode != 0:
+                with tf.control_dependencies([assign_op[mode - 1]]):
+                    Y = ops.ttm(input_data, A, skip_matrices_index=mode, transpose=True)
+            else:
+                Y = ops.ttm(input_data, A, skip_matrices_index=mode, transpose=True)
             _, tmp, _ = tf.svd(ops.unfold(Y, mode))
-            train_ops[mode] = A[mode].assign(tmp[:, :args.ranks[mode]])
+            assign_op[mode] = A[mode].assign(tmp[:, :args.ranks[mode]])
 
-        g = ops.ttm(input_data, A, transpose=True)
+        g = ops.ttm(input_data, assign_op, transpose=True)
 
         init_op = tf.group(*init_ops)
-        train_op = tf.group(*train_ops, g)
-        P = TTensor(g, A)
-        full_tensor_op = P.extract()
-        loss_op = rmse_ignore_zero(input_data, full_tensor_op)
-        var_list = A
+        #train_op = tf.group(*train_ops, g)
+        P = TTensor(g, assign_op)
+        full_op = P.extract()
+        loss_op = rmse_ignore_zero(input_data, full_op)
 
         tf.summary.scalar('loss', loss_op)
 
-        self._model = Model(self._env, train_op, loss_op, var_list, init_op, full_tensor_op, args)
-        return self._model
+        self._args = args
+        self._init_op = init_op
+        self._full_op = full_op
+        self._factor_update_op = assign_op
+        self._core_op = g
+        self._loss_op = loss_op
 
-    def _train_in_single(self, steps):
+
+    @property
+    def full(self):
+        return self._full_tensor
+
+    def predict(self, *key):
+        return self._full_tensor.item(key)
+
+    @property
+    def factors(self):
+        return self._factors
+
+    @property
+    def core(self):
+        return self._core
+
+    @property
+    def train_finish(self):
+        return self._is_train_finish
+
+
+    def train(self, steps):
         sess = self._env.sess
-        model = self._model
-        args = model.args
+        args = self._args
+
+        init_op = self._init_op
+        full_op = self._full_op
+        factor_update_op = self._factor_update_op
+        core_op = self._core_op
+        loss_op = self._loss_op
+
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
 
-        sess.run(model.init_op)
+        sess.run(init_op)
         print('HOOI model initial finish')
-        for step in range(steps):
-            sess.run(model.train_op)
-            if step + 1 == steps:
-                loss_v, self._full_tensor = sess.run([model.loss_op, model.full_tensor_op])
-                sum_writer.add_summary(sess.run(sum_op), step)
-                self._factors = sess.run(model.var_list)
-                g = ops.ttm(model.full_tensor_op, model.var_list, transpose=True)
-                self._core = sess.run(g)
-                print('step=%d, RMSE=%f' % (step, loss_v))
-            elif args.verbose or step == 0 or step % args.validation_internal == 0:
-                loss_v = sess.run(model.loss_op)
-                sum_writer.add_summary(sess.run(sum_op), step)
-                print('step=%d, RMSE=%f' % (step, loss_v))
-        print('HOOI model train finish, with RMSE = %f' % loss_v)
+        for step in range(1, steps+1):
+            if (step == steps) or (args.verbose) or (step == 1) or (step % args.validation_internal == 0 and args.validation_internal != -1):
+                loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run([loss_op, full_op, factor_update_op, core_op, sum_op])
+                sum_writer.add_summary(sum_msg, step)
+                print('step=%d, RMSE=%.15f' % (step, loss_v))
+                #print("factor matrices:")
+                #for matrix in self._factors:
+                #    print(matrix, end='\n\n')
+                #print('core tensor:')
+                #for ii in range(2):
+                #    print(self._core[:,:,ii],end='\n\n')
+                #print('full tensor:')
+                #for ii in range(self._full_tensor.shape[-1]):
+                #    print(self._full_tensor[:,:,ii],end='\n\n')
+
+            else:
+                self._factors, self._core = sess.run([factor_update_op, core_op])
+                #print('step=%d' % (step))
+                print("factor matrices:")
+                #for matrix in self._factors:
+                #    print(matrix, end='\n\n')
+                #print('core tensor:')
+                #for ii in range(2):
+                #    print(self._core[:,:,ii],end='\n\n')
+        print('HOOI model train finish, with RMSE = %.15f' % loss_v)
         self._is_train_finish = True
 

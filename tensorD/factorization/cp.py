@@ -29,8 +29,9 @@ class CP_ALS(BaseFact):
         self._env = env
         self._model = None
         self._full_tensor = None
-        self._is_train_finish = False
+        self._factors = None
         self._lambdas = None
+        self._is_train_finish = False
         self._args = None
         self._init_op = None
         self._norm_input_data = None
@@ -45,7 +46,6 @@ class CP_ALS(BaseFact):
         if not self._full_tensor:
             raise TensorErr('improper stage to call predict before the model is trained')
         return self._full_tensor.item(key)
-
 
     @property
     def full(self):
@@ -75,18 +75,19 @@ class CP_ALS(BaseFact):
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
             assign_op = [None for _ in range(order)]
 
-
         for mode in range(order):
             if mode != 0:
                 with tf.control_dependencies([assign_op[mode - 1]]):
-                    AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
+                    AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in
+                           range(order)]
                     XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
             else:
                 AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
                 XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
 
             V = ops.hadamard(AtA, skip_matrices_index=mode)
-            non_norm_A = tf.matmul(XA, tf.py_func(np.linalg.pinv, [V], tf.float64, name='pinvV-%d' % mode), name='XApinvV-%d' % mode)
+            non_norm_A = tf.matmul(XA, tf.py_func(np.linalg.pinv, [V], tf.float64, name='pinvV-%d' % mode),
+                                   name='XApinvV-%d' % mode)
             with tf.name_scope('max-norm-%d' % mode) as scope:
                 lambda_op = tf.reduce_max(tf.reshape(non_norm_A, shape=(shape[mode], args.rank)), axis=0)
                 assign_op[mode] = A[mode].assign(tf.div(non_norm_A, lambda_op))
@@ -124,8 +125,6 @@ class CP_ALS(BaseFact):
         self._fit_op_zero = fit_op_zero
         self._fit_op_not_zero = fit_op_not_zero
         self._loss_op = loss_op
-
-
 
     def train(self, steps):
         self._is_train_finish = False
