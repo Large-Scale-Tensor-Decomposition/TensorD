@@ -124,28 +124,38 @@ class HOOI(BaseFact):
 
         # HOSVD to initialize factors A
         A = [tf.Variable(np.random.rand(shape[ii], args.ranks[ii]), name='A-%d' % ii) for ii in range(order)]
+
         init_ops = [None for _ in range(order)]
         for mode in range(order):
-            _, U, _ = tf.svd(ops.unfold(input_data, mode), full_matrices=True, name='svd-%d' % mode)
-            init_ops[mode] = A[mode].assign(U[:, :args.ranks[mode]])
+            with tf.name_scope('HOSVD-init-%d' % mode) as scope:
+                _, U, _ = tf.svd(ops.unfold(input_data, mode), full_matrices=True, name='svd-%d' % mode)
+                init_ops[mode] = A[mode].assign(U[:, :args.ranks[mode]])
 
         assign_op = [None for _ in range(order)]
         for mode in range(order):
             if mode != 0:
                 with tf.control_dependencies([assign_op[mode - 1]]):
-                    Y = ops.ttm(input_data, A, skip_matrices_index=mode, transpose=True)
+                    with tf.name_scope('Y-%d' % mode) as scope:
+                        Y = ops.ttm(input_data, A, skip_matrices_index=mode, transpose=True)
             else:
-                Y = ops.ttm(input_data, A, skip_matrices_index=mode, transpose=True)
-            _, tmp, _ = tf.svd(ops.unfold(Y, mode))
-            assign_op[mode] = A[mode].assign(tmp[:, :args.ranks[mode]])
+                with tf.name_scope('Y-%d' % mode) as scope:
+                    Y = ops.ttm(input_data, A, skip_matrices_index=mode, transpose=True)
+            with tf.name_scope('SVD-%d' % mode) as scope:
+                _, tmp, _ = tf.svd(ops.unfold(Y, mode))
+                assign_op[mode] = A[mode].assign(tmp[:, :args.ranks[mode]])
 
-        g = ops.ttm(input_data, assign_op, transpose=True)
+        with tf.name_scope('core-tensor') as scope:
+            g = ops.ttm(input_data, assign_op, transpose=True)
+
 
         init_op = tf.group(*init_ops)
-        #train_op = tf.group(*train_ops, g)
-        P = TTensor(g, assign_op)
-        full_op = P.extract()
-        loss_op = rmse_ignore_zero(input_data, full_op)
+
+        with tf.name_scope('full-tensor') as scope:
+            P = TTensor(g, assign_op)
+            full_op = P.extract()
+
+        with tf.name_scope('loss') as scope:
+            loss_op = rmse_ignore_zero(input_data, full_op)
 
         tf.summary.scalar('loss', loss_op)
 
@@ -210,7 +220,7 @@ class HOOI(BaseFact):
             else:
                 self._factors, self._core = sess.run([factor_update_op, core_op])
                 #print('step=%d' % (step))
-                print("factor matrices:")
+                #print("factor matrices:")
                 #for matrix in self._factors:
                 #    print(matrix, end='\n\n')
                 #print('core tensor:')

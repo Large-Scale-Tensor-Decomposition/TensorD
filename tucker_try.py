@@ -67,7 +67,7 @@ def my_hooi_test(steps, printinfo=False):
     data_provider.full_tensor = lambda: tf.constant(X_, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     hooi = HOOI(env)
-    args = hooi.HOOI_Args(ranks=[2, 2, 2])
+    args = hooi.HOOI_Args(ranks=[2, 2, 2], validation_internal=5)
     hooi.build_model(args)
     hooi.train(steps)
 
@@ -103,4 +103,4 @@ def my_hooi_test(steps, printinfo=False):
 
 
 #my_hosvd_test(True)
-my_hooi_test(10)
+my_hooi_test(100)
