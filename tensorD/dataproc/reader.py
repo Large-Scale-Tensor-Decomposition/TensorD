@@ -1,6 +1,46 @@
 # # Created by ay27 at 17/2/7
 # import parse
 #
+import csv
+import numpy as np
+import tensorflow as tf
+
+
+class TensorReader(object):
+    """
+
+    Attibutes
+    ---------
+
+    """
+    def __init__(self, file_path, type='csv'):
+        """
+
+        Parameters
+        ----------
+        file_path: file path
+        type: type of file, default 'csv'
+        """
+        self._file_path = file_path
+        self._type = type
+        self._dense = None
+        self._sparse = None
+
+    def read(self):
+        file = open(self._file_path, 'r')
+        tmp = []
+        if self._type == 'csv':
+            for row in csv.reader(file):
+                tmp.append(row)
+        else:
+            pass
+        print(tmp)
+
+
+
+
+
+
 #
 # class TensorReader(object):
 #     """

@@ -10,6 +10,7 @@
 import tensorflow as tf
 import numpy as np
 
+
 def queue_test1():
     q = tf.FIFOQueue(3, 'float')
     init = q.enqueue_many(([0., 0., 0.],))
@@ -18,11 +19,12 @@ def queue_test1():
     y = x + 1
     q_inc = q.enqueue([y])
 
-    init.run()
-    q_inc.run()
-    q_inc.run()
-    q_inc.run()
-    q_inc.run()
+    sess = tf.Session()
+    init_v = sess.run(init)
+    sess.run(q_inc)
+    sess.run(q_inc)
+    sess.run(q_inc)
+    sess.run(q_inc)
 
 
 queue_test1()
