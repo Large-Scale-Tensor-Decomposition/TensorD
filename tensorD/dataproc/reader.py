@@ -38,22 +38,24 @@ class TensorReader(object):
         else:
             raise ArgumentError(self._type + ' file is not supported by TensorReader.')
         print(str_in)
-        num_entry = len(str_in)
+
 
         order = len(str_in[0]) - 1
         sparse_data = dict()
+        max_dim = [0 for _ in range(order)]
+
         for entry in str_in:
             idx_tuple = tuple([int(entry[mode]) for mode in range(order)])
             sparse_data[idx_tuple] = float(entry[-1])
+
+            # TODO : assume that index starts from zero ? can be selected later
+            for mode in range(order):
+                if idx_tuple[mode] > max_dim[mode]:
+                    max_dim[mode] = idx_tuple[mode]
+
+
         self._sparse = sparse_data
         print(sparse_data)
-
-        # TODO : assume that index starts from zero ? can be selected later
-        max_dim = [0 for _ in range(order)]
-        for entry in sparse_data:
-            for mode in range(order):
-                if entry[mode] > max_dim[mode]:
-                    max_dim[mode] = entry[mode]
         print(max_dim)
 
 
