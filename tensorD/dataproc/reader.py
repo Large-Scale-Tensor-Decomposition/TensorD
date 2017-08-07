@@ -4,6 +4,7 @@
 import csv
 import numpy as np
 import tensorflow as tf
+from ctypes import ArgumentError
 
 
 class TensorReader(object):
@@ -13,7 +14,7 @@ class TensorReader(object):
     ---------
 
     """
-    def __init__(self, file_path, type='csv'):
+    def __init__(self, file_path):
         """
 
         Parameters
@@ -22,19 +23,48 @@ class TensorReader(object):
         type: type of file, default 'csv'
         """
         self._file_path = file_path
-        self._type = type
         self._dense = None
         self._sparse = None
+        self._type = self._file_path.split('.')[-1]
+
 
     def read(self):
         file = open(self._file_path, 'r')
-        tmp = []
-        if self._type == 'csv':
+        str_in = []
+        if self._type == 'csv' or self._type == 'txt':
             for row in csv.reader(file):
-                tmp.append(row)
+                if len(row) != 0:
+                    str_in.append(row)
         else:
-            pass
-        print(tmp)
+            raise ArgumentError(self._type + ' file is not supported by TensorReader.')
+        print(str_in)
+        num_entry = len(str_in)
+
+        order = len(str_in[0]) - 1
+        sparse_data = dict()
+        for entry in str_in:
+            idx_tuple = tuple([int(entry[mode]) for mode in range(order)])
+            sparse_data[idx_tuple] = float(entry[-1])
+        self._sparse = sparse_data
+        print(sparse_data)
+
+        # TODO : assume that index starts from zero ? can be selected later
+        max_dim = [0 for _ in range(order)]
+        for entry in sparse_data:
+            for mode in range(order):
+                if entry[mode] > max_dim[mode]:
+                    max_dim[mode] = entry[mode]
+        print(max_dim)
+
+
+
+
+
+
+
+
+
+
 
 
 

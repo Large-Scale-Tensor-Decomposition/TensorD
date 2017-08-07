@@ -14,8 +14,3 @@ if __name__ == '__main__':
     tensor_reader1 = TensorReader(file_path1)
     tensor_reader1.read()
 
-    print('\ntxt file:')
-    file_path2 = 'data1.txt'
-    tensor_reader2 = TensorReader(file_path2)
-    tensor_reader2.read()
-
