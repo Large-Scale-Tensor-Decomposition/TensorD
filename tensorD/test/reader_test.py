@@ -10,7 +10,9 @@ from tensorD.dataproc.reader import TensorReader
 
 if __name__ == '__main__':
     print('csv file:')
-    file_path1 = 'data1.csv'
-    tensor_reader1 = TensorReader(file_path1)
-    tensor_reader1.read()
+    file_path = 'data1.csv'
+    treader = TensorReader(file_path)
+    treader.read()
+    print(treader.full_data)
+    print(treader.sparse_data)
 

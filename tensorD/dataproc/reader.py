@@ -14,6 +14,7 @@ class TensorReader(object):
     ---------
 
     """
+
     def __init__(self, file_path):
         """
 
@@ -24,9 +25,9 @@ class TensorReader(object):
         """
         self._file_path = file_path
         self._dense = None
-        self._sparse = None
+        self._sparse_data = None
+        self._full_data = None
         self._type = self._file_path.split('.')[-1]
-
 
     def read(self):
         file = open(self._file_path, 'r')
@@ -37,8 +38,6 @@ class TensorReader(object):
                     str_in.append(row)
         else:
             raise ArgumentError(self._type + ' file is not supported by TensorReader.')
-        print(str_in)
-
 
         order = len(str_in[0]) - 1
         sparse_data = dict()
@@ -50,28 +49,23 @@ class TensorReader(object):
 
             # TODO : assume that index starts from zero ? can be selected later
             for mode in range(order):
-                if idx_tuple[mode] > max_dim[mode]:
-                    max_dim[mode] = idx_tuple[mode]
+                if idx_tuple[mode] > max_dim[mode] + 1:
+                    max_dim[mode] = idx_tuple[mode] + 1
 
+        full_data = np.zeros(shape=max_dim)
+        for entry in sparse_data:
+            full_data[entry] = sparse_data[entry]
 
-        self._sparse = sparse_data
-        print(sparse_data)
-        print(max_dim)
+        self._sparse_data = sparse_data
+        self._full_data = full_data
 
+    @property
+    def full_data(self):
+        return self._full_data
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @property
+    def sparse_data(self):
+        return self._sparse_data
 
 #
 # class TensorReader(object):
