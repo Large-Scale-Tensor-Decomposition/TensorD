@@ -29,7 +29,7 @@ class TensorReader(object):
         self._full_data = None
         self._type = self._file_path.split('.')[-1]
 
-    def read(self):
+    def read_demo1(self):
         file = open(self._file_path, 'r')
         str_in = []
         if self._type == 'csv' or self._type == 'txt':
@@ -38,6 +38,67 @@ class TensorReader(object):
                     str_in.append(row)
         else:
             raise ArgumentError(self._type + ' file is not supported by TensorReader.')
+        file.close()
+
+        order = len(str_in[0]) - 1
+        entry_count = len(str_in)
+        value = np.zeros(entry_count)
+        idx = np.zeros(shape=(entry_count, order), dtype=int)
+        for row in range(entry_count):
+            entry = str_in[row]
+            idx[row] = np.array([int(entry[mode]) for mode in range(order)])
+            value[row] = float(entry[-1])
+        max_dim = np.max(idx, axis=0) + np.ones(order).astype(int)
+        self._sparse_data = tf.SparseTensor(indices=idx, values=value, dense_shape=max_dim)
+        self._full_data = tf.sparse_tensor_to_dense(self._sparse_data)
+
+    def read_demo2(self):
+        tmp = np.loadtxt(self._file_path, dtype=float, delimiter=',')
+        order = len(tmp[0]) - 1
+        max_dim = np.max(tmp[:, 0:order], axis=0).astype(int) + np.ones(order).astype(int)
+        self._sparse_data = tf.SparseTensor(indices=tmp[:, 0:order].astype(int), values=tmp[:, order],
+                                            dense_shape=max_dim)
+        self._full_data = tf.sparse_tensor_to_dense(self._sparse_data)
+
+    def read_demo3(self):
+        file = open(self._file_path, 'r')
+        str_in = []
+        if self._type == 'csv' or self._type == 'txt':
+            for row in csv.reader(file):
+                if len(row) != 0:
+                    str_in.append(row)
+        else:
+            raise ArgumentError(self._type + ' file is not supported by TensorReader.')
+        file.close()
+
+        idx = []
+        value = []
+        order = len(str_in[0]) - 1
+        max_dim = [0 for _ in range(order)]
+
+        for entry in str_in:
+            tmp_idx = [int(entry[mode]) for mode in range(order)]
+            idx.append(tmp_idx)
+            value.append(float(entry[-1]))
+            # TODO : assume that index starts from zero ? can be selected later
+            for mode in range(order):
+                if max_dim[mode] < tmp_idx[mode] + 1:
+                    max_dim[mode] = tmp_idx[mode] + 1
+
+        self._sparse_data = tf.SparseTensor(indices=idx, values=value, dense_shape=max_dim)
+        self._full_data = tf.sparse_tensor_to_dense(self._sparse_data)
+
+    def read_demo4(self):
+        file = open(self._file_path, 'r')
+        str_in = []
+        if self._type == 'csv' or self._type == 'txt':
+            for row in csv.reader(file):
+                if len(row) != 0:
+                    str_in.append(row)
+        else:
+            raise ArgumentError(self._type + ' file is not supported by TensorReader.')
+
+        file.close()
 
         order = len(str_in[0]) - 1
         sparse_data = dict()
@@ -49,7 +110,7 @@ class TensorReader(object):
 
             # TODO : assume that index starts from zero ? can be selected later
             for mode in range(order):
-                if idx_tuple[mode] > max_dim[mode] + 1:
+                if max_dim[mode] < idx_tuple[mode] + 1:
                     max_dim[mode] = idx_tuple[mode] + 1
 
         full_data = np.zeros(shape=max_dim)
