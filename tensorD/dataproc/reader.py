@@ -50,7 +50,7 @@ class TensorReader(object):
             value[row] = float(entry[-1])
         max_dim = np.max(idx, axis=0) + np.ones(order).astype(int)
         self._sparse_data = tf.SparseTensor(indices=idx, values=value, dense_shape=max_dim)
-        self._full_data = tf.sparse_tensor_to_dense(self._sparse_data)
+        self._full_data = tf.sparse_tensor_to_dense(self._sparse_data, validate_indices=False)
 
     def read_demo2(self):
         tmp = np.loadtxt(self._file_path, dtype=float, delimiter=',')
@@ -58,7 +58,7 @@ class TensorReader(object):
         max_dim = np.max(tmp[:, 0:order], axis=0).astype(int) + np.ones(order).astype(int)
         self._sparse_data = tf.SparseTensor(indices=tmp[:, 0:order].astype(int), values=tmp[:, order],
                                             dense_shape=max_dim)
-        self._full_data = tf.sparse_tensor_to_dense(self._sparse_data)
+        self._full_data = tf.sparse_tensor_to_dense(self._sparse_data, validate_indices=False)
 
     def read_demo3(self):
         file = open(self._file_path, 'r')
@@ -86,7 +86,7 @@ class TensorReader(object):
                     max_dim[mode] = tmp_idx[mode] + 1
 
         self._sparse_data = tf.SparseTensor(indices=idx, values=value, dense_shape=max_dim)
-        self._full_data = tf.sparse_tensor_to_dense(self._sparse_data)
+        self._full_data = tf.sparse_tensor_to_dense(self._sparse_data, validate_indices=False)
 
     def read_demo4(self):
         file = open(self._file_path, 'r')
