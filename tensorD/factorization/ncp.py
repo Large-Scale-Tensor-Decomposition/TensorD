@@ -5,3 +5,15 @@
 # @Site    : 
 # @File    : ncp.py
 # @Software: PyCharm Community Edition
+
+import tensorflow as tf
+import numpy as np
+from tensorD.loss import *
+from tensorD.base import *
+from .factorization import *
+from .env import *
+
+
+
+
+
