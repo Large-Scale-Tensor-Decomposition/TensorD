@@ -40,8 +40,9 @@ class NTUCKER_ALS(BaseFact):
         order = input_data.get_shape().ndims
 
         with tf.name_scope('random-initial') as scope:
-            A = [tf.Variable(rand(shape[ii], args.rank), name='A-%d' % ii) for ii in range(order)]
-
+            A = [tf.Variable(rand(shape[ii], args.ranks[ii]), name='A-%d' % ii) for ii in range(order)]
+            g = tf.Variable(np.zeros(args.ranks))
+            g_init_op = g.assign(ops.ttm(input_data, A, transpose=True))
         with tf.name_scope('unfold-all-mode') as scope:
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
             assign_op = [None for _ in range(order)]
@@ -49,7 +50,13 @@ class NTUCKER_ALS(BaseFact):
         for mode in range(order):
             if mode != 0:
                 with tf.control_dependencies([assign_op[mode - 1]]):
-                    S =
+                    S = ops.kron(A, mode, True)
+                    GS_pinv = tf.py_func(np.linalg.pinv, [tf.matmul(ops.unfold(g, mode), S, name='GS-%d' % mode)], tf.float64, name='pinvGS-%d' % mode)
+                    XGS_pinv = tf.matmul(mats[mode], GS_pinv, name='XGS-%d' % mode)
+                    assign_op[mode] = A[mode].assign(tf.nn.relu(XGS_pinv))
+                    SA_pinv = tf.py_func(np.linalg.pinv, [ops.kron([tf.transpose(S), assign_op[mode]])], tf.float64, name='pinvSA-%d' % mode)
+                    vecG = tf.nn.relu(tf.matmul(SA_pinv, ops.vectorize(mats[mode])), name='vecG-%d' % mode)
+                    # TODO : reshape core tensor g
 
 
     def predict(self, *key):
