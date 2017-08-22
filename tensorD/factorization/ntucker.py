@@ -11,6 +11,7 @@ import numpy as np
 from tensorD.loss import *
 from tensorD.base import *
 from numpy.random import rand
+from functools import reduce
 from .factorization import BaseFact
 from .env import Environment
 
@@ -51,12 +52,22 @@ class NTUCKER_ALS(BaseFact):
             if mode != 0:
                 with tf.control_dependencies([assign_op[mode - 1]]):
                     S = ops.kron(A, mode, True)
-                    GS_pinv = tf.py_func(np.linalg.pinv, [tf.matmul(ops.unfold(g, mode), S, name='GS-%d' % mode)], tf.float64, name='pinvGS-%d' % mode)
-                    XGS_pinv = tf.matmul(mats[mode], GS_pinv, name='XGS-%d' % mode)
-                    assign_op[mode] = A[mode].assign(tf.nn.relu(XGS_pinv))
-                    SA_pinv = tf.py_func(np.linalg.pinv, [ops.kron([tf.transpose(S), assign_op[mode]])], tf.float64, name='pinvSA-%d' % mode)
-                    vecG = tf.nn.relu(tf.matmul(SA_pinv, ops.vectorize(mats[mode])), name='vecG-%d' % mode)
-                    # TODO : reshape core tensor g
+            else:
+                S = ops.kron(A, mode, True)
+
+            GS_pinv = tf.py_func(np.linalg.pinv, [tf.matmul(ops.unfold(g, mode), S, name='GS-%d' % mode)], tf.float64,
+                                 name='pinvGS-%d' % mode)
+            XGS_pinv = tf.matmul(mats[mode], GS_pinv, name='XGS-%d' % mode)
+            assign_op[mode] = A[mode].assign(tf.nn.relu(XGS_pinv))
+            SA_pinv = tf.py_func(np.linalg.pinv, [ops.kron([tf.transpose(S), A[mode]])], tf.float64,
+                                 name='pinvSA-%d' % mode)
+            vecG = tf.nn.relu(tf.matmul(SA_pinv, ops.vectorize(mats[mode])), name='vecG-%d' % mode)
+            # TODO : reshape core tensor g
+            Gn = ops.vec_to_tensor(vecG,
+                                   (args.ranks[mode], int(reduce(lambda x, y: x * y, args.ranks) / args.ranks[mode])))
+            g_update_op = g.assign(ops.fold(Gn, mode, args.ranks))
+
+
 
 
     def predict(self, *key):
