@@ -3,3 +3,4 @@
 from .env import *
 from .factorization import *
 from .cp import *
+from .tucker import *
