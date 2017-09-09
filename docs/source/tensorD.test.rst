@@ -12,6 +12,30 @@ tensorD.test.cp_test module
     :undoc-members:
     :show-inheritance:
 
+tensorD.test.ntucker_test module
+--------------------------------
+
+.. automodule:: tensorD.test.ntucker_test
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tensorD.test.reader_test module
+-------------------------------
+
+.. automodule:: tensorD.test.reader_test
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tensorD.test.tucker_test module
+-------------------------------
+
+.. automodule:: tensorD.test.tucker_test
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

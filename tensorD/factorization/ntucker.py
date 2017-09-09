@@ -18,8 +18,10 @@ from .env import Environment
 
 class NTUCKER_ALS(BaseFact):
     class NTUCKER_Args(object):
-        def __init__(self, ranks: list):
+        def __init__(self, ranks: list, validation_internal=-1, verbose=False):
             self.ranks = ranks
+            self.validation_internal = validation_internal
+            self.verbose = verbose
 
     def __init__(self, env):
         assert isinstance(env, Environment)
@@ -30,8 +32,11 @@ class NTUCKER_ALS(BaseFact):
         self._core = None
         self._args = None
         self._init_op = None
+        self._core_init = None
         self._core_op = None
         self._factor_update_op = None
+        self._full_op = None
+        self._loss_op = None
         self._is_train_finish = False
 
     def build_model(self, args):
@@ -59,16 +64,29 @@ class NTUCKER_ALS(BaseFact):
                                  name='pinvGS-%d' % mode)
             XGS_pinv = tf.matmul(mats[mode], GS_pinv, name='XGS-%d' % mode)
             assign_op[mode] = A[mode].assign(tf.nn.relu(XGS_pinv))
-            SA_pinv = tf.py_func(np.linalg.pinv, [ops.kron([tf.transpose(S), A[mode]])], tf.float64,
-                                 name='pinvSA-%d' % mode)
-            vecG = tf.nn.relu(tf.matmul(SA_pinv, ops.vectorize(mats[mode])), name='vecG-%d' % mode)
-            # TODO : reshape core tensor g
-            Gn = ops.vec_to_tensor(vecG,
-                                   (args.ranks[mode], int(reduce(lambda x, y: x * y, args.ranks) / args.ranks[mode])))
-            g_update_op = g.assign(ops.fold(Gn, mode, args.ranks))
+            StA_pinv = tf.py_func(np.linalg.pinv, [ops.kron([tf.transpose(S), A[mode]])], tf.float64, name='pinvStA-%d' % mode)
+            with tf.name_scope('core-tensor') as scope:
+                vecG = tf.nn.relu(tf.matmul(StA_pinv, ops.vectorize(mats[mode])), name='vecG-%d' % mode)
+                Gn = ops.vec_to_tensor(vecG, (args.ranks[mode], int(reduce(lambda x, y: x * y, args.ranks) / args.ranks[mode])))
+                g_update_op = g.assign(ops.fold(Gn, mode, args.ranks))
 
+        with tf.name_scope('full-tensor') as scope:
+            P = TTensor(g_update_op, assign_op)
+            full_op = P.extract()
 
+        with tf.name_scope('loss') as scope:
+            loss_op = rmse_ignore_zero(input_data, full_op)
+        tf.summary.scalar('loss', loss_op)
 
+        init_op = tf.global_variables_initializer()
+
+        self._args = args
+        self._init_op = init_op
+        self._core_init = g_init_op
+        self._full_op = full_op
+        self._factor_update_op = assign_op
+        self._core_op = g_update_op
+        self._loss_op = loss_op
 
     def predict(self, *key):
         if not self._full_tensor:
@@ -86,3 +104,33 @@ class NTUCKER_ALS(BaseFact):
     @property
     def train_finish(self):
         return self._is_train_finish
+
+
+    def train(self, steps):
+        sess = self._env.sess
+        args = self._args
+
+        init_op = self._init_op
+        g_init_op = self._core_init
+        full_op = self._full_op
+        factor_update_op = self._factor_update_op
+        core_op = self._core_op
+        loss_op = self._loss_op
+
+        sum_op = tf.summary.merge_all()
+        sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
+
+        sess.run(init_op)
+        
+        print('Non-negative tucker model initial finish')
+        for step in range(1, steps + 1):
+            if (step == steps) or args.verbose or (step == 1) or (step % args.validation_internal == 0 and args.validation_internal != -1):
+                loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run([loss_op, full_op, factor_update_op, core_op, sum_op])
+                sum_writer.add_summary(sum_msg, step)
+                print('step=%d, RMSE=%.15f' % (step, loss_v))
+            else:
+                self._factors, self._core = sess.run([factor_update_op, core_op])
+
+        print('Non-negative tucker model train finish, with RMSE = %.15f' % loss_v)
+        self._is_train_finish = True
+
