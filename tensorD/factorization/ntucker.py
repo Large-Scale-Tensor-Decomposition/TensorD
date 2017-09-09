@@ -56,20 +56,13 @@ class NTUCKER_ALS(BaseFact):
         for mode in range(order):
             if mode != 0:
                 with tf.control_dependencies([assign_op[mode - 1]]):
-                    S = ops.kron(A, mode, True)
+                    # TODO : update part 1
             else:
-                S = ops.kron(A, mode, True)
+                # TODO : update part 1
 
-            GS_pinv = tf.py_func(np.linalg.pinv, [tf.matmul(ops.unfold(g, mode), S, name='GS-%d' % mode)], tf.float64,
-                                 name='pinvGS-%d' % mode)
-            XGS_pinv = tf.matmul(mats[mode], GS_pinv, name='XGS-%d' % mode)
-            assign_op[mode] = A[mode].assign(tf.nn.relu(XGS_pinv))
-            StA_pinv = tf.py_func(np.linalg.pinv, [ops.kron([tf.transpose(S), A[mode]])], tf.float64, name='pinvStA-%d' % mode)
-            with tf.name_scope('core-tensor') as scope:
-                vecG = tf.nn.relu(tf.matmul(StA_pinv, ops.vectorize(mats[mode])), name='vecG-%d' % mode)
-                Gn = ops.vec_to_tensor(vecG, (args.ranks[mode], int(reduce(lambda x, y: x * y, args.ranks) / args.ranks[mode])))
-                g_update_op = g.assign(ops.fold(Gn, mode, args.ranks))
+            # TODO : update part 2
 
+        # TODO : not sure whether could use in this way
         with tf.name_scope('full-tensor') as scope:
             P = TTensor(g_update_op, assign_op)
             full_op = P.extract()
@@ -121,7 +114,7 @@ class NTUCKER_ALS(BaseFact):
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
 
         sess.run(init_op)
-        
+
         print('Non-negative tucker model initial finish')
         for step in range(1, steps + 1):
             if (step == steps) or args.verbose or (step == 1) or (step % args.validation_internal == 0 and args.validation_internal != -1):
