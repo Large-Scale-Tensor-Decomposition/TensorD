@@ -88,13 +88,13 @@ class NCP(BaseFact):
             Gn = tf.subtract(tf.matmul(Am[mode], V), XA, name='G-%d' % mode)
             A_update_op[mode] = A[mode].assign(tf.nn.relu(tf.subtract(Am[mode], tf.div(Gn, L_update_op[mode]))))
             wA_update_op[mode] = wA[mode].assign(tf.minimum(w, tf.sqrt(L0_update_op[mode]/L_update_op[mode])))
-            Am_update_op[mode] = Am[mode].assign(A_update_op[mode] + tf.matmul(wA, A_update_op[mode]-A0[mode]))
+            Am_update_op[mode] = Am[mode].assign(A_update_op[mode] + tf.matmul(wA_update_op[mode], A_update_op[mode]-A0[mode]))
             A0_update_op[mode] = A0[mode].assign(A_update_op[mode])
 
-        t0_update_op = t0.assign(t)
+        t0_update_op = t0.assign(t_update_op)
 
         with tf.name_scope('full-tensor') as scope:
-            P = KTensor(assign_op)
+            P = KTensor(A)
             full_op = P.extract()
         with tf.name_scope('loss') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
