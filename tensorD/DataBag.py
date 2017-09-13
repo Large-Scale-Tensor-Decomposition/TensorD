@@ -96,7 +96,7 @@ def rand_list(shape_list, rank):
     order = len(shape_list)
     init_mat = [np.zeros(shape=(shape_list[ii], rank)) for ii in range(order)]
     for mode in range(order):
-        if mode != 0:
+        if mode != -1:
             I_i = shape_list[mode]
             for ii in range(I_i):
                 for jj in range(rank):
@@ -107,8 +107,13 @@ def rand_list(shape_list, rank):
 
 
 
-def insert_test(tf_variable):
+def insert_test(tf_variable, num):
     init_op = tf.global_variables_initializer()
     with tf.Session() as sess:
         sess.run(init_op)
-        print(sess.run(tf_variable))
+        res = sess.run(tf_variable)
+        if num==1:
+            print(res)
+        else:
+            for element in res:
+                print(element)
