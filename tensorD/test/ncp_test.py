@@ -19,8 +19,8 @@ if __name__ == '__main__':
     data_provider.full_tensor = lambda: tf.constant(X, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     ncp = NCP(env)
-    args = NCP.NCP_Args(rank=2, validation_internal=1)
+    args = NCP.NCP_Args(rank=2, validation_internal=5)
     ncp.build_model(args)
-    ncp.train(4)
-    #print(ncp.full - X)
+    ncp.train(210)
+    print(ncp.full - X)
 

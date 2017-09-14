@@ -99,31 +99,15 @@ class CP_ALS(BaseFact):
         with tf.name_scope('loss') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
 
-        """
-        if \\left \\| X - X_{real}  \\right \\|_F \\neq
-        fitness = 1 - \\frac{\\left \\| X - X_{real}  \\right \\|_F}{\\left \\| X  \\right \\|_F}
-        """
-        with tf.name_scope('fitness') as scope:
-            norm_input_data = tf.norm(input_data)
-            fit_op_not_zero = 1 - tf.sqrt(
-                tf.square(norm_input_data) + tf.square(tf.norm(full_op)) - 2 * ops.inner(input_data,
-                                                                                         full_op)) / norm_input_data
-            fit_op_zero = tf.square(tf.norm(full_op)) - 2 * ops.inner(input_data, full_op)
-
         tf.summary.scalar('loss', loss_op)
-        tf.summary.scalar('fitness', fit_op_not_zero)
-        tf.summary.scalar('fitness_0', fit_op_zero)
 
         init_op = tf.global_variables_initializer()
 
         self._args = args
         self._init_op = init_op
-        self._norm_input_data = norm_input_data
         self._lambda_op = lambda_op
         self._full_op = full_op
         self._factor_update_op = assign_op
-        self._fit_op_zero = fit_op_zero
-        self._fit_op_not_zero = fit_op_not_zero
         self._loss_op = loss_op
 
     def train(self, steps):
@@ -133,16 +117,10 @@ class CP_ALS(BaseFact):
         args = self._args
 
         init_op = self._init_op
-        norm_input_data = self._norm_input_data
 
         lambda_op = self._lambda_op
         full_op = self._full_op
         factor_update_op = self._factor_update_op
-
-        # if the l2-norm of input tensor is zero, then use fit_op_zero
-        # if not, then use fit_op_not_zero
-        fit_op_zero = self._fit_op_zero
-        fit_op_not_zero = self._fit_op_not_zero
         loss_op = self._loss_op
 
         sum_op = tf.summary.merge_all()
@@ -151,19 +129,13 @@ class CP_ALS(BaseFact):
         sess.run(init_op)
         print('CP model initial finish')
 
-        if sess.run(norm_input_data) == 0:
-            fit_op = fit_op_zero
-        else:
-            fit_op = fit_op_not_zero
-
         for step in range(1, steps + 1):
             if (step == steps) or (args.verbose) or (step == 1) or (step % args.validation_internal == 0 and args.validation_internal != -1):
-                self._factors, self._lambdas, self._full_tensor, loss_v, fitness, sum_msg = sess.run(
-                    [factor_update_op, lambda_op, full_op, loss_op, fit_op, sum_op])
+                self._factors, self._lambdas, self._full_tensor, loss_v, sum_msg = sess.run([factor_update_op, lambda_op, full_op, loss_op, sum_op])
                 sum_writer.add_summary(sum_msg, step)
-                print('step=%d, RMSE=%f, fit=%.10f' % (step, loss_v, fitness))
+                print('step=%d, RMSE=%f' % (step, loss_v))
             else:
                 self._factors, self._lambdas = sess.run([factor_update_op, lambda_op])
 
-        print('CP model train finish, with RMSE = %.10f, fit=%.10f' % (loss_v, fitness))
+        print('CP model train finish, with RMSE = %.10f' % (loss_v))
         self._is_train_finish = True
