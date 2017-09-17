@@ -53,33 +53,6 @@ class NTUCKER_ALS(BaseFact):
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
             assign_op = [None for _ in range(order)]
 
-        for mode in range(order):
-            if mode != 0:
-                with tf.control_dependencies([assign_op[mode - 1]]):
-                    # TODO : update part 1
-            else:
-                # TODO : update part 1
-
-            # TODO : update part 2
-
-        # TODO : not sure whether could use in this way
-        with tf.name_scope('full-tensor') as scope:
-            P = TTensor(g_update_op, assign_op)
-            full_op = P.extract()
-
-        with tf.name_scope('loss') as scope:
-            loss_op = rmse_ignore_zero(input_data, full_op)
-        tf.summary.scalar('loss', loss_op)
-
-        init_op = tf.global_variables_initializer()
-
-        self._args = args
-        self._init_op = init_op
-        self._core_init = g_init_op
-        self._full_op = full_op
-        self._factor_update_op = assign_op
-        self._core_op = g_update_op
-        self._loss_op = loss_op
 
     def predict(self, *key):
         if not self._full_tensor:
@@ -104,10 +77,8 @@ class NTUCKER_ALS(BaseFact):
         args = self._args
 
         init_op = self._init_op
-        g_init_op = self._core_init
         full_op = self._full_op
         factor_update_op = self._factor_update_op
-        core_op = self._core_op
         loss_op = self._loss_op
 
         sum_op = tf.summary.merge_all()
@@ -118,12 +89,12 @@ class NTUCKER_ALS(BaseFact):
         print('Non-negative tucker model initial finish')
         for step in range(1, steps + 1):
             if (step == steps) or args.verbose or (step == 1) or (step % args.validation_internal == 0 and args.validation_internal != -1):
-                loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run([loss_op, full_op, factor_update_op, core_op, sum_op])
+                sum_msg = sess.run([sum_op])
                 sum_writer.add_summary(sum_msg, step)
-                print('step=%d, RMSE=%.15f' % (step, loss_v))
+                print('step=%d, RMSE=%.10f' % (step, loss_v))
             else:
-                self._factors, self._core = sess.run([factor_update_op, core_op])
+                self._factors = sess.run([])
 
-        print('Non-negative tucker model train finish, with RMSE = %.15f' % loss_v)
+        print('Non-negative tucker model train finish, with RMSE = %.10f' % loss_v)
         self._is_train_finish = True
 
