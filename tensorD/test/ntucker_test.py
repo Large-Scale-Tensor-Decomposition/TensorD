@@ -12,10 +12,12 @@ from numpy.random import rand
 from tensorD.factorization.env import Environment
 from tensorD.dataproc.provider import Provider
 from tensorD.factorization.ntucker import NTUCKER_ALS
+from  tensorD.DataBag import  *
 
 if __name__ == '__main__':
     data_provider = Provider()
-    X = np.arange(24).reshape(3, 4, 2)
+    #X = np.arange(24).reshape(3, 4, 2)
+    X = gen_test_tensor([3, 4, 5], 3)
     data_provider.full_tensor = lambda: tf.constant(X, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     ntucker = NTUCKER_ALS(env)

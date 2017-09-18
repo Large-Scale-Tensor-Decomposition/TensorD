@@ -68,38 +68,41 @@ class NCP(BaseFact):
         shape = input_data.get_shape().as_list()
         order = len(shape)
 
-        with tf.name_scope('random-initial') as scope:
+        with tf.name_scope('random-init') as scope:
             # initialize with normally distributed pseudorandom numbers
-            A = [tf.Variable(rand(shape[ii], args.rank), name='A-%d' % ii, dtype=tf.float64) for ii in range(order)]
-            Am = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float64) for ii in range(order)]
-            A0 = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float64) for ii in range(order)]
+            A = [tf.Variable(tf.nn.relu(tf.random_normal(shape=(shape[ii], args.rank), dtype=tf.float64)), name='A-%d' % ii, dtype=tf.float64) for ii in range(order)]
+            A_update_op = [None for _ in range(order)]
+
+        Am = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float64, name='Am-%d' % ii) for ii in range(order)]
+        A0 = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float64, name='A0-%d' % ii) for ii in range(order)]
+        Am_update_op1 = [None for _ in range(order)]
+        Am_update_op2 = [None for _ in range(order)]
+        A0_update_op1 = [None for _ in range(order)]
+
+        with tf.name_scope('norm-init') as scope:
+            norm_init_op = [None for _ in range(order)]
             Am_init_op = [None for _ in range(order)]
             A0_init_op = [None for _ in range(order)]
-            A_update_op = [None for _ in range(order)]
-            Am_update_op1 = [None for _ in range(order)]
-            Am_update_op2 = [None for _ in range(order)]
-            A0_update_op1 = [None for _ in range(order)]
-            t0 = tf.Variable(1.0, dtype=tf.float64)
-            t = tf.Variable(1.0, dtype=tf.float64)
-            wA = [tf.Variable(1.0, dtype=tf.float64) for _ in range(order)]
-            wA_update_op1 = [None for _ in range(order)]
-            L = [tf.Variable(1.0, name='gradientLipschitz-%d' % ii, dtype=tf.float64) for ii in range(order)]
-            L0 = [tf.Variable(1.0, dtype=tf.float64) for _ in range(order)]
-            L_update_op = [None for _ in range(order)]
-            L0_update_op = [None for _ in range(order)]
-
-        with tf.name_scope('normalize-initial') as scope:
-            norm_init_op = [None for _ in range(order)]
             for mode in range(order):
                 norm_init_op[mode] = A[mode].assign(
                     A[mode] / tf.norm(A[mode], ord='fro', axis=(0, 1)) * tf.pow(input_norm, 1 / order))
                 A0_init_op[mode] = A0[mode].assign(norm_init_op[mode])
                 Am_init_op[mode] = Am[mode].assign(norm_init_op[mode])
+
+        t0 = tf.Variable(1.0, dtype=tf.float64, name='t0')
+        t = tf.Variable(1.0, dtype=tf.float64, name='t')
+        wA = [tf.Variable(1.0, dtype=tf.float64, name='wA-%d' % ii) for ii in range(order)]
+        wA_update_op1 = [None for _ in range(order)]
+        L = [tf.Variable(1.0, name='Lipschitz-%d' % ii, dtype=tf.float64) for ii in range(order)]
+        L0 = [tf.Variable(1.0, name='Lipschitz0-%d' % ii, dtype=tf.float64) for ii in range(order)]
+        L_update_op = [None for _ in range(order)]
+        L0_update_op = [None for _ in range(order)]
+
+
         with tf.name_scope('unfold-all-mode') as scope:
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
 
         for mode in range(order):
-
             if mode != 0:
                 with tf.control_dependencies([A_update_op[mode - 1]]):
                     AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in
@@ -108,34 +111,48 @@ class NCP(BaseFact):
             else:
                 AtA = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
                 XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
-            V = ops.hadamard(AtA, skip_matrices_index=mode)
+            with tf.name_scope('V-%d' % mode):
+                V = ops.hadamard(AtA, skip_matrices_index=mode)
             L0_update_op[mode] = L0[mode].assign(L[mode])
             with tf.control_dependencies([L0_update_op[mode]]):
                 L_update_op[mode] = L[mode].assign(tf.reduce_max(tf.svd(V, compute_uv=False)))
             Gn = tf.subtract(tf.matmul(Am[mode], V), XA, name='G-%d' % mode)
-            A_update_op[mode] = A[mode].assign(tf.nn.relu(tf.subtract(Am[mode], tf.div(Gn, L_update_op[mode]))))
+            with tf.name_scope('A-update-%d' % mode) as scope:
+                A_update_op[mode] = A[mode].assign(tf.nn.relu(tf.subtract(Am[mode], tf.div(Gn, L_update_op[mode]))))
 
         with tf.name_scope('full-tensor') as scope:
             P = KTensor(A_update_op)
             full_op = P.extract()
         with tf.name_scope('loss') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
+        with tf.name_scope('relative-residual') as scope:
+            rel_res_op = tf.norm(full_op - input_data) / input_norm
+        with tf.name_scope('objective-value') as scope:
+            obj_op = 0.5*tf.square(tf.norm(full_op - input_data))
 
-        t_update_op = t.assign((1 + tf.sqrt(1 + 4 * tf.square(t0))) / 2)
-        w = (t0 - 1) / t
-        for mode in range(order):
-            # if RMSE loss is increasing
-            Am_update_op2[mode] = Am[mode].assign(A0[mode])
-            # if RMSE loss is not increasing
-            wA_update_op1[mode] = wA[mode].assign(tf.minimum(w, tf.sqrt(L0[mode] / L[mode])))
-            Am_update_op1[mode] = Am[mode].assign(A[mode] + wA_update_op1[mode] * (A[mode] - A0[mode]))
-            with tf.control_dependencies([Am_update_op1[mode]]):
-                A0_update_op1[mode] = A0[mode].assign(A[mode])
 
-        with tf.control_dependencies([Am_update_op1[order - 1]]):
-            t0_update_op1 = t0.assign(t)
+        with tf.name_scope('t') as scope:
+            t_update_op = t.assign((1 + tf.sqrt(1 + 4 * tf.square(t0))) / 2)
+        with tf.name_scope('w') as scope:
+            w = (t0 - 1) / t
+
+        with tf.name_scope('Am-wA-update') as scope:
+            for mode in range(order):
+                # if RMSE loss is increasing
+                Am_update_op2[mode] = Am[mode].assign(A0[mode])
+                # if RMSE loss is not increasing
+                wA_update_op1[mode] = wA[mode].assign(tf.minimum(w, tf.sqrt(L0[mode] / L[mode])))
+                Am_update_op1[mode] = Am[mode].assign(A[mode] + wA_update_op1[mode] * (A[mode] - A0[mode]))
+                with tf.control_dependencies([Am_update_op1[mode]]):
+                    A0_update_op1[mode] = A0[mode].assign(A[mode])
+
+        with tf.name_scope('t0') as scope:
+            with tf.control_dependencies([Am_update_op1[order - 1]]):
+                t0_update_op1 = t0.assign(t)
 
         tf.summary.scalar('loss', loss_op)
+        tf.summary.scalar('relative_residual', rel_res_op)
+        tf.summary.scalar('objective-value', obj_op)
 
         init_op = tf.global_variables_initializer()
 
@@ -148,6 +165,8 @@ class NCP(BaseFact):
         self._factor_update_op = A_update_op
         self._full_op = full_op
         self._loss_op = loss_op
+        self._obj_op = obj_op
+        self._rel_res_op = rel_res_op
 
     def train(self, steps):
         self._is_train_finish = False
@@ -163,6 +182,8 @@ class NCP(BaseFact):
         train_op2 = self._train_op2
         full_op = self._full_op
         loss_op = self._loss_op
+        obj_op = self._obj_op
+        rel_res_op = self._rel_res_op
 
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
@@ -174,20 +195,23 @@ class NCP(BaseFact):
         for step in range(1, steps + 1):
             if (step == steps) or (args.verbose) or (step == 1) or (
                                 step % args.validation_internal == 0 and args.validation_internal != -1):
-                self._factors, self._full_tensor, loss_v, sum_msg, _ = sess.run(
-                    [factor_update_op, full_op, loss_op, sum_op, train_op])
+                self._factors, self._full_tensor, loss_v, obj, rel_res, sum_msg, _ = sess.run(
+                    [factor_update_op, full_op, loss_op, obj_op, rel_res_op, sum_op, train_op])
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%.5f' % (step, loss_v))
             else:
-                self._factors, loss_v, _ = sess.run([factor_update_op, loss_op, train_op])
+                self._factors, loss_v, rel_res, _ = sess.run([factor_update_op, loss_op, rel_res_op, train_op])
 
             if step == 1:
-                loss_v0 = loss_v + 1
-            crit = abs(loss_v - loss_v0) / (loss_v0 + 1) < args.tol
+                obj0 = obj + 1
 
-            if loss_v < loss_v0:
+            relerr1 = abs(obj - obj0) / (obj0 + 1)
+            relerr2 = rel_res
+            crit =  relerr1 < args.tol
+
+            if obj < obj0:
                 sess.run(train_op1)
-                loss_v0 = loss_v
+                obj0 = obj
             else:
                 sess.run(train_op2)
 
@@ -195,7 +219,7 @@ class NCP(BaseFact):
                 nstall = nstall + 1
             else:
                 nstall = 0
-            if nstall >= 3:
+            if nstall >= 3 or relerr2 < args.tol:
                 break
 
         self._lambdas = np.ones(shape=(1, args.rank))

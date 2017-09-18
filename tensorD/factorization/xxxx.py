@@ -45,13 +45,24 @@ from tensorD.DataBag import *
 # sess.run(A0_init)
 # print('A0 after update: ', sess.run(A0_assign))
 #
-X = tf.Variable(1, dtype=tf.float64)
-X2 = tf.Variable(0, dtype=tf.float64)
-op1 = X.assign(X*10)
-op2 = X2.assign(X*10)
-
-init_op = tf.global_variables_initializer()
-sess = tf.Session()
-sess.run(init_op)
-
-
+# X = tf.Variable(1, dtype=tf.float64)
+# X2 = tf.Variable(0, dtype=tf.float64)
+# op1 = X.assign(X*10)
+# op2 = X2.assign(X*10)
+#
+# init_op = tf.global_variables_initializer()
+# sess = tf.Session()
+# sess.run(init_op)
+#
+#
+# Uinit = rand_list2([2,3,4], [2,3,3])
+# print('U{1}:')
+# print(Uinit[0])
+# print('U{2}:')
+# print(Uinit[1])
+# print('U{3}:')
+# print(Uinit[2])
+core = gen_core(3)
+print(core[:,:,0])
+print(core[:,:,1])
+print(core[:,:,2])

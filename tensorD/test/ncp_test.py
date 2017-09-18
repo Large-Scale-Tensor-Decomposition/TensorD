@@ -14,11 +14,11 @@ from tensorD.DataBag import *
 
 if __name__ == '__main__':
     data_provider = Provider()
-    X = np.arange(24).reshape(3, 4, 2)
+    X = np.arange(24).reshape(2, 3, 4)
     data_provider.full_tensor = lambda: tf.constant(X, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     ncp = NCP(env)
     args = NCP.NCP_Args(rank=2, validation_internal=1)
     ncp.build_model(args)
-    ncp.train(200)
+    ncp.train(500)
     print(ncp.full - X)

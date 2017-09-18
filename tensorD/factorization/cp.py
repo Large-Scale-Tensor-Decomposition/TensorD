@@ -69,7 +69,7 @@ class CP_ALS(BaseFact):
         shape = input_data.get_shape().as_list()
         order = len(shape)
 
-        with tf.name_scope('random-initial') as scope:
+        with tf.name_scope('random-init') as scope:
             A = [tf.Variable(rand(shape[ii], args.rank), name='A-%d' % ii) for ii in range(order)]
         with tf.name_scope('unfold-all-mode') as scope:
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
