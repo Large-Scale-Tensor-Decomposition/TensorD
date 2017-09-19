@@ -470,6 +470,30 @@ def khatri(matrices, skip_matrices_index=None, reverse=False):
         back_shape = (r_size, int(matrices[0].get_shape()[1].value))
         return tf.reshape(tmp, back_shape)
 
+def max_single_value_mul(matrices, skip_matrices_index=None):
+    """
+        Product of max single values of given matrices.
+
+        Parameters
+        ----------
+        matrices : list of tf.Tensor
+            a list of matrix-shape tensor
+        skip_matrices_index : int, list
+            skip one or more matrices
+
+        Returns
+        -------
+        tf.Tensor
+
+    """
+    with tf.name_scope('max-single-value-mul') as scope:
+        matrices = _skip(matrices, skip_matrices_index)
+        max_single_value = [tf.reduce_max(tf.svd(mat, compute_uv=False)) for mat in matrices]
+        return reduce(lambda a, b: a * b, max_single_value)
+
+
+
+
 
 def xcb(X, C, B):
     X = unfold(X, 0)

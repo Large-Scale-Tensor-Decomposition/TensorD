@@ -229,6 +229,10 @@ class MyTestCase(unittest.TestCase):
             tf_res = ops.khatri([tf_A, tf_B, tf_C]).eval()
         np.testing.assert_array_almost_equal(np_res, tf_res)
 
+    def test_max_single_value_mul(self):
+        # TODO
+
+
     def test_xcb(self):
         X = rand(70, 3000)
         np_B = rand(50, 40)

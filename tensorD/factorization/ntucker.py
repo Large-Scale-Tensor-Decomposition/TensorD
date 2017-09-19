@@ -93,6 +93,11 @@ class NTUCKER_ALS(BaseFact):
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
 
 
+        L0_update_op[order] = L0[order].assign(L[order])
+        AtA_g = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
+        L_update_op[order] =
+
+
     def predict(self, *key):
         if not self._full_tensor:
             raise TensorErr('improper stage to call predict before the model is trained')
