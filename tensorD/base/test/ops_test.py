@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 import tensorD.base.ops as ops
 from numpy.random import rand
+
 assert_array_equal = np.testing.assert_array_almost_equal
 
 logger = logging.getLogger('TEST')
@@ -230,8 +231,14 @@ class MyTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(np_res, tf_res)
 
     def test_max_single_value_mul(self):
-        # TODO
+        np_X = np.array([[2, 0, 1], [-1, 1, 0], [-3, 3, 0]])
+        np_matrices = [np_X for _ in range(3)]
+        np_res = np.prod([max(np.linalg.svd(mat, compute_uv=0)) for mat in np_matrices])
 
+        tf_matrices = [tf.constant(np_X, dtype=tf.float64) for _ in range(3)]
+        with tf.Session().as_default():
+            tf_res = ops.max_single_value_mul(tf_matrices).eval()
+        np.testing.assert_array_almost_equal(np_res, tf_res)
 
     def test_xcb(self):
         X = rand(70, 3000)
@@ -245,11 +252,12 @@ class MyTestCase(unittest.TestCase):
         with tf.Session().as_default():
             t1 = time.time()
             res = ops.xcb(X, tfC, tfB).eval()
-            print("t1 = ",time.time() - t1)
+            print("t1 = ", time.time() - t1)
             t2 = time.time()
             res1 = (tf.matmul(X, ops.khatri([tfC, tfB]))).eval()
             print("t2 = ", time.time() - t2)
         np.testing.assert_array_almost_equal(res, res1)
+
 
 if __name__ == '__main__':
     unittest.main()
