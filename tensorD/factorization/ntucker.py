@@ -149,7 +149,10 @@ class NTUCKER_ALS(BaseFact):
                 Am_update_op1[mode] = Am[mode].assign(A[mode] + wA_update_op1[mode] * (A[mode] - A0[mode]))
                 with tf.control_dependencies([Am_update_op1[mode]]):
                     A0_update_op1[mode] = A0[mode].assign(A[mode])
+            wA_update_op1[order] = wA[order].assign(tf.minimum(w, tf.sqrt(L0[order] / L[order])))
 
+        with tf.name_scope('core_m-update') as scope:
+            gm_update_op1 = gm.assign(g+wA_update_op1[order]*(g - g0))
         with tf.name_scope('core_0-update') as scope:
             g0_update_op1 = g0.assign(g)
         with tf.name_scope('t0') as scope:
