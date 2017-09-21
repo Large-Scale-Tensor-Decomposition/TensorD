@@ -68,16 +68,17 @@ class NTUCKER_ALS(BaseFact):
                 A0_init_op[mode] = A0[mode].assign(norm_init_op[mode])
                 Am_init_op[mode] = Am[mode].assign(norm_init_op[mode])
 
+        # initialize with normally distributed pseudorandom numbers
+        # g = tf.Variable(tf.nn.relu(tf.random_normal(shape=args.ranks, dtype=tf.float64)), name='core-tensor')
+        g = tf.Variable(gen_core(args.ranks[0]), dtype=tf.float64, name='core-tensor')
         with tf.name_scope('core-init') as scope:
-            # initialize with normally distributed pseudorandom numbers
-            #g = tf.Variable(tf.nn.relu(tf.random_normal(shape=args.ranks, dtype=tf.float64)), name='core-tensor')
-            g = tf.Variable(gen_core(args.ranks[0]), dtype=tf.float64, name='core-tensor')
             g_norm_init = g.assign(g / tf.norm(g) * tf.pow(input_norm, 1 / (order+1)))
-
         g0 = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float64, name='core_0')
+        with tf.name_scope('core_0-init') as scope:
+            g0_init_op = g0.assign(g_norm_init)
         gm = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float64, name='core_m')
-        g0_init_op = g0.assign(g_norm_init)
-        gm_init_op = gm.assign(g_norm_init)
+        with tf.name_scope('core_m-init') as scope:
+            gm_init_op = gm.assign(g_norm_init)
 
         t0 = tf.Variable(1.0, dtype=tf.float64, name='t0')
         t = tf.Variable(1.0, dtype=tf.float64, name='t')
@@ -88,14 +89,41 @@ class NTUCKER_ALS(BaseFact):
         L_update_op = [None for _ in range(order+1)]
         L0_update_op = [None for _ in range(order+1)]
 
+        Bsq = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float64, name='Bsq')
+        Grad_g = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float64, name='Grad_g')
 
         with tf.name_scope('unfold-all-mode') as scope:
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
 
 
+        # update core tensor g
         L0_update_op[order] = L0[order].assign(L[order])
         AtA_g = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
-        L_update_op[order] =
+        L_update_op[order] = L[order].assign(ops.max_single_value_mul(AtA_g))
+        Bsq_assign_op_g = Bsq.assign(ops.ttm(gm, AtA_g))
+        Grad_g_assign = Grad_g.assign(Bsq_assign_g - ops.ttm(input_data, A, transpose=True))
+        g_assign = g.assign(tf.nn.relu(gm - Grad_g_assign/L_update_op[order]))
+
+        # update factor matrices A
+        for mode in range(order):
+            if mode != 0:
+                with tf.control_dependencies([A_update_op[mode - 1]]):
+                    B = ops.unfold(ops.ttm(g, A, skip_matrices_index=mode), mode)
+            else:
+                B = ops.unfold(ops.ttm(g, A, skip_matrices_index=mode), mode)
+            Bsq_assign_op = Bsq.assign(tf.matmul(B, B, transpose_b=True))
+            XB = tf.matmul(mats[order], B, transpose_b=True, name='XB')
+            GradA = tf.subtract(tf.matmul(Am[mode], Bsq_assign_op), XB, name='GradA')
+            L0_update_op[mode] = L0[mode].assign(L[order])
+            with tf.control_dependencies([L0_update_op[mode]]):
+                L_update_op[mode] = L[mode].assign(tf.reduce_max(tf.svd(Bsq_assign_op, compute_uv=False)))
+            with tf.name_scope('A-update-%d' % mode) as scope:
+                A_update_op[mode] = A[mode].assign(tf.nn.relu(tf.subtract(Am[mode], tf.div(GradA, L_update_op[mode]))))
+
+
+
+            # TODO : not finished yet
+
 
 
     def predict(self, *key):
