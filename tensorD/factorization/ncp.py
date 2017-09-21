@@ -138,9 +138,9 @@ class NCP(BaseFact):
 
         with tf.name_scope('Am-wA-update') as scope:
             for mode in range(order):
-                # if RMSE loss is increasing
+                # if objective is increasing
                 Am_update_op2[mode] = Am[mode].assign(A0[mode])
-                # if RMSE loss is not increasing
+                # if objective is not increasing
                 wA_update_op1[mode] = wA[mode].assign(tf.minimum(w, tf.sqrt(L0[mode] / L[mode])))
                 Am_update_op1[mode] = Am[mode].assign(A[mode] + wA_update_op1[mode] * (A[mode] - A0[mode]))
                 with tf.control_dependencies([Am_update_op1[mode]]):

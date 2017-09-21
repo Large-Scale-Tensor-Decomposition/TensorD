@@ -56,7 +56,10 @@ class NTUCKER_ALS(BaseFact):
             A_update_op = [None for _ in range(order)]
 
         Am = [tf.Variable(np.zeros(shape=(shape[ii], args.ranks[ii])), dtype=tf.float64, name='Am-%d' % ii) for ii in range(order)]
+        Am_update_op1 = [None for _ in range(order)]
+        Am_update_op2 = [None for _ in range(order)]
         A0 = [tf.Variable(np.zeros(shape=(shape[ii], args.ranks[ii])), dtype=tf.float64, name='A0-%d' % ii) for ii in range(order)]
+        A0_update_op1 = [None for _ in range(order)]
 
         with tf.name_scope('norm-init') as scope:
             norm_init_op = [None for _ in range(order)]
@@ -83,7 +86,8 @@ class NTUCKER_ALS(BaseFact):
         t0 = tf.Variable(1.0, dtype=tf.float64, name='t0')
         t = tf.Variable(1.0, dtype=tf.float64, name='t')
         wA = [tf.Variable(1.0, dtype=tf.float64, name='wA-%d' % ii) for ii in range(order+1)]
-        wA_update_op = [None for _ in range(order+1)]
+        wA_update_op1 = [None for _ in range(order+1)]
+
         L = [tf.Variable(1.0, name='Lipschitz-%d' % ii, dtype=tf.float64) for ii in range(order+1)]
         L0 = [tf.Variable(1.0, name='Lipschitz0-%d' % ii, dtype=tf.float64) for ii in range(order+1)]
         L_update_op = [None for _ in range(order+1)]
@@ -100,9 +104,9 @@ class NTUCKER_ALS(BaseFact):
         L0_update_op[order] = L0[order].assign(L[order])
         AtA_g = [tf.matmul(A[ii], A[ii], transpose_a=True, name='AtA-%d-%d' % (mode, ii)) for ii in range(order)]
         L_update_op[order] = L[order].assign(ops.max_single_value_mul(AtA_g))
-        Bsq_assign_op_g = Bsq.assign(ops.ttm(gm, AtA_g))
-        Grad_g_assign = Grad_g.assign(Bsq_assign_g - ops.ttm(input_data, A, transpose=True))
-        g_assign = g.assign(tf.nn.relu(gm - Grad_g_assign/L_update_op[order]))
+        Bsq_update_op_g = Bsq.assign(ops.ttm(gm, AtA_g))
+        Grad_g_update_op = Grad_g.assign(Bsq_update_op_g - ops.ttm(input_data, A, transpose=True))
+        g_update = g.assign(tf.nn.relu(gm - Grad_g_update_op/L_update_op[order]))
 
         # update factor matrices A
         for mode in range(order):
@@ -120,9 +124,55 @@ class NTUCKER_ALS(BaseFact):
             with tf.name_scope('A-update-%d' % mode) as scope:
                 A_update_op[mode] = A[mode].assign(tf.nn.relu(tf.subtract(Am[mode], tf.div(GradA, L_update_op[mode]))))
 
+        with tf.name_scope('full-tensor') as scope:
+            P = TTensor(g, A_update_op)
+            full_op = P.extract()
+        with tf.name_scope('loss') as scope:
+            loss_op = rmse_ignore_zero(input_data, full_op)
+        with tf.name_scope('relative-residual') as scope:
+            rel_res_op = tf.norm(full_op - input_data) / input_norm
+        with tf.name_scope('objective-value') as scope:
+            obj_op = 0.5 * tf.square(tf.norm(full_op - input_data))
+
+        with tf.name_scope('t') as scope:
+            t_update_op = t.assign((1 + tf.sqrt(1 + 4 * tf.square(t0))) / 2)
+        with tf.name_scope('w') as scope:
+            w = (t0 - 1) / t
+
+        with tf.name_scope('Am-wA-update') as scope:
+            for mode in range(order):
+                # if objective is increasing
+                Am_update_op2[mode] = Am[mode].assign(A0[mode])
+                gm_update_op2 = gm.assign(g0)
+                # if objective is not increasing
+                wA_update_op1[mode] = wA[mode].assign(tf.minimum(w, tf.sqrt(L0[mode] / L[mode])))
+                Am_update_op1[mode] = Am[mode].assign(A[mode] + wA_update_op1[mode] * (A[mode] - A0[mode]))
+                with tf.control_dependencies([Am_update_op1[mode]]):
+                    A0_update_op1[mode] = A0[mode].assign(A[mode])
+
+        with tf.name_scope('core_0-update') as scope:
+            g0_update_op1 = g0.assign(g)
+        with tf.name_scope('t0') as scope:
+            with tf.control_dependencies([Am_update_op1[order - 1]]):
+                t0_update_op1 = t0.assign(t)
+
+        tf.summary.scalar('loss', loss_op)
+        tf.summary.scalar('relative_residual', rel_res_op)
+        tf.summary.scalar('objective-value', obj_op)
+
+        init_op = tf.global_variables_initializer()
 
 
-            # TODO : not finished yet
+
+
+
+
+
+
+
+
+
+                # TODO : not finished yet
 
 
 
