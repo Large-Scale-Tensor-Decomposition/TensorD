@@ -70,11 +70,14 @@ class NCP(BaseFact):
 
         with tf.name_scope('random-init') as scope:
             # initialize with normally distributed pseudorandom numbers
-            A = [tf.Variable(tf.nn.relu(tf.random_normal(shape=(shape[ii], args.rank), dtype=tf.float64)), name='A-%d' % ii, dtype=tf.float64) for ii in range(order)]
+            A = [tf.Variable(tf.nn.relu(tf.random_normal(shape=(shape[ii], args.rank), dtype=tf.float64)),
+                             name='A-%d' % ii, dtype=tf.float64) for ii in range(order)]
             A_update_op = [None for _ in range(order)]
 
-        Am = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float64, name='Am-%d' % ii) for ii in range(order)]
-        A0 = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float64, name='A0-%d' % ii) for ii in range(order)]
+        Am = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float64, name='Am-%d' % ii) for ii in
+              range(order)]
+        A0 = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float64, name='A0-%d' % ii) for ii in
+              range(order)]
         Am_update_op1 = [None for _ in range(order)]
         Am_update_op2 = [None for _ in range(order)]
         A0_update_op1 = [None for _ in range(order)]
@@ -97,7 +100,6 @@ class NCP(BaseFact):
         L0 = [tf.Variable(1.0, name='Lipschitz0-%d' % ii, dtype=tf.float64) for ii in range(order)]
         L_update_op = [None for _ in range(order)]
         L0_update_op = [None for _ in range(order)]
-
 
         with tf.name_scope('unfold-all-mode') as scope:
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
@@ -128,8 +130,7 @@ class NCP(BaseFact):
         with tf.name_scope('relative-residual') as scope:
             rel_res_op = tf.norm(full_op - input_data) / input_norm
         with tf.name_scope('objective-value') as scope:
-            obj_op = 0.5*tf.square(tf.norm(full_op - input_data))
-
+            obj_op = 0.5 * tf.square(tf.norm(full_op - input_data))
 
         with tf.name_scope('t') as scope:
             t_update_op = t.assign((1 + tf.sqrt(1 + 4 * tf.square(t0))) / 2)
@@ -207,20 +208,19 @@ class NCP(BaseFact):
 
             relerr1 = abs(obj - obj0) / (obj0 + 1)
             relerr2 = rel_res
-            crit =  relerr1 < args.tol
-
-            if obj < obj0:
-                sess.run(train_op1)
-                obj0 = obj
-            else:
-                sess.run(train_op2)
-
+            crit = relerr1 < args.tol
             if crit:
                 nstall = nstall + 1
             else:
                 nstall = 0
             if nstall >= 3 or relerr2 < args.tol:
                 break
+
+            if obj < obj0:
+                sess.run(train_op1)
+                obj0 = obj
+            else:
+                sess.run(train_op2)
 
         self._lambdas = np.ones(shape=(1, args.rank))
 

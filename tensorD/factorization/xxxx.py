@@ -25,11 +25,24 @@ from functools import reduce
 # sess = tf.Session()
 # sess.run(init_op)
 # print(sess.run(prod))
-np_X = np.array([[2, 0, 1], [-1, 1, 0], [-3, 3, 0]])
-np_matrices = [np_X for _ in range(3)]
-np_res = np.prod([max(np.linalg.svd(mat, compute_uv=0)) for mat in np_matrices])
-print('np result: ', np_res)
-tf_matrices = [tf.constant(np_X,dtype=tf.float64) for _ in range(3)]
-tf_res = ops.max_single_value_mul(tf_matrices)
-sess = tf.Session()
-print('tf result: ', sess.run(tf_res))
+# np_X = np.array([[2, 0, 1], [-1, 1, 0], [-3, 3, 0]])
+# np_matrices = [np_X for _ in range(3)]
+# np_res = np.prod([max(np.linalg.svd(mat, compute_uv=0)) for mat in np_matrices])
+# print('np result: ', np_res)
+# tf_matrices = [tf.constant(np_X,dtype=tf.float64) for _ in range(3)]
+# tf_res = ops.max_single_value_mul(tf_matrices)
+# sess = tf.Session()
+# print('tf result: ', sess.run(tf_res))
+# core = gen_core(2)
+# print(core[:,:,0])
+# print(core[:,:,1])
+# A = rand_list2([3,4,5], [2,2,2])
+# print(A[0])
+# print(A[1])
+# print(A[2])
+T = np.arange(24).reshape(2,3,4)
+T = T + 1
+print(T[:,:,0])
+print(T[:,:,1])
+print(T[:,:,2])
+print(T[:,:,3])

@@ -16,12 +16,11 @@ from  tensorD.DataBag import  *
 
 if __name__ == '__main__':
     data_provider = Provider()
-    #X = np.arange(24).reshape(3, 4, 2)
-    X = gen_test_tensor([3, 4, 5], 3)
+    X = np.arange(24).reshape(2, 3, 4) + 1
     data_provider.full_tensor = lambda: tf.constant(X, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     ntucker = NTUCKER_ALS(env)
-    args = NTUCKER_ALS.NTUCKER_Args(ranks=[2, 2, 2], validation_internal=1)
+    args = NTUCKER_ALS.NTUCKER_Args(ranks=[2, 2, 2], validation_internal=5)
     ntucker.build_model(args)
     ntucker.train(100)
-    print(ntucker.full - X)
+

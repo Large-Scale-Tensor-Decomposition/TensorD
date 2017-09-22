@@ -82,7 +82,7 @@ def gen_test_tensor(I_list, R, max_prime=10000):
     core = gen_core(R, number_list)
     P = TTensor(core, ABC)
     with tf.Session() as sess:
-        full_tensor = sess.run(P.extract())
+        full_tensor = sess.run(P.extract())/1000
     return full_tensor
 
 
