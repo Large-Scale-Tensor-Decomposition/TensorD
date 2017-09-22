@@ -67,10 +67,7 @@ class NTUCKER_ALS(BaseFact):
 
         with tf.name_scope('random-init') as scope:
             # initialize with normally distributed pseudorandom numbers
-            # A = [tf.Variable(tf.nn.relu(tf.random_normal(shape=(shape[ii], args.ranks[ii]), dtype=tf.float64)), name='A-%d' % ii, dtype=tf.float64) for ii in range(order)]
-            # TODO : fix initialization in test
-            Uinit = rand_list2(shape, args.ranks)
-            A = [tf.Variable(Uinit[ii], name='A-%d' % ii) for ii in range(order)]
+            A = [tf.Variable(tf.nn.relu(tf.random_normal(shape=(shape[ii], args.ranks[ii]), dtype=tf.float64)), name='A-%d' % ii, dtype=tf.float64) for ii in range(order)]
             A_update_op = [None for _ in range(order)]
 
         Am = [tf.Variable(np.zeros(shape=(shape[ii], args.ranks[ii])), dtype=tf.float64, name='Am-%d' % ii) for ii in
@@ -92,8 +89,7 @@ class NTUCKER_ALS(BaseFact):
                 Am_init_op[mode] = Am[mode].assign(norm_init_op[mode])
 
         # initialize with normally distributed pseudorandom numbers
-        # g = tf.Variable(tf.nn.relu(tf.random_normal(shape=args.ranks, dtype=tf.float64)), name='core-tensor')
-        g = tf.Variable(gen_core(args.ranks[0]), dtype=tf.float64, name='core-tensor')
+        g = tf.Variable(tf.nn.relu(tf.random_normal(shape=args.ranks, dtype=tf.float64)), name='core-tensor')
         with tf.name_scope('core-init') as scope:
             g_norm_init = g.assign(g / tf.norm(g) * tf.pow(input_norm, 1 / (order + 1)))
         g0 = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float64, name='core_0')
