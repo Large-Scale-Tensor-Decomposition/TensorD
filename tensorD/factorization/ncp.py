@@ -10,7 +10,6 @@ import tensorflow as tf
 import numpy as np
 from numpy.random import rand
 from tensorD.loss import *
-from tensorD.DataBag import *
 from tensorD.base import *
 from .factorization import *
 from .env import *

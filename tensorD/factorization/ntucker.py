@@ -14,7 +14,6 @@ from numpy.random import rand
 from functools import reduce
 from .factorization import BaseFact
 from .env import Environment
-from tensorD.DataBag import *
 
 
 class NTUCKER_ALS(BaseFact):
@@ -67,7 +66,8 @@ class NTUCKER_ALS(BaseFact):
 
         with tf.name_scope('random-init') as scope:
             # initialize with normally distributed pseudorandom numbers
-            A = [tf.Variable(tf.nn.relu(tf.random_normal(shape=(shape[ii], args.ranks[ii]), dtype=tf.float64)), name='A-%d' % ii, dtype=tf.float64) for ii in range(order)]
+            A = [tf.Variable(tf.nn.relu(tf.random_normal(shape=(shape[ii], args.ranks[ii]), dtype=tf.float64)),
+                             name='A-%d' % ii, dtype=tf.float64) for ii in range(order)]
             A_update_op = [None for _ in range(order)]
 
         Am = [tf.Variable(np.zeros(shape=(shape[ii], args.ranks[ii])), dtype=tf.float64, name='Am-%d' % ii) for ii in

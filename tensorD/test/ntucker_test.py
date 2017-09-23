@@ -12,7 +12,6 @@ from numpy.random import rand
 from tensorD.factorization.env import Environment
 from tensorD.dataproc.provider import Provider
 from tensorD.factorization.ntucker import NTUCKER_ALS
-from  tensorD.DataBag import *
 
 if __name__ == '__main__':
     data_provider = Provider()

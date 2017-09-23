@@ -10,7 +10,6 @@ from tensorD.factorization.ncp import NCP
 from tensorD.dataproc.provider import Provider
 import tensorflow as tf
 import numpy as np
-from tensorD.DataBag import *
 
 if __name__ == '__main__':
     data_provider = Provider()
