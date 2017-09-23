@@ -35,10 +35,26 @@ tensorD.factorization.factorization module
     :undoc-members:
     :show-inheritance:
 
-tensorD.factorization.giga module
----------------------------------
+tensorD.factorization.folding_test module
+-----------------------------------------
 
-.. automodule:: tensorD.factorization.giga
+.. automodule:: tensorD.factorization.folding_test
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tensorD.factorization.ncp module
+--------------------------------
+
+.. automodule:: tensorD.factorization.ncp
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tensorD.factorization.ntucker module
+------------------------------------
+
+.. automodule:: tensorD.factorization.ntucker
     :members:
     :undoc-members:
     :show-inheritance:
@@ -47,6 +63,14 @@ tensorD.factorization.tucker module
 -----------------------------------
 
 .. automodule:: tensorD.factorization.tucker
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tensorD.factorization.xxxx module
+---------------------------------
+
+.. automodule:: tensorD.factorization.xxxx
     :members:
     :undoc-members:
     :show-inheritance:

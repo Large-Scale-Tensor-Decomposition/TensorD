@@ -8,11 +8,12 @@ import numpy as np
 
 if __name__ == '__main__':
     data_provider = Provider()
-    data_provider.full_tensor = lambda: tf.constant(np.arange(24).reshape(3, 4, 2), dtype=tf.float64)
+    X = np.arange(24).reshape(3, 4, 2)
+    data_provider.full_tensor = lambda: tf.constant(X, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     cp = CP_ALS(env)
     args = CP_ALS.CP_Args(rank=2, validation_internal=1000)
     cp.build_model(args)
     cp.train(10000)
-    print(cp.full)
+    print(cp.full - X)
 
