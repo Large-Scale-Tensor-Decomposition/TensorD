@@ -13,7 +13,7 @@ import numpy as np
 
 if __name__ == '__main__':
     data_provider = Provider()
-    X = np.arange(24).reshape(2, 3, 4)
+    X = np.arange(60).reshape(3, 4, 5)
     data_provider.full_tensor = lambda: tf.constant(X, dtype=tf.float64)
     env = Environment(data_provider, summary_path='/tmp/tensord')
     ncp = NCP(env)

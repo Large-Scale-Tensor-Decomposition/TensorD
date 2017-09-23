@@ -17,7 +17,7 @@ from tensorD.factorization.tucker import HOOI
 
 if __name__ == '__main__':
     data_provider = Provider()
-    X = np.arange(24).reshape(3, 4, 2)
+    X = np.arange(60).reshape(3, 4, 5)
     data_provider.full_tensor = lambda: tf.constant(X, dtype=tf.float64)
 
     print('====HOSVD test====')
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     hooi = HOOI(hooi_env)
     args = hooi.HOOI_Args(ranks=[2, 2, 2], validation_internal=1)
     hooi.build_model(args)
-    hooi.train(5)
+    hooi.train(100)
     print(hooi.full - X)
 
 

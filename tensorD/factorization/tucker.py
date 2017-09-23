@@ -122,7 +122,7 @@ class HOOI(BaseFact):
 
         init_ops = [None for _ in range(order)]
         for mode in range(order):
-            with tf.name_scope('HOSVD-init-%d' % mode) as scope:
+            with tf.name_scope('HOSVD-A-init-%d' % mode) as scope:
                 _, U, _ = tf.svd(ops.unfold(input_data, mode), full_matrices=True, name='svd-%d' % mode)
                 init_ops[mode] = A[mode].assign(U[:, :args.ranks[mode]])
 
