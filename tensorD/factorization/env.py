@@ -21,6 +21,9 @@ class Environment(object):
     def full_data(self):
         return self._data_provider.full_tensor()
 
+    def full_shape(self):
+        return self._data_provider.full_tensor().shape
+
     @property
     def summary_path(self):
         return self._sum_path

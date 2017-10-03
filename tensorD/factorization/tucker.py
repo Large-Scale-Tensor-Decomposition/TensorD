@@ -15,6 +15,7 @@ class HOSVD(BaseFact):
 
     def __init__(self, env: Environment):
         self._env = env
+        self._feed_dict = None
         self._model = None
         self._full_tensor = None
         self._factors = None
@@ -26,7 +27,8 @@ class HOSVD(BaseFact):
         self._is_train_finish = False
 
     def build_model(self, args):
-        input_data = self._env.full_data()
+        input_data = tf.placeholder(tf.float64, shape=self._env.full_shape())
+        self._feed_dict = {input_data: self._env.full_data()}
         order = input_data.get_shape().ndims
         A = []
         for n in range(order):
@@ -63,11 +65,11 @@ class HOSVD(BaseFact):
         self._is_train_finish = False
         sess = self._env.sess
 
-        sess.run(self._init_op)
+        sess.run(self._init_op, feed_dict=self._feed_dict)
         print('HOSVD model initial finish')
 
         loss_v, self._full_tensor, self._factors, self._core = sess.run(
-            [self._loss_op, self._full_op, self._factor_update_op, self._core_op])
+            [self._loss_op, self._full_op, self._factor_update_op, self._core_op], feed_dict=self._feed_dict)
         print('HOSVD model train finish, with RMSE = %f' % loss_v)
         self._is_train_finish = True
 
@@ -100,6 +102,7 @@ class HOOI(BaseFact):
 
     def __init__(self, env: Environment):
         self._env = env
+        self._feed_dict = None
         self._full_tensor = None
         self._factors = None
         self._core = None
@@ -113,7 +116,8 @@ class HOOI(BaseFact):
 
     def build_model(self, args):
         assert isinstance(args, HOOI.HOOI_Args)
-        input_data = self._env.full_data()
+        input_data = tf.placeholder(tf.float64, shape=self._env.full_shape())
+        self._feed_dict = {input_data: self._env.full_data()}
         shape = input_data.get_shape().as_list()
         order = input_data.get_shape().ndims
 
@@ -192,17 +196,17 @@ class HOOI(BaseFact):
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
 
-        sess.run(init_op)
+        sess.run(init_op, feed_dict=self._feed_dict)
         print('HOOI model initial finish')
         for step in range(1, steps + 1):
             if (step == steps) or args.verbose or (step == 1) or (
                                 step % args.validation_internal == 0 and args.validation_internal != -1):
                 loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run(
-                    [loss_op, full_op, factor_update_op, core_op, sum_op])
+                    [loss_op, full_op, factor_update_op, core_op, sum_op], feed_dict=self._feed_dict)
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%.15f' % (step, loss_v))
             else:
-                self._factors, self._core = sess.run([factor_update_op, core_op])
+                self._factors, self._core = sess.run([factor_update_op, core_op], feed_dict=self._feed_dict)
 
         print('HOOI model train finish, with RMSE = %.15f' % loss_v)
         self._is_train_finish = True

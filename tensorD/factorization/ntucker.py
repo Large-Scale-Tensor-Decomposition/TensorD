@@ -27,6 +27,7 @@ class NTUCKER_BCU(BaseFact):
     def __init__(self, env):
         assert isinstance(env, Environment)
         self._env = env
+        self._feed_dict = None
         self._model = None
         self._full_tensor = None
         self._factors = None
@@ -59,7 +60,8 @@ class NTUCKER_BCU(BaseFact):
 
     def build_model(self, args):
         assert isinstance(args, NTUCKER_BCU.NTUCKER_Args)
-        input_data = self._env.full_data()
+        input_data = tf.placeholder(tf.float64, shape=self._env.full_shape())
+        self._feed_dict = {input_data:self._env.full_data()}
         input_norm = tf.norm(input_data)
         shape = input_data.get_shape().as_list()
         order = input_data.get_shape().ndims
@@ -214,24 +216,27 @@ class NTUCKER_BCU(BaseFact):
         obj_op = self._obj_op
         rel_res_op = self._rel_res_op
 
+
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
 
-        sess.run(init_op)
-        sess.run(other_init_op)
+        sess.run(init_op, feed_dict=self._feed_dict)
+        sess.run(other_init_op, feed_dict=self._feed_dict)
+        nstall = 0
         print('Non-Negative Tucker model initial finish')
 
+
         for step in range(1, steps + 1):
-            self._core, _ = sess.run([core_update_op, core_train_op])
+            self._core, _ = sess.run([core_update_op, core_train_op], feed_dict=self._feed_dict)
             if (step == steps) or (args.verbose) or (step == 1) or (
                                 step % args.validation_internal == 0 and args.validation_internal != -1):
                 self._factors, self._full_tensor, loss_v, obj, rel_res, sum_msg, _ = sess.run(
-                    [factor_update_op, full_op, loss_op, obj_op, rel_res_op, sum_op, train_op])
+                    [factor_update_op, full_op, loss_op, obj_op, rel_res_op, sum_op, train_op], feed_dict=self._feed_dict)
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%.5f' % (step, loss_v))
             else:
                 self._factors, loss_v, rel_res, obj, _ = sess.run(
-                    [factor_update_op, loss_op, rel_res_op, obj_op, train_op])
+                    [factor_update_op, loss_op, rel_res_op, obj_op, train_op], feed_dict=self._feed_dict)
 
             if step == 1:
                 obj0 = obj + 1

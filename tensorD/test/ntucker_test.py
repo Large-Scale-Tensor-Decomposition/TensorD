@@ -16,7 +16,7 @@ from tensorD.factorization.ntucker import NTUCKER_BCU
 if __name__ == '__main__':
     data_provider = Provider()
     X = np.arange(60).reshape(3, 4, 5)
-    data_provider.full_tensor = lambda: tf.constant(X, dtype=tf.float64)
+    data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/tensord')
     ntucker = NTUCKER_BCU(env)
     args = NTUCKER_BCU.NTUCKER_Args(ranks=[2, 2, 2], validation_internal=5)

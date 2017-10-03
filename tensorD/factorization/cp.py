@@ -27,6 +27,7 @@ class CP_ALS(BaseFact):
     def __init__(self, env):
         assert isinstance(env, Environment)
         self._env = env
+        self._feed_dict = None
         self._model = None
         self._full_tensor = None
         self._factors = None
@@ -65,7 +66,8 @@ class CP_ALS(BaseFact):
 
     def build_model(self, args):
         assert isinstance(args, CP_ALS.CP_Args)
-        input_data = self._env.full_data()
+        input_data = tf.placeholder(tf.float64, shape=self._env.full_shape())
+        self._feed_dict = {input_data: self._env.full_data()}
         shape = input_data.get_shape().as_list()
         order = len(shape)
 
@@ -126,16 +128,16 @@ class CP_ALS(BaseFact):
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
 
-        sess.run(init_op)
+        sess.run(init_op, feed_dict=self._feed_dict)
         print('CP model initial finish')
 
         for step in range(1, steps + 1):
             if (step == steps) or (args.verbose) or (step == 1) or (step % args.validation_internal == 0 and args.validation_internal != -1):
-                self._factors, self._lambdas, self._full_tensor, loss_v, sum_msg = sess.run([factor_update_op, lambda_op, full_op, loss_op, sum_op])
+                self._factors, self._lambdas, self._full_tensor, loss_v, sum_msg = sess.run([factor_update_op, lambda_op, full_op, loss_op, sum_op], feed_dict=self._feed_dict)
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%f' % (step, loss_v))
             else:
-                self._factors, self._lambdas = sess.run([factor_update_op, lambda_op])
+                self._factors, self._lambdas = sess.run([factor_update_op, lambda_op], feed_dict=self._feed_dict)
 
         print('CP model train finish, with RMSE = %.10f' % (loss_v))
         self._is_train_finish = True
