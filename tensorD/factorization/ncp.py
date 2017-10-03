@@ -15,7 +15,7 @@ from .factorization import *
 from .env import *
 
 
-class NCP(BaseFact):
+class NCP_BCU(BaseFact):
     class NCP_Args(object):
         def __init__(self, rank, validation_internal=-1, verbose=False, tol=1.0e-4):
             self.rank = rank
@@ -61,7 +61,7 @@ class NCP(BaseFact):
         return self._lambdas
 
     def build_model(self, args):
-        assert isinstance(args, NCP.NCP_Args)
+        assert isinstance(args, NCP_BCU.NCP_Args)
         input_data = self._env.full_data()
         input_norm = tf.norm(input_data)
         shape = input_data.get_shape().as_list()
@@ -200,7 +200,7 @@ class NCP(BaseFact):
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%.5f' % (step, loss_v))
             else:
-                self._factors, loss_v, rel_res, _ = sess.run([factor_update_op, loss_op, rel_res_op, train_op])
+                self._factors, loss_v, rel_res, obj, _ = sess.run([factor_update_op, loss_op, rel_res_op, obj_op, train_op])
 
             if step == 1:
                 obj0 = obj + 1

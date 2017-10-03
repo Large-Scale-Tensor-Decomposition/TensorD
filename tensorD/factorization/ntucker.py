@@ -16,7 +16,7 @@ from .factorization import BaseFact
 from .env import Environment
 
 
-class NTUCKER_ALS(BaseFact):
+class NTUCKER_BCU(BaseFact):
     class NTUCKER_Args(object):
         def __init__(self, ranks: list, validation_internal=-1, verbose=False, tol=1.0e-4):
             self.ranks = ranks
@@ -58,7 +58,7 @@ class NTUCKER_ALS(BaseFact):
         return self._is_train_finish
 
     def build_model(self, args):
-        assert isinstance(args, NTUCKER_ALS.NTUCKER_Args)
+        assert isinstance(args, NTUCKER_BCU.NTUCKER_Args)
         input_data = self._env.full_data()
         input_norm = tf.norm(input_data)
         shape = input_data.get_shape().as_list()
