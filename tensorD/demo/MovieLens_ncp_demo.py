@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2017/10/3 PM4:16
+# @Time    : 2017/10/4 PM8:41
 # @Author  : Shiloh Leung
 # @Site    : 
-# @File    : MovieLens_ntucker_demo.py
+# @File    : MovieLens_ncp_demo.py
 # @Software: PyCharm Community Edition
 
 from tensorD.dataproc.reader import TensorReader
 import tensorflow as tf
 from tensorD.factorization.env import Environment
 from tensorD.dataproc.provider import Provider
-from tensorD.factorization.ntucker import NTUCKER_BCU
+from tensorD.factorization.ncp import NCP_BCU
 from tensorD.loss import *
 
 if __name__ == '__main__':
@@ -23,19 +23,26 @@ if __name__ == '__main__':
         rating_tensor = sess.run(base.full_data)
     data_provider = Provider()
     data_provider.full_tensor = lambda: rating_tensor
-    env = Environment(data_provider, summary_path='/tmp/ntucker_demo')
-    ntucker = NTUCKER_BCU(env)
-    args = NTUCKER_BCU.NTUCKER_Args(ranks=[7, 7, 7], validation_internal=2)
-    ntucker.build_model(args)
-    ntucker.train(100)
-    print('Train ends.\n\n\n')
+    env = Environment(data_provider, summary_path='/tmp/ncp_demo')
+    ncp = NCP_BCU(env)
+    args = NCP_BCU.NCP_Args(rank=7, validation_internal=2)
+    ncp.build_model(args)
+    ncp.train(100)
+    print('Training ends.\n\n\n')
 
     # Test on *.test.csv
     print('=========Test=========')
     test = TensorReader('u1.test.csv')
     test.read(full_shape=[943, 1682, 8])
-    full = tf.constant(ntucker.full, dtype=tf.float64)
+    full = tf.constant(ncp.full, dtype=tf.float64)
     rmse_op = rmse_ignore_zero(test.full_data, full)
     with tf.Session() as sess:
         rmse = sess.run(rmse_op)
     print('RMSE on u1.test.csv :  %.5f' % rmse)
+
+
+
+
+
+
+

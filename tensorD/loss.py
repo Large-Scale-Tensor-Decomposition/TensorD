@@ -80,10 +80,9 @@ def rmse_ignore_zero(A, B):
         if the shape of A and B are not equal
 
     """
-    # TODO : might have problem when A is all zero ...
     with tf.name_scope('RMSE-ignore-zero') as scope:
         if A.get_shape() != B.get_shape():
             raise TensorErr('the shape of tensor A and B must be equal')
         B = B * tf.cast(tf.not_equal(A, 0), B.dtype)
         diff_tensor = tf.subtract(A, B)
-        return tf.sqrt(tf.reduce_sum(tf.square(diff_tensor)) / diff_tensor.get_shape().num_elements())
+        return tf.sqrt(tf.reduce_sum(tf.square(diff_tensor)) / tf.reduce_sum(tf.cast(tf.not_equal(A, 0), B.dtype)))

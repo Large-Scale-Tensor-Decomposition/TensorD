@@ -19,6 +19,6 @@ if __name__ == '__main__':
     data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/tensord')
     ntucker = NTUCKER_BCU(env)
-    args = NTUCKER_BCU.NTUCKER_Args(ranks=[2, 2, 2], validation_internal=5)
+    args = NTUCKER_BCU.NTUCKER_Args(ranks=[2, 2, 2], validation_internal=1)
     ntucker.build_model(args)
     ntucker.train(500)

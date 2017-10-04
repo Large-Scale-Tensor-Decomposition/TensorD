@@ -47,6 +47,10 @@ class NTUCKER_BCU(BaseFact):
         return self._full_tensor.item(key)
 
     @property
+    def full(self):
+        return self._full_tensor
+
+    @property
     def factors(self):
         return self._factors
 

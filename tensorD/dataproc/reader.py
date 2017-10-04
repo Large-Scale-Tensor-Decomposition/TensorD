@@ -29,7 +29,7 @@ class TensorReader(object):
         self._full_data = None
         self._type = self._file_path.split('.')[-1]
 
-    def read(self):
+    def read(self, full_shape=None):
         file = open(self._file_path, 'r')
         str_in = []
         if self._type == 'csv' or self._type == 'txt':
@@ -48,7 +48,11 @@ class TensorReader(object):
             entry = str_in[row]
             idx[row] = np.array([int(entry[mode]) for mode in range(order)])
             value[row] = float(entry[-1])
-        max_dim = np.max(idx, axis=0) + np.ones(order).astype(int)
+
+        if full_shape==None:
+            max_dim = np.max(idx, axis=0) + np.ones(order).astype(int)
+        else:
+            max_dim = full_shape
 
         self._sparse_data = tf.SparseTensor(indices=idx, values=value, dense_shape=max_dim)
         self._full_data = tf.sparse_tensor_to_dense(self._sparse_data, validate_indices=False)
