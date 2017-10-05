@@ -14,10 +14,10 @@ from tensorD.factorization.tucker import HOOI
 from tensorD.loss import *
 
 if __name__ == '__main__':
-    full_shape = [943, 1682, 8]
+    full_shape = [943, 1682, 31]
     # Train on *.base.csv
     print('=========Train=========')
-    base = TensorReader('u1.base.csv')
+    base = TensorReader('movielens-100k/u1.base.csv')
     base.read(full_shape=full_shape)
     with tf.Session() as sess:
         rating_tensor = sess.run(base.full_data)
@@ -33,8 +33,8 @@ if __name__ == '__main__':
 
     # Test on *.test.csv
     print('=========Test=========')
-    test = TensorReader('u1.test.csv')
-    test.read(full_shape=[943, 1682, 8])
+    test = TensorReader('movielens-100k/u1.test.csv')
+    test.read(full_shape=full_shape)
     full = tf.constant(hooi.full, dtype=tf.float64)
     rmse_op = rmse_ignore_zero(test.full_data, full)
     with tf.Session() as sess:
