@@ -44,6 +44,62 @@ def time_week_group(now_timestamp, start_timestamp):
     week_group = np.floor((now_day - start_day).days / 7)
     return int(week_group)
 
+def time_month_group(now_timestamp, start_timestamp):
+    """
+        Transform timestamp into ``month_group``. The ``month_group`` of ``start_timestamp`` is ``0``.
+
+        Parameters
+        ----------
+        now_timestamp : int
+            timestamp to transform
+        start_timestamp : int
+            timestamp of the beginning
+
+        Returns
+        -------
+        int
+
+    """
+    start_time = time.localtime(start_timestamp)
+    now_time = time.localtime(now_timestamp)
+    month_group = 12*(now_time.tm_year-start_time.tm_year) + now_time.tm_mon-start_time.tm_mon
+    return int(month_group)
+
+
+def ml_1m_data():
+    file_path = 'ratings.csv'
+    start_timestamp = 789652009
+    with open(file_path, 'r') as in_file:
+        reader = csv.reader(in_file)
+        str_in = [row for row in reader]
+    str_in = str_in[1::]
+    tmp_set = set([int(row[1]) for row in str_in])
+    movie_count = 9066    # 9066 movies in all
+    movie_id_set = sorted(list(tmp_set))
+    movie_dict = dict()
+    for ii in range(movie_count):
+        movie_id = movie_id_set[ii]
+        movie_dict[movie_id] = ii    # {movie_id:movie_idx}
+    with open('new_ratings_all.csv', 'w') as out_file:
+        writer = csv.writer(out_file)
+        rating_count = len(str_in)
+        all_data = []
+        for ii in range(rating_count):
+            user_id = int(str_in[ii][0]) - 1    # user_id = 0~670
+            movie_id = int(str_in[ii][1])
+            movie_idx = movie_dict[movie_id]    # movie_idx = 0~9065
+            month_group = time_month_group(int(str_in[ii][3]), start_timestamp)    # month_group = 0~261
+            rating = float(str_in[ii][2])
+            all_data.append([user_id, movie_idx, month_group, rating])
+            writer.writerow([str(user_id), str(movie_idx), str(month_group), str(rating)])
+    return all_data
+
+
+
+
+
+
+
 
 def u_data_make():
     file_path = 'ml-100k/u.data'
