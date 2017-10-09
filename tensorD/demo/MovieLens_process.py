@@ -97,6 +97,19 @@ def ml_1m_data():
 
 
 
+def data_random():
+    # [943, 1682, 31]
+    with open('random_data.csv', 'w') as out_file:
+        writer = csv.writer(out_file)
+        for user_id in range(600):
+            for movie_id in range(1500):
+                for month_group in range(30):
+                    rand_seed = np.random.rand()
+                    if rand_seed < 0.01:
+                        rating = np.ceil(5*np.random.rand())
+                        writer.writerow([str(user_id), str(movie_id), str(month_group), str(rating)])
+
+
 
 
 

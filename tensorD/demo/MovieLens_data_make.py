@@ -19,6 +19,7 @@ if __name__ == '__main__':
     # u_csv_make('ml-100k/u3.test', 'movielens-100k/u3.test.csv')
     # u_csv_make('ml-100k/u4.test', 'movielens-100k/u4.test.csv')
     # u_csv_make('ml-100k/u5.test', 'movielens-100k/u5.test.csv')
-    all_data = ml_1m_data()
+    # all_data = ml_1m_data()
+    data_random()
 
 

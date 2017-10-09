@@ -14,10 +14,10 @@ from tensorD.factorization.ncp import NCP_BCU
 from tensorD.loss import *
 
 if __name__ == '__main__':
-    full_shape = [671, 9066, 262]
+    full_shape = [600, 1500, 30] #[671, 9066, 262]
     # Train on *.base.csv
     print('=========Train=========')
-    base = TensorReader('new_ratings_all.csv')
+    base = TensorReader('random_data.csv') #('new_ratings_all.csv')
     base.read(full_shape=full_shape)
     with tf.Session() as sess:
         rating_tensor = sess.run(base.full_data)

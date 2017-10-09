@@ -14,10 +14,10 @@ from tensorD.factorization.tucker import HOOI
 from tensorD.loss import *
 
 if __name__ == '__main__':
-    full_shape =  [671, 9066, 262]#[943, 1682, 31]
+    full_shape = [600, 1500, 30] #[671, 9066, 262]#[943, 1682, 31]
     # Train on *.base.csv
     print('=========Train=========')
-    base = TensorReader('new_ratings_all.csv')#('movielens-100k/u1.base.csv')
+    base = TensorReader('random_data.csv') #('new_ratings_all.csv')#('movielens-100k/u1.base.csv')
     base.read(full_shape=full_shape)
     with tf.Session() as sess:
         rating_tensor = sess.run(base.full_data)
