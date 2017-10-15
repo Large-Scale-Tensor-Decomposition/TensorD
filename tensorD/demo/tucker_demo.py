@@ -11,13 +11,12 @@ from tensorD.dataproc.provider import Provider
 from tensorD.factorization.tucker import HOOI
 from tensorD.demo.DataGenerator import *
 
-
 if __name__ == '__main__':
     print('=========Train=========')
-    X = synthetic_data_nonneg([30, 30, 30], 10)
+    X = synthetic_data_tucker([30, 30, 30], [10, 10, 10])
     data_provider = Provider()
     data_provider.full_tensor = lambda: X
-    env = Environment(data_provider, summary_path='/tmp/tucker_demo_'+'30')
+    env = Environment(data_provider, summary_path='/tmp/tucker_demo_' + '30')
     hooi = HOOI(env)
     args = HOOI.HOOI_Args(ranks=[10, 10, 10], validation_internal=1)
     hooi.build_model(args)

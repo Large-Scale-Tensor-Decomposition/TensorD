@@ -17,65 +17,81 @@ import time
 
 if __name__ == '__main__':
     # cp test
-    for ii in range(1, 6):
-        I = 30 * ii
-        R = 10 + ii
-        X = synthetic_data_nonneg([I, I, I], R)
-        data_provider = Provider()
-        data_provider.full_tensor = lambda: X
-        env = Environment(data_provider, summary_path='/tmp/cp_demo_' + str(I))
-        cp = CP_ALS(env)
-        args = CP_ALS.CP_Args(rank=R, validation_internal=5)
-        cp.build_model(args)
-        print('CP with %dx%dx%d, R=%d' % (I, I, I, R))
-        start = time.time()
-        cp.train(100)
-        print('Train ends in %.5f\n\n' % time.time() - start)
+    N1 = 40
+    N2 = 40
+    N3 = 40
+    R = 10
+    X = synthetic_data_cp([N1, N2, N3], R)
+    data_provider = Provider()
+    data_provider.full_tensor = lambda: X
+    env = Environment(data_provider, summary_path='/tmp/cp_demo_' + str(N1))
+    cp = CP_ALS(env)
+    args = CP_ALS.CP_Args(rank=R, validation_internal=1)
+    cp.build_model(args)
+    print('CP with %dx%dx%d, R=%d' % (N1, N2, N3, R))
+    loss_hist = cp.train(500)
+    out_path = '/root/tensorD_f/data_out_tmp/python_out/cp_N1_N2_N3_R_' + str(N1) + '_' + str(N2) + '_' + str(
+        N3) + '_' + str(R) + '_1'
+    with open(out_path, 'w') as out:
+        for loss in loss_hist:
+            out.write('%.5f\n' % loss)
 
     # ncp test
-    for ii in range(1, 6):
-        I = 30 * ii
-        R = 10 + ii
-        X = synthetic_data_nonneg([I, I, I], R)
-        data_provider = Provider()
-        data_provider.full_tensor = lambda: X
-        env = Environment(data_provider, summary_path='/tmp/ncp_demo_' + str(I))
-        ncp = NCP_BCU(env)
-        args = NCP_BCU.NCP_Args(rank=R, validation_internal=5)
-        ncp.build_model(args)
-        print('NCP with %dx%dx%d, R=%d' % (I, I, I, R))
-        start = time.time()
-        ncp.train(100)
-        print('Train ends in %.5f\n\n' % time.time() - start)
+    N1 = 40
+    N2 = 40
+    N3 = 40
+    R = 10
+    X = synthetic_data_cp([N1, N2, N3], R)
+    data_provider = Provider()
+    data_provider.full_tensor = lambda: X
+    env = Environment(data_provider, summary_path='/tmp/ncp_demo_' + str(N1))
+    ncp = NCP_BCU(env)
+    args = NCP_BCU.NCP_Args(rank=R, validation_internal=1)
+    ncp.build_model(args)
+    print('NCP with %dx%dx%d, R=%d' % (N1, N2, N3, R))
+    loss_hist = ncp.train(500)
+    out_path = '/root/tensorD_f/data_out_tmp/python_out/ncp_N1_N2_N3_R_' + str(N1) + '_' + str(N2) + '_' + str(
+        N3) + '_' + str(R) + '_1'
+    with open(out_path, 'w') as out:
+        for loss in loss_hist:
+            out.write('%.5f\n' % loss)
 
     # ntucker test
-    for ii in range(1, 6):
-        I = 30 * ii
-        R = 10 + ii
-        X = synthetic_data_nonneg([I, I, I], R)
-        data_provider = Provider()
-        data_provider.full_tensor = lambda: X
-        env = Environment(data_provider, summary_path='/tmp/ntucker_demo_' + str(I))
-        ntucker = NTUCKER_BCU(env)
-        args = NTUCKER_BCU.NTUCKER_Args(ranks=[R, R, R], validation_internal=5)
-        ntucker.build_model(args)
-        print('NTucker with %dx%dx%d, R=%d' % (I, I, I, R))
-        start = time.time()
-        ntucker.train(100)
-        print('Train ends in %.5f\n\n' % time.time() - start)
+    N1 = 40
+    N2 = 40
+    N3 = 40
+    R = 10
+    X = synthetic_data_tucker([N1, N2, N3], [R, R, R])
+    data_provider = Provider()
+    data_provider.full_tensor = lambda: X
+    env = Environment(data_provider, summary_path='/tmp/ntucker_demo_' + str(N1))
+    ntucker = NTUCKER_BCU(env)
+    args = NTUCKER_BCU.NTUCKER_Args(ranks=[R, R, R], validation_internal=1)
+    ntucker.build_model(args)
+    print('NTucker with %dx%dx%d, R=%d' % (N1, N2, N3, R))
+    loss_hist = ntucker.train(500)
+    out_path = '/root/tensorD_f/data_out_tmp/python_out/ntucker_N1_N2_N3_R_' + str(N1) + '_' + str(N2) + '_' + str(
+        N3) + '_' + str(R) + '_1'
+    with open(out_path, 'w') as out:
+        for loss in loss_hist:
+            out.write('%.5f\n' % loss)
 
     # tucker test
-    for ii in range(1, 6):
-        I = 30 * ii
-        R = 10 + ii
-        X = synthetic_data_nonneg([I, I, I], R)
-        data_provider = Provider()
-        data_provider.full_tensor = lambda: X
-        env = Environment(data_provider, summary_path='/tmp/tucker_demo_' + str(I))
-        hooi = HOOI(env)
-        args = HOOI.HOOI_Args(ranks=[R, R, R], validation_internal=3)
-        hooi.build_model(args)
-        print('Tucker with %dx%dx%d, R=%d' % (I, I, I, R))
-        start = time.time()
-        hooi.train(50)
-        print('Train ends in %.5f\n\n' % time.time() - start)
+    N1 = 40
+    N2 = 40
+    N3 = 40
+    R = 10
+    X = synthetic_data_tucker([N1, N2, N3], [R, R, R])
+    data_provider = Provider()
+    data_provider.full_tensor = lambda: X
+    env = Environment(data_provider, summary_path='/tmp/tucker_demo_' + str(N1))
+    hooi = HOOI(env)
+    args = HOOI.HOOI_Args(ranks=[R, R, R], validation_internal=1)
+    hooi.build_model(args)
+    print('Tucker with %dx%dx%d, R=%d' % (N1, N2, N3, R))
+    loss_hist = hooi.train(50)
+    out_path = '/root/tensorD_f/data_out_tmp/python_out/tucker_N1_N2_N3_R_' + str(N1) + '_' + str(N2) + '_' + str(
+        N3) + '_' + str(R) + '_1'
+    with open(out_path, 'w') as out:
+        for loss in loss_hist:
+            out.write('%.5f\n' % loss)
