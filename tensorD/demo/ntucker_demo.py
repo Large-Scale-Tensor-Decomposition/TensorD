@@ -14,12 +14,12 @@ from tensorD.demo.DataGenerator import *
 
 if __name__ == '__main__':
     print('=========Train=========')
-    X = synthetic_data_nonneg([30, 30, 30], 10)
+    X = synthetic_data_nonneg([1800, 200, 20], 10)
     data_provider = Provider()
     data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/ntucker_demo_'+'30')
     ntucker = NTUCKER_BCU(env)
-    args = NTUCKER_BCU.NTUCKER_Args(ranks=[10, 10, 10], validation_internal=1)
+    args = NTUCKER_BCU.NTUCKER_Args(ranks=[10, 10, 10], validation_internal=5)
     ntucker.build_model(args)
     ntucker.train(500)
     print('Train ends.\n\n\n')

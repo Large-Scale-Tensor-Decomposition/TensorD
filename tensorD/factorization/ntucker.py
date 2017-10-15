@@ -219,6 +219,7 @@ class NTUCKER_BCU(BaseFact):
         loss_op = self._loss_op
         obj_op = self._obj_op
         rel_res_op = self._rel_res_op
+        loss_hist = []
 
 
         sum_op = tf.summary.merge_all()
@@ -241,7 +242,7 @@ class NTUCKER_BCU(BaseFact):
             else:
                 self._factors, loss_v, rel_res, obj, _ = sess.run(
                     [factor_update_op, loss_op, rel_res_op, obj_op, train_op], feed_dict=self._feed_dict)
-
+            loss_hist.append(loss_v)
             if step == 1:
                 obj0 = obj + 1
 
@@ -263,3 +264,4 @@ class NTUCKER_BCU(BaseFact):
 
         print('Non-Negative Tucker model train finish, in %d steps, with RMSE = %.10f' % (step, loss_v))
         self._is_train_finish = True
+        return loss_hist
