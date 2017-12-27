@@ -14,7 +14,7 @@ from tensorD.demo.DataGenerator import *
 
 if __name__ == '__main__':
     print('=========Train=========')
-    X = synthetic_data_nonneg([30, 30, 30], 10)
+    X = synthetic_data_cp([30, 30, 30], 10)
     data_provider = Provider()
     data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/ncp_demo_'+'30')

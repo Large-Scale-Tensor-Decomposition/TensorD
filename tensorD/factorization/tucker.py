@@ -95,10 +95,11 @@ class HOSVD(BaseFact):
 
 class HOOI(BaseFact):
     class HOOI_Args(object):
-        def __init__(self, ranks: list, validation_internal=-1, verbose=False):
+        def __init__(self, ranks: list, validation_internal=-1, verbose=False, tol=1.0e-4):
             self.ranks = ranks
             self.validation_internal = validation_internal
             self.verbose = verbose
+            self.tol = tol
 
     def __init__(self, env: Environment):
         self._env = env
@@ -192,11 +193,13 @@ class HOOI(BaseFact):
         factor_update_op = self._factor_update_op
         core_op = self._core_op
         loss_op = self._loss_op
+        loss_hist = []
 
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
 
         sess.run(init_op, feed_dict=self._feed_dict)
+        nstall = 0
         print('HOOI model initial finish')
         for step in range(1, steps + 1):
             if (step == steps) or args.verbose or (step == 1) or (
@@ -206,7 +209,23 @@ class HOOI(BaseFact):
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%.15f' % (step, loss_v))
             else:
-                self._factors, self._core = sess.run([factor_update_op, core_op], feed_dict=self._feed_dict)
+                self._factors, self._core, loss_v = sess.run([factor_update_op, core_op, loss_op],
+                                                             feed_dict=self._feed_dict)
+            loss_hist.append(loss_v)
+            if step == 1:
+                loss_v0 = loss_v + 1
 
-        print('HOOI model train finish, with RMSE = %.15f' % loss_v)
+            relerr1 = abs(loss_v - loss_v0) / (loss_v0 + 1)
+            relerr2 = abs(loss_v - loss_v0)
+            crit = relerr1 < args.tol
+            if crit:
+                nstall = nstall + 1
+            else:
+                nstall = 0
+            if nstall >= 3 or relerr2 < args.tol:
+                break
+            loss_v0 = loss_v
+
+        print('HOOI model train finish, in %d steps, with RMSE = %.10f' % (step, loss_v))
         self._is_train_finish = True
+        return loss_hist

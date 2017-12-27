@@ -9,22 +9,26 @@
 
 import numpy as np
 from tensorD.base.type import KTensor
+from tensorD.base.type import TTensor
 import tensorflow as tf
 
-def synthetic_data_nonneg(N_list, R):
+def synthetic_data_cp(N_list, R, max_noise=0.1):
     matrices = [None for _ in range(len(N_list))]
     for ii in range(len(N_list)):
-        matrices[ii] = np.maximum(0, np.random.randn(N_list[ii], R))
+        matrices[ii] = np.maximum(0, np.random.rand(N_list[ii], R))
     M = KTensor(matrices)
     with tf.Session() as sess:
         Mtrue = sess.run(M.extract())
-    return Mtrue
+    noise = np.maximum(0, max_noise * np.random.rand(*N_list))
+    return Mtrue + noise
 
-def synthetic_data(N_list, R):
+def synthetic_data_tucker(N_list, Ranks, max_noise=0.04):
     matrices = [None for _ in range(len(N_list))]
+    G = np.maximum(0, np.random.rand(*Ranks))
     for ii in range(len(N_list)):
-        matrices[ii] = np.random.randn(N_list[ii], R)
-    M = KTensor(matrices)
+        matrices[ii] = np.maximum(0, np.random.rand(N_list[ii], Ranks[ii]))
+    M = TTensor(G, matrices)
     with tf.Session() as sess:
         Mtrue = sess.run(M.extract())
-    return Mtrue
+    noise = np.maximum(0, max_noise * np.random.rand(*N_list))
+    return Mtrue + noise

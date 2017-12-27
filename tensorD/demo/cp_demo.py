@@ -15,12 +15,12 @@ from tensorD.demo.DataGenerator import *
 
 if __name__ == '__main__':
     print('=========Train=========')
-    X = synthetic_data_nonneg([30, 30, 30], 10)
+    X = synthetic_data_cp([80, 80, 80], 20)
     data_provider = Provider()
     data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/cp_demo_' + '30')
     cp = CP_ALS(env)
-    args = CP_ALS.CP_Args(rank=10, validation_internal=1)
+    args = CP_ALS.CP_Args(rank=15, validation_internal=1)
     cp.build_model(args)
-    cp.train(50)
+    cp.train(100)
     print('Train ends.\n\n\n')

@@ -12,7 +12,7 @@ class CP_ALS(BaseFact):
     class CP_Args(object):
         def __init__(self,
                      rank,
-                     tol=10e-6,
+                     tol=10e-4,
                      validation_internal=-1,
                      get_lambda=False,
                      get_rmse=False,
@@ -124,11 +124,13 @@ class CP_ALS(BaseFact):
         full_op = self._full_op
         factor_update_op = self._factor_update_op
         loss_op = self._loss_op
+        loss_hist = []
 
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
 
         sess.run(init_op, feed_dict=self._feed_dict)
+        nstall = 0
         print('CP model initial finish')
 
         for step in range(1, steps + 1):
@@ -137,7 +139,22 @@ class CP_ALS(BaseFact):
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%f' % (step, loss_v))
             else:
-                self._factors, self._lambdas = sess.run([factor_update_op, lambda_op], feed_dict=self._feed_dict)
+                self._factors, self._lambdas, loss_v = sess.run([factor_update_op, lambda_op, loss_op], feed_dict=self._feed_dict)
+            loss_hist.append(loss_v)
+            if step == 1:
+                loss_v0 = loss_v + 1
 
-        print('CP model train finish, with RMSE = %.10f' % (loss_v))
+            relerr1 = abs(loss_v - loss_v0) / (loss_v0 + 1)
+            relerr2 = abs(loss_v - loss_v0)
+            crit = relerr1 < args.tol
+            if crit:
+                nstall = nstall + 1
+            else:
+                nstall = 0
+            if nstall >= 3 or relerr2 < args.tol:
+                break
+            loss_v0 = loss_v
+
+        print('CP model train finish, in %d steps, with RMSE = %.10f' % (step, loss_v))
         self._is_train_finish = True
+        return loss_hist

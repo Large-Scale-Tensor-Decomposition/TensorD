@@ -186,6 +186,7 @@ class NCP_BCU(BaseFact):
         loss_op = self._loss_op
         obj_op = self._obj_op
         rel_res_op = self._rel_res_op
+        loss_hist = []
 
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
@@ -207,6 +208,7 @@ class NCP_BCU(BaseFact):
 
             if step == 1:
                 obj0 = obj + 1
+            loss_hist.append(loss_v)
 
             relerr1 = abs(obj - obj0) / (obj0 + 1)
             relerr2 = rel_res
@@ -228,3 +230,4 @@ class NCP_BCU(BaseFact):
 
         print('Non-Negative CP model train finish, in %d steps, with RMSE = %.10f' % (step, loss_v))
         self._is_train_finish = True
+        return loss_hist
