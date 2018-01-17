@@ -72,7 +72,8 @@ class CP_ALS(BaseFact):
         order = len(shape)
 
         with tf.name_scope('random-init') as scope:
-            A = [tf.Variable(tf.random_uniform(shape=(shape[ii], args.rank), dtype=tf.float32), name='A-%d' % ii) for ii in range(order)]
+            A = [tf.Variable(tf.random_uniform(shape=(shape[ii], args.rank), dtype=tf.float32), name='A-%d' % ii) for ii
+                 in range(order)]
         with tf.name_scope('unfold-all-mode') as scope:
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
             assign_op = [None for _ in range(order)]
@@ -134,12 +135,15 @@ class CP_ALS(BaseFact):
         print('CP model initial finish')
 
         for step in range(1, steps + 1):
-            if (step == steps) or (args.verbose) or (step == 1) or (step % args.validation_internal == 0 and args.validation_internal != -1):
-                self._factors, self._lambdas, self._full_tensor, loss_v, sum_msg = sess.run([factor_update_op, lambda_op, full_op, loss_op, sum_op], feed_dict=self._feed_dict)
+            if (step == steps) or (args.verbose) or (step == 1) or (
+                        step % args.validation_internal == 0 and args.validation_internal != -1):
+                self._factors, self._lambdas, self._full_tensor, loss_v, sum_msg = sess.run(
+                    [factor_update_op, lambda_op, full_op, loss_op, sum_op], feed_dict=self._feed_dict)
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%f' % (step, loss_v))
             else:
-                self._factors, self._lambdas, loss_v = sess.run([factor_update_op, lambda_op, loss_op], feed_dict=self._feed_dict)
+                self._factors, self._lambdas, loss_v = sess.run([factor_update_op, lambda_op, loss_op],
+                                                                feed_dict=self._feed_dict)
             loss_hist.append(loss_v)
             if step == 1:
                 loss_v0 = loss_v + 1

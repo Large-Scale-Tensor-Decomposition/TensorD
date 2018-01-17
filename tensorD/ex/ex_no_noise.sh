@@ -53,15 +53,15 @@ do
     gR=10
     dR=10
     run_cp_ex $N $N $N $gR $dR
-    #run_ncp_ex $N $N $N $gR $dR
-    #run_ntucker_ex $N $N $N $gR $dR
+    run_ncp_ex $N $N $N $gR $dR
+    run_ntucker_ex $N $N $N $gR $dR
 
 
     gR=20
     dR=20
     run_cp_ex $N $N $N $gR $dR
-    #run_ncp_ex $N $N $N $gR $dR
-    #run_ntucker_ex $N $N $N $gR $dR
+    run_ncp_ex $N $N $N $gR $dR
+    run_ntucker_ex $N $N $N $gR $dR
 
     N=$(($N*2))
 done

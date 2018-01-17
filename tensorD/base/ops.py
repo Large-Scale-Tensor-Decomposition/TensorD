@@ -303,15 +303,15 @@ def ttm(tensor, matrices, axis=None, transpose=False, skip_matrices_index=None):
 
     Examples
     --------
-    >>> tensorA = tf.constant(np.arange(24).reshape(2,4,3), dtype=tf.float64)
-    >>> mat1 = tf.constant(np.arange(10).reshape(5, 2), dtype=tf.float64)
-    >>> mat2 = tf.constant(np.arange(24).reshape(6, 4), dtype=tf.float64)
-    >>> mat3 = tf.constant(np.arange(21).reshape(7, 3), dtype=tf.float64)
+    >>> tensorA = tf.constant(np.arange(24).reshape(2,4,3), dtype=tf.float32)
+    >>> mat1 = tf.constant(np.arange(10).reshape(5, 2), dtype=tf.float32)
+    >>> mat2 = tf.constant(np.arange(24).reshape(6, 4), dtype=tf.float32)
+    >>> mat3 = tf.constant(np.arange(21).reshape(7, 3), dtype=tf.float32)
     >>> mats = [mat1, mat2, mat3]
     >>> contracted1 = ops.ttm(tensorA, mats) # shape is 5x6x7
     >>> contracted2 = ops.ttm(tensorA, [mat2, mat1, mat3], axis=[1,0,2]) # same as above
     >>> contracted3 = ops.ttm(tensorA, mats, skip_matrices_index=1)  # shape is 5x4x7
-    >>> tensorB = tf.constant(np.arange(210).reshape(5,6,7), dtype=tf.float64)
+    >>> tensorB = tf.constant(np.arange(210).reshape(5,6,7), dtype=tf.float32)
     >>> contracted4 = ops.ttm(tensorB, mats, transpose=True) # shape is 2x4x3
 
     """

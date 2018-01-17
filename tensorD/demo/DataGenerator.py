@@ -12,6 +12,7 @@ from tensorD.base.type import KTensor
 from tensorD.base.type import TTensor
 import tensorflow as tf
 
+
 def synthetic_data_cp(N_list, R, max_noise=0.1):
     matrices = [None for _ in range(len(N_list))]
     for ii in range(len(N_list)):
@@ -21,6 +22,7 @@ def synthetic_data_cp(N_list, R, max_noise=0.1):
         Mtrue = sess.run(M.extract())
     noise = np.maximum(0, max_noise * np.random.randn(*N_list))
     return Mtrue + noise
+
 
 def synthetic_data_tucker(N_list, Ranks, max_noise=0.04):
     matrices = [None for _ in range(len(N_list))]

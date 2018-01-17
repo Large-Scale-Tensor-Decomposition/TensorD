@@ -200,11 +200,13 @@ class NCP_BCU(BaseFact):
             if (step == steps) or (args.verbose) or (step == 1) or (
                                 step % args.validation_internal == 0 and args.validation_internal != -1):
                 self._factors, self._full_tensor, loss_v, obj, rel_res, sum_msg, _ = sess.run(
-                    [factor_update_op, full_op, loss_op, obj_op, rel_res_op, sum_op, train_op], feed_dict=self._feed_dict)
+                    [factor_update_op, full_op, loss_op, obj_op, rel_res_op, sum_op, train_op],
+                    feed_dict=self._feed_dict)
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%.5f' % (step, loss_v))
             else:
-                self._factors, loss_v, rel_res, obj, _ = sess.run([factor_update_op, loss_op, rel_res_op, obj_op, train_op], feed_dict=self._feed_dict)
+                self._factors, loss_v, rel_res, obj, _ = sess.run(
+                    [factor_update_op, loss_op, rel_res_op, obj_op, train_op], feed_dict=self._feed_dict)
 
             if step == 1:
                 obj0 = obj + 1

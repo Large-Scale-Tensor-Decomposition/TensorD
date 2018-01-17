@@ -6,7 +6,6 @@
 # @File    : cp_demo.py
 # @Software: PyCharm Community Edition
 
-from tensorD.dataproc.reader import TensorReader
 import tensorflow as tf
 from tensorD.factorization.env import Environment
 from tensorD.dataproc.provider import Provider

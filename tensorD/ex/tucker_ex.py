@@ -7,10 +7,7 @@
 
 from tensorD.factorization.env import Environment
 from tensorD.dataproc.provider import Provider
-from tensorD.factorization.ntucker import NTUCKER_BCU
 from tensorD.factorization.tucker import HOOI
-from tensorD.factorization.cp import CP_ALS
-from tensorD.factorization.ncp import NCP_BCU
 from tensorD.demo.DataGenerator import *
 import sys
 

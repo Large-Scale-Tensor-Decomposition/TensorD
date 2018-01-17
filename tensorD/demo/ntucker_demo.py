@@ -11,7 +11,6 @@ from tensorD.factorization.env import Environment
 from tensorD.dataproc.provider import Provider
 from tensorD.factorization.ntucker import NTUCKER_BCU
 from tensorD.demo.DataGenerator import *
-from tensorD.DataBag import *
 
 if __name__ == '__main__':
     print('=========Train=========')

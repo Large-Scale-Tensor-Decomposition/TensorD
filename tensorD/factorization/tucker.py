@@ -123,7 +123,8 @@ class HOOI(BaseFact):
         order = input_data.get_shape().ndims
 
         # HOSVD to initialize factors A
-        A = [tf.Variable(tf.random_uniform(shape=(shape[ii], args.ranks[ii]), dtype=tf.float32), name='A-%d' % ii) for ii in range(order)]
+        A = [tf.Variable(tf.random_uniform(shape=(shape[ii], args.ranks[ii]), dtype=tf.float32), name='A-%d' % ii) for
+             ii in range(order)]
 
         init_ops = [None for _ in range(order)]
         for mode in range(order):

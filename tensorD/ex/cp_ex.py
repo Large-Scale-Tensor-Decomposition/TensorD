@@ -27,11 +27,12 @@ def cp_run(N1, N2, N3, gR, dR, time):
     cp.build_model(args)
     print('CP with %dx%dx%d, gR=%d, dR=%d, time=%d' % (N1, N2, N3, gR, dR, time))
     loss_hist = cp.train(6000)
-    scale = str(N1) +'_' + str(gR) + '_' + str(dR)
+    scale = str(N1) + '_' + str(gR) + '_' + str(dR)
     out_path = '/root/tensorD_f/data_out_tmp/python_out/cp_' + scale + '_' + str(time) + '.txt'
     with open(out_path, 'w') as out:
         for loss in loss_hist:
             out.write('%.6f\n' % loss)
+
 
 if __name__ == '__main__':
     cp_run(N1=int(sys.argv[1]),
