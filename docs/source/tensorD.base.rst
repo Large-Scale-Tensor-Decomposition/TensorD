@@ -51,6 +51,22 @@ tensorD.base.type module
     :undoc-members:
     :show-inheritance:
 
+tensorD.base.pitf_ops module
+----------------------------
+
+.. automodule:: tensorD.base.pitf_ops
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tensorD.base.pitf_ops_numpy module
+----------------------------------
+
+.. automodule:: tensorD.base.pitf_ops_numpy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

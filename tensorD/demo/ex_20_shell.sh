@@ -1,4 +1,4 @@
-export PYTHON_PATH=/root/tensorD:$PYTHON_PATH
+export PYTHONPATH=/root/tensorD:$PYTHONPATH
 
 
 run_cp_ex() {
@@ -50,7 +50,7 @@ run_ntucker_ex() {
     gR=$4
     dR=$5
     time=0
-    while [ "$time" != 20 ]
+    while [ "$time" != 21 ]
     do
         time=$(($time+1))
         python3 ntucker_ex.py $N1 $N2 $N3 $gR $dR $time
@@ -58,28 +58,28 @@ run_ntucker_ex() {
 }
 
 N=20
-while [ "$N" != 320 ]
+while [ "$N" != 160 ]
 do
     gR=10
     dR=5
-    while [ "$dR" != 20 ]
+    while [ "$dR" != 16 ]
     do
         run_cp_ex $N $N $N $gR $dR
         run_ncp_ex $N $N $N $gR $dR
         run_tucker_ex $N $N $N $gR $dR
         run_ntucker_ex $N $N $N $gR $dR
-        dR=$(($dR+5))
+        dR=$(($dR+1))
     done
 
     gR=20
     dR=15
-    while [ "$dR" != 30 ]
+    while [ "$dR" != 26 ]
     do
         run_cp_ex $N $N $N $gR $dR
         run_ncp_ex $N $N $N $gR $dR
         run_tucker_ex $N $N $N $gR $dR
         run_ntucker_ex $N $N $N $gR $dR
-        dR=$(($dR+5))
+        dR=$(($dR+1))
     done
 
     N=$(($N*2))

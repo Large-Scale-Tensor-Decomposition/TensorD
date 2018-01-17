@@ -63,7 +63,7 @@ class NCP_BCU(BaseFact):
 
     def build_model(self, args):
         assert isinstance(args, NCP_BCU.NCP_Args)
-        input_data = tf.placeholder(tf.float64, shape=self._env.full_shape())
+        input_data = tf.placeholder(tf.float32, shape=self._env.full_shape())
         self._feed_dict = {input_data: self._env.full_data()}
         input_norm = tf.norm(input_data)
         shape = input_data.get_shape().as_list()
@@ -71,13 +71,13 @@ class NCP_BCU(BaseFact):
 
         with tf.name_scope('random-init') as scope:
             # initialize with normally distributed pseudorandom numbers
-            A = [tf.Variable(tf.nn.relu(tf.random_normal(shape=(shape[ii], args.rank), dtype=tf.float64)),
-                             name='A-%d' % ii, dtype=tf.float64) for ii in range(order)]
+            A = [tf.Variable(tf.nn.relu(tf.random_uniform(shape=(shape[ii], args.rank), dtype=tf.float32)),
+                             name='A-%d' % ii, dtype=tf.float32) for ii in range(order)]
             A_update_op = [None for _ in range(order)]
 
-        Am = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float64, name='Am-%d' % ii) for ii in
+        Am = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float32, name='Am-%d' % ii) for ii in
               range(order)]
-        A0 = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float64, name='A0-%d' % ii) for ii in
+        A0 = [tf.Variable(np.zeros(shape=(shape[ii], args.rank)), dtype=tf.float32, name='A0-%d' % ii) for ii in
               range(order)]
         Am_update_op1 = [None for _ in range(order)]
         Am_update_op2 = [None for _ in range(order)]
@@ -93,12 +93,12 @@ class NCP_BCU(BaseFact):
                 A0_init_op[mode] = A0[mode].assign(norm_init_op[mode])
                 Am_init_op[mode] = Am[mode].assign(norm_init_op[mode])
 
-        t0 = tf.Variable(1.0, dtype=tf.float64, name='t0')
-        t = tf.Variable(1.0, dtype=tf.float64, name='t')
-        wA = [tf.Variable(1.0, dtype=tf.float64, name='wA-%d' % ii) for ii in range(order)]
+        t0 = tf.Variable(1.0, dtype=tf.float32, name='t0')
+        t = tf.Variable(1.0, dtype=tf.float32, name='t')
+        wA = [tf.Variable(1.0, dtype=tf.float32, name='wA-%d' % ii) for ii in range(order)]
         wA_update_op1 = [None for _ in range(order)]
-        L = [tf.Variable(1.0, name='Lipschitz-%d' % ii, dtype=tf.float64) for ii in range(order)]
-        L0 = [tf.Variable(1.0, name='Lipschitz0-%d' % ii, dtype=tf.float64) for ii in range(order)]
+        L = [tf.Variable(1.0, name='Lipschitz-%d' % ii, dtype=tf.float32) for ii in range(order)]
+        L0 = [tf.Variable(1.0, name='Lipschitz0-%d' % ii, dtype=tf.float32) for ii in range(order)]
         L_update_op = [None for _ in range(order)]
         L0_update_op = [None for _ in range(order)]
 

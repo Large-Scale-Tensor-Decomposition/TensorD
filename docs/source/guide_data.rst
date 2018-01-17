@@ -1,5 +1,5 @@
-Data Types
-==========
+Tensor Types
+============
 
 A *tensor* is a multidimensional array. For the sake of different applications, we will introduce 4 different data
 types to store tensors.

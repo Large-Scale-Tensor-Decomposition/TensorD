@@ -12,7 +12,7 @@ class CP_ALS(BaseFact):
     class CP_Args(object):
         def __init__(self,
                      rank,
-                     tol=10e-4,
+                     tol=1.0e-4,
                      validation_internal=-1,
                      get_lambda=False,
                      get_rmse=False,
@@ -66,13 +66,13 @@ class CP_ALS(BaseFact):
 
     def build_model(self, args):
         assert isinstance(args, CP_ALS.CP_Args)
-        input_data = tf.placeholder(tf.float64, shape=self._env.full_shape())
+        input_data = tf.placeholder(tf.float32, shape=self._env.full_shape())
         self._feed_dict = {input_data: self._env.full_data()}
         shape = input_data.get_shape().as_list()
         order = len(shape)
 
         with tf.name_scope('random-init') as scope:
-            A = [tf.Variable(rand(shape[ii], args.rank), name='A-%d' % ii) for ii in range(order)]
+            A = [tf.Variable(tf.random_uniform(shape=(shape[ii], args.rank), dtype=tf.float32), name='A-%d' % ii) for ii in range(order)]
         with tf.name_scope('unfold-all-mode') as scope:
             mats = [ops.unfold(input_data, mode) for mode in range(order)]
             assign_op = [None for _ in range(order)]
@@ -88,7 +88,7 @@ class CP_ALS(BaseFact):
                 XA = tf.matmul(mats[mode], ops.khatri(A, mode, True), name='XA-%d' % mode)
 
             V = ops.hadamard(AtA, skip_matrices_index=mode)
-            non_norm_A = tf.matmul(XA, tf.py_func(np.linalg.pinv, [V], tf.float64, name='pinvV-%d' % mode),
+            non_norm_A = tf.matmul(XA, tf.py_func(np.linalg.pinv, [V], tf.float32, name='pinvV-%d' % mode),
                                    name='XApinvV-%d' % mode)
             with tf.name_scope('max-norm-%d' % mode) as scope:
                 lambda_op = tf.reduce_max(tf.reshape(non_norm_A, shape=(shape[mode], args.rank)), axis=0)

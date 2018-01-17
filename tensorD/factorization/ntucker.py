@@ -14,6 +14,7 @@ from numpy.random import rand
 from functools import reduce
 from .factorization import BaseFact
 from .env import Environment
+from tensorD.DataBag import *
 
 
 class NTUCKER_BCU(BaseFact):
@@ -64,7 +65,7 @@ class NTUCKER_BCU(BaseFact):
 
     def build_model(self, args):
         assert isinstance(args, NTUCKER_BCU.NTUCKER_Args)
-        input_data = tf.placeholder(tf.float64, shape=self._env.full_shape())
+        input_data = tf.placeholder(tf.float32, shape=self._env.full_shape())
         self._feed_dict = {input_data:self._env.full_data()}
         input_norm = tf.norm(input_data)
         shape = input_data.get_shape().as_list()
@@ -72,15 +73,16 @@ class NTUCKER_BCU(BaseFact):
 
         with tf.name_scope('random-init') as scope:
             # initialize with normally distributed pseudorandom numbers
-            A = [tf.Variable(tf.nn.relu(tf.random_normal(shape=(shape[ii], args.ranks[ii]), dtype=tf.float64)),
-                             name='A-%d' % ii, dtype=tf.float64) for ii in range(order)]
+            A = [tf.Variable(tf.nn.relu(tf.random_uniform(shape=(shape[ii], args.ranks[ii]), dtype=tf.float32)),
+                                           name='A-%d' % ii, dtype=tf.float32) for ii in range(order)]
+
             A_update_op = [None for _ in range(order)]
 
-        Am = [tf.Variable(np.zeros(shape=(shape[ii], args.ranks[ii])), dtype=tf.float64, name='Am-%d' % ii) for ii in
+        Am = [tf.Variable(np.zeros(shape=(shape[ii], args.ranks[ii])), dtype=tf.float32, name='Am-%d' % ii) for ii in
               range(order)]
         Am_update_op1 = [None for _ in range(order)]
         Am_update_op2 = [None for _ in range(order)]
-        A0 = [tf.Variable(np.zeros(shape=(shape[ii], args.ranks[ii])), dtype=tf.float64, name='A0-%d' % ii) for ii in
+        A0 = [tf.Variable(np.zeros(shape=(shape[ii], args.ranks[ii])), dtype=tf.float32, name='A0-%d' % ii) for ii in
               range(order)]
         A0_update_op1 = [None for _ in range(order)]
 
@@ -95,28 +97,28 @@ class NTUCKER_BCU(BaseFact):
                 Am_init_op[mode] = Am[mode].assign(norm_init_op[mode])
 
         # initialize with normally distributed pseudorandom numbers
-        g = tf.Variable(tf.nn.relu(tf.random_normal(shape=args.ranks, dtype=tf.float64)), name='core-tensor')
+        g = tf.Variable(tf.nn.relu(tf.random_uniform(shape=args.ranks, dtype=tf.float32)), name='core-tensor')
         with tf.name_scope('core-init') as scope:
             g_norm_init = g.assign(g / tf.norm(g) * tf.pow(input_norm, 1 / (order + 1)))
-        g0 = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float64, name='core_0')
+        g0 = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float32, name='core_0')
         with tf.name_scope('core_0-init') as scope:
             g0_init_op = g0.assign(g_norm_init)
-        gm = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float64, name='core_m')
+        gm = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float32, name='core_m')
         with tf.name_scope('core_m-init') as scope:
             gm_init_op = gm.assign(g_norm_init)
 
-        t0 = tf.Variable(1.0, dtype=tf.float64, name='t0')
-        t = tf.Variable(1.0, dtype=tf.float64, name='t')
-        wA = [tf.Variable(1.0, dtype=tf.float64, name='wA-%d' % ii) for ii in range(order + 1)]
+        t0 = tf.Variable(1.0, dtype=tf.float32, name='t0')
+        t = tf.Variable(1.0, dtype=tf.float32, name='t')
+        wA = [tf.Variable(1.0, dtype=tf.float32, name='wA-%d' % ii) for ii in range(order + 1)]
         wA_update_op1 = [None for _ in range(order + 1)]
 
-        L = [tf.Variable(1.0, name='L-%d' % ii, dtype=tf.float64) for ii in range(order + 1)]
-        L0 = [tf.Variable(1.0, name='L0-%d' % ii, dtype=tf.float64) for ii in range(order + 1)]
+        L = [tf.Variable(1.0, name='L-%d' % ii, dtype=tf.float32) for ii in range(order + 1)]
+        L0 = [tf.Variable(1.0, name='L0-%d' % ii, dtype=tf.float32) for ii in range(order + 1)]
         L_update_op = [None for _ in range(order + 1)]
         L0_update_op = [None for _ in range(order + 1)]
 
-        Bsq = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float64, name='Bsq')
-        Grad_g = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float64, name='Grad-core')
+        Bsq = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float32, name='Bsq')
+        Grad_g = tf.Variable(np.zeros(shape=args.ranks), dtype=tf.float32, name='Grad-core')
 
         with tf.name_scope('unfold-all-mode') as scope:
             mats = [ops.unfold(input_data, mode) for mode in range(order)]

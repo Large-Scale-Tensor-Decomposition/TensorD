@@ -19,7 +19,7 @@ def synthetic_data_cp(N_list, R, max_noise=0.1):
     M = KTensor(matrices)
     with tf.Session() as sess:
         Mtrue = sess.run(M.extract())
-    noise = np.maximum(0, max_noise * np.random.rand(*N_list))
+    noise = np.maximum(0, max_noise * np.random.randn(*N_list))
     return Mtrue + noise
 
 def synthetic_data_tucker(N_list, Ranks, max_noise=0.04):
@@ -30,5 +30,5 @@ def synthetic_data_tucker(N_list, Ranks, max_noise=0.04):
     M = TTensor(G, matrices)
     with tf.Session() as sess:
         Mtrue = sess.run(M.extract())
-    noise = np.maximum(0, max_noise * np.random.rand(*N_list))
+    noise = np.maximum(0, max_noise * np.random.randn(*N_list))
     return Mtrue + noise

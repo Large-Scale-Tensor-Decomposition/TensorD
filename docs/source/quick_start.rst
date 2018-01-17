@@ -2,4 +2,4 @@
 Quick Start
 ===========
 
-Welcome to this introduction tutorial.
+Welcome to tensorD`s introduction tutorial.

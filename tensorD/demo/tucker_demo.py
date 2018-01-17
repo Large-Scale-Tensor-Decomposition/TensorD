@@ -13,7 +13,7 @@ from tensorD.demo.DataGenerator import *
 
 if __name__ == '__main__':
     print('=========Train=========')
-    X = synthetic_data_tucker([80, 80, 80], [10, 10, 10])
+    X = synthetic_data_tucker([40, 40, 40], [10, 10, 10])
     data_provider = Provider()
     data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/tucker_demo_' + '30')

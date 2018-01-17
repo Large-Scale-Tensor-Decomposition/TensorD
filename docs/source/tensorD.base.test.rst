@@ -36,6 +36,13 @@ tensorD.base.test.ttensor_test module
     :undoc-members:
     :show-inheritance:
 
+tensorD.base.test.pitf_ops_test module
+--------------------------------------
+
+.. automodule:: tensorD.base.test.pitf_ops_test
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Module contents
 ---------------

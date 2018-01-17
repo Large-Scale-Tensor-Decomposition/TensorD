@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to factorizer's documentation!
-======================================
+Welcome to tensorD`s documentation!
+===================================
 
 This is a toolbox on tenser basic operations and factorization.
 
@@ -12,7 +12,6 @@ This is a toolbox on tenser basic operations and factorization.
    :maxdepth: 1
 
    introduction
-   Quick Start <quick_start>
    User Guide <user_guide>
    API Reference <modules>
 

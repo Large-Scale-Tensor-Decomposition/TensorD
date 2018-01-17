@@ -1,5 +1,5 @@
-TensorToolbox
-=============
+tensorD
+=======
 
 .. toctree::
    :maxdepth: 4

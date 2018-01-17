@@ -36,6 +36,13 @@ tensorD.test.tucker_test module
     :undoc-members:
     :show-inheritance:
 
+tensorD.test.pitf_test module
+-----------------------------
+
+.. automodule:: tensorD.test.pitf_test
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Module contents
 ---------------

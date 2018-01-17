@@ -11,6 +11,7 @@ from tensorD.factorization.env import Environment
 from tensorD.dataproc.provider import Provider
 from tensorD.factorization.ntucker import NTUCKER_BCU
 from tensorD.demo.DataGenerator import *
+from tensorD.DataBag import *
 
 if __name__ == '__main__':
     print('=========Train=========')
@@ -19,7 +20,7 @@ if __name__ == '__main__':
     data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/ntucker_demo_' + '30')
     ntucker = NTUCKER_BCU(env)
-    args = NTUCKER_BCU.NTUCKER_Args(ranks=[5, 5, 5], validation_internal=10)
+    args = NTUCKER_BCU.NTUCKER_Args(ranks=[10, 10, 10], validation_internal=1)
     ntucker.build_model(args)
-    ntucker.train(5000)
+    ntucker.train(1000)
     print('Train ends.\n\n\n')

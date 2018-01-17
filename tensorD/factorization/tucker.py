@@ -27,7 +27,7 @@ class HOSVD(BaseFact):
         self._is_train_finish = False
 
     def build_model(self, args):
-        input_data = tf.placeholder(tf.float64, shape=self._env.full_shape())
+        input_data = tf.placeholder(tf.float32, shape=self._env.full_shape())
         self._feed_dict = {input_data: self._env.full_data()}
         order = input_data.get_shape().ndims
         A = []
@@ -117,13 +117,13 @@ class HOOI(BaseFact):
 
     def build_model(self, args):
         assert isinstance(args, HOOI.HOOI_Args)
-        input_data = tf.placeholder(tf.float64, shape=self._env.full_shape())
+        input_data = tf.placeholder(tf.float32, shape=self._env.full_shape())
         self._feed_dict = {input_data: self._env.full_data()}
         shape = input_data.get_shape().as_list()
         order = input_data.get_shape().ndims
 
         # HOSVD to initialize factors A
-        A = [tf.Variable(np.random.rand(shape[ii], args.ranks[ii]), name='A-%d' % ii) for ii in range(order)]
+        A = [tf.Variable(tf.random_uniform(shape=(shape[ii], args.ranks[ii]), dtype=tf.float32), name='A-%d' % ii) for ii in range(order)]
 
         init_ops = [None for _ in range(order)]
         for mode in range(order):

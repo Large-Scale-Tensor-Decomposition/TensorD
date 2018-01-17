@@ -75,6 +75,30 @@ tensorD.factorization.xxxx module
     :undoc-members:
     :show-inheritance:
 
+tensorD.factorization.pitf module
+---------------------------------
+
+.. automodule:: tensorD.factorization.pitf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tensorD.factorization.pitf_numpy module
+---------------------------------------
+
+.. automodule:: tensorD.factorization.pitf_numpy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tensorD.factorization.pitf module
+---------------------------------
+
+.. automodule:: tensorD.factorization.pitf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

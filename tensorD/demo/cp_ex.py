@@ -18,12 +18,12 @@ import sys
 
 def cp_run(N1, N2, N3, gR, dR, time):
     # cp test
-    X = synthetic_data_cp([N1, N2, N3], gR)
+    X = synthetic_data_cp([N1, N2, N3], gR, 0)
     data_provider = Provider()
     data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/cp_' + str(N1))
     cp = CP_ALS(env)
-    args = CP_ALS.CP_Args(rank=dR, validation_internal=200)
+    args = CP_ALS.CP_Args(rank=dR, validation_internal=200, tol=1.0e-4)
     cp.build_model(args)
     print('CP with %dx%dx%d, gR=%d, dR=%d, time=%d' % (N1, N2, N3, gR, dR, time))
     loss_hist = cp.train(6000)

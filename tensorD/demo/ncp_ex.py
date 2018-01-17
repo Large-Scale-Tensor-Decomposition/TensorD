@@ -18,7 +18,7 @@ import sys
 
 def ncp_run(N1, N2, N3, gR, dR, time):
     # ncp test
-    X = synthetic_data_cp([N1, N2, N3], gR)
+    X = synthetic_data_cp([N1, N2, N3], gR, 0)
     data_provider = Provider()
     data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/ncp_' + str(N1))
