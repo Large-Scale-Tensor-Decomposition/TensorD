@@ -3,3 +3,54 @@
 [![Build Status](https://travis-ci.org/Large-Scale-Tensor-Decomposition/tensorD.svg?branch=master)](https://travis-ci.org/Large-Scale-Tensor-Decomposition/tensorD)
 
 Tensor:D
+
+## What is TensorD?
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Structure
+
+
+
+
+
+
+
+
+
+## Installation
+
+
+
+
+
+
+
+
+
+
+
+##  Example
+
+
+
+
+
+
+
+## Reference
+
+
+
+
+
