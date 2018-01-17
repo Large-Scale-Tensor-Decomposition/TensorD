@@ -14,15 +14,15 @@ def readme():
 
 
 config = {
-    'name': 'tensorD',
+    'name': ‘TensorD',
     'packages': find_packages(exclude=['doc']),
     'description': 'Tensor Decomposition via TensorFlow',
     'long_description': readme(),
     'author': 'Jinmian Ye, Liyang Hao, Siqi Liang',
     'author_email': 'jinmian.y@gmail.com',
     'version': version,
-    'url': 'https://github.com/ay27/tensorD',
-    'download_url': 'https://github.com/ay27/tensorD' + version,  # TODO : release version
+    'url': 'https://github.com/Large-Scale-Tensor-Decomposition/tensorD',
+    'download_url': 'https://github.com/Large-Scale-Tensor-Decomposition/tensorD' + version,  # TODO : release version
     'install_requires': ['numpy', 'tensorflow>=1.0'],
     'license': 'MIT',
     'scripts': [],

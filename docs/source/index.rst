@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to *TensorD*`s documentation!
+Welcome to TensorD`s documentation!
 =====================================
 
 *TensorD* is A tensor decomposition library in TensorFlow
