@@ -56,7 +56,8 @@ Tensor:D
 ## Reference
 
 ```
-[1] M. Abadi, P. Barham, J. Chen, Z. Chen, A. Davis, J. Dean, M. Devin, S. Ghemawat,G. Irving, M. Isard, et al., Tensorflow:  A system for large-scale machine learning., in:  OSDI, Vol. 16, 2016, pp. 265-283.
+[1] M. Abadi, P. Barham, J. Chen, Z. Chen, A. Davis, J. Dean, M. Devin, S. Ghemawat,G. Irving, M. Isard, 
+    et al., Tensorflow:  A system for large-scale machine learning., in:  OSDI, Vol. 16, 2016, pp. 265-283.
 [2] Using gpus, https://www.tensorflow.org/tutorials/using_gpu.
 ```
 
