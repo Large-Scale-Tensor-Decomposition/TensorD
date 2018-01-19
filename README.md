@@ -1,4 +1,4 @@
-# *TensorD*: A Tensor Decomposition Library in Tensorflow
+# *TensorD*: A Tensor Decomposition Library in TensorFlow
 
 [![Build Status](https://travis-ci.org/Large-Scale-Tensor-Decomposition/tensorD.svg?branch=master)](https://travis-ci.org/Large-Scale-Tensor-Decomposition/tensorD)
 
@@ -6,13 +6,13 @@ Tensor:D
 
 ## What is *TensorD*?
 
-*TensorD* is a Python tensor library built on Tensorflow  [1]. It provides basic decomposition methods, such as Tucker decomposition and CANDECOMP/PARAFAC (CP) decomposition, as well as new decomposition methods developed recently, for example, Pairwise Interaction Tensor Decomposition. 
+*TensorD* is a Python tensor library built on ``TensorFlow``  [1]. It provides basic decomposition methods, such as Tucker decomposition and CANDECOMP/PARAFAC (CP) decomposition, as well as new decomposition methods developed recently, for example, Pairwise Interaction Tensor Decomposition. 
 
 
 
-*TensorD* is designed to be flexible, lightweight and scalable when used to transform idea into result as soon as possible in nowadays research. Based on Tensorflow, *TensorD* has several key features:
+*TensorD* is designed to be flexible, lightweight and scalable when used to transform idea into result as soon as possible in nowadays research. Based on ``TensorFlow``, *TensorD* has several key features:
 
-- **GPU Compatibility**: *TensorD* is completely built within TensorFlow, which enables all GPUs to be visible to the process [2] and flexible usage on GPU computation for acceleration.
+- **GPU Compatibility**: *TensorD* is completely built within ``TensorFlow``, which enables all GPUs to be visible to the process [2] and flexible usage on GPU computation for acceleration.
 - **Static Computation Graph**: *TensorD* runs in Static Computaiton Graph way, which means defining computation graph at first then running real computaion with dataflow. 
 - **Light-weighted**: *TensorD* is written in Python which provides high-level implementations of mathematical operations. Acquiring small memory footprint, *TensorD* is friendly to install even on mobile devices.
 - **High modularity of structure for extensibility**: *TensorD* has a modular structure which facilitates the expansion optionally. *TensorD* modulizes its code for the convenience of using its tensor classes, loss functions, basic operations and decomposition models separately as well as plugged together. 
@@ -29,23 +29,28 @@ Tensor:D
 
 *TensorD*'s implementations of structure are clear and modular. The library structure is roughly contains three main modules: 
 
-1) data processing module, providing interface to read and write sparse tensor in coordinate format, and a transformation between sparse and dense tensor.
-2) the basic operation module, which assembled via the linear algebra in TensorFlow, providing basic matrix and tensor operations not only for tensor decomposition but also for other algorithms.
-3) and the decomposition algorithm module, including common decomposition algorithms such as CP decomposition [3, 4, 5], Tucker decomposition [6, 7], NCP decomposition [8, 9] and NTucker decomposition [8, 10]
+1) Data processing module, providing interface to read and write sparse tensor in coordinate format, and a transformation between sparse and dense tensor.
+2) Basic operation module, which assembled via the linear algebra in TensorFlow, providing basic matrix and tensor operations not only for tensor decomposition but also for other algorithms.
+3) Decomposition model module, including common decomposition algorithms such as CP decomposition [3, 4, 5], Tucker decomposition [6, 7], NCP decomposition [8, 9] and NTucker decomposition [8, 10]
 
 
 
 
+
+## Requirements
+
+- Python 3.x
+- TensorFlow(>=1.2.1) (see  [Installing TensorFlow](https://www.tensorflow.org/install/)),
+- numpy
+- csv
 
 ## Installation
 
+Clone the *TensorD* repository:
 
-
-
-
-
-
-
+```
+git clone https://github.com/Large-Scale-Tensor-Decomposition/tensorD.git
+```
 
 
 
@@ -54,6 +59,10 @@ Tensor:D
 
 
 
+
+## License
+
+*TensorD* is released under the MIT License (refer to LISENSE file for details).
 
 
 
