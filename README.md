@@ -25,7 +25,7 @@ Tensor:D
 
 ## Structure
 
-![Structure of TensorD](https://github.com/Large-Scale-Tensor-Decomposition/tensorD/pictures/struct.png)
+![Structure of TensorD](https://github.com/Large-Scale-Tensor-Decomposition/tensorD/raw/master/pictures/struct.png)
 
 *TensorD*'s implementations of structure are clear and modular. The library structure is roughly contains three main modules: 
 
@@ -79,4 +79,3 @@ Tensor:D
 
 
 [10] Y.-D. Kim, S. Choi, Nonnegative tucker decomposition, in: Computer Vision and Pattern Recognition, 2007. CVPR’07. IEEE Conference on, IEEE, 2007, pp. 1–8.
-
