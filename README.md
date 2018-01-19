@@ -25,9 +25,7 @@ Tensor:D
 
 ## Structure
 
-```
-![Structure of TensorD](https://github.com/Large-Scale-Tensor-Decomposition/tensorD/pictures/struct.eps)
-```
+![Structure of TensorD](https://github.com/Large-Scale-Tensor-Decomposition/tensorD/pictures/struct.png)
 
 *TensorD*'s implementations of structure are clear and modular. The library structure is roughly contains three main modules: 
 
