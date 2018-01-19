@@ -41,8 +41,7 @@ Tensor:D
 
 - Python 3.x
 - TensorFlow(>=1.2.1) (see  [Installing TensorFlow](https://www.tensorflow.org/install/)),
-- numpy
-- csv
+- NumPy
 
 ## Installation
 
