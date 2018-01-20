@@ -22,4 +22,6 @@ if __name__ == '__main__':
     args = NCP_BCU.NCP_Args(rank=10, validation_internal=1)
     ncp.build_model(args)
     ncp.train(100)
+    factor_matrices = ncp.factors
+    lambdas = ncp.lambdas
     print('Training ends.\n\n\n')

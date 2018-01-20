@@ -22,4 +22,6 @@ if __name__ == '__main__':
     args = NTUCKER_BCU.NTUCKER_Args(ranks=[10, 10, 10], validation_internal=1)
     ntucker.build_model(args)
     ntucker.train(1000)
+    factor_matrices = ntucker.factors
+    core_tensor = ntucker.core
     print('Train ends.\n\n\n')

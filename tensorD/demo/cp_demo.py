@@ -22,4 +22,6 @@ if __name__ == '__main__':
     args = CP_ALS.CP_Args(rank=10, validation_internal=1)
     cp.build_model(args)
     cp.train(100)
+    factor_matrices = cp.factors
+    lambdas = cp.lambdas
     print('Train ends.\n\n\n')

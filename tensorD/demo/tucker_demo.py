@@ -21,4 +21,6 @@ if __name__ == '__main__':
     args = HOOI.HOOI_Args(ranks=[10, 10, 10], validation_internal=1, tol=1.0e-4)
     hooi.build_model(args)
     hooi.train(50)
+    factor_matrices = hooi.factors
+    core_tensor = hooi.core
     print('Train ends.\n\n\n')

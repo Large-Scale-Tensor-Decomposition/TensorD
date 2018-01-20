@@ -55,7 +55,32 @@ git clone https://github.com/Large-Scale-Tensor-Decomposition/tensorD.git
 
 ##  Example
 
+Here is a simple example for CP decomposition. See [documentation](http://smile-lab-tensord.readthedocs.io) or [demo files](https://github.com/Large-Scale-Tensor-Decomposition/tensorD/tree/master/tensorD/demo) for more examples. 
 
+```python
+# import necessary packages
+from tensorD.factorization.env import Environment
+from tensorD.dataproc.provider import Provider
+from tensorD.factorization.cp import CP_ALS
+import tensorD.demo.DataGenerator as dg
+
+# use synthetic_data_cp to generate a random tensor with shape of 40x40x40
+X = dg.synthetic_data_cp([40, 40, 40], 10)
+data_provider = Provider()
+data_provider.full_tensor = lambda: X
+env = Environment(data_provider, summary_path='/tmp/cp_demo_' + '30')
+cp = CP_ALS(env)
+# set rank=10 for decomposition 
+args = CP_ALS.CP_Args(rank=10, validation_internal=1)
+# build decomposition model
+cp.build_model(args)
+# train decomposition model
+cp.train(100)
+# obtain factor matrices
+factor_matrices = cp.factors
+# obtain scaling vector
+lambdas = cp.lambdas
+```
 
 
 
