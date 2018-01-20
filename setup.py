@@ -14,7 +14,7 @@ def readme():
 
 
 config = {
-    'name': ‘tensorD',
+    'name': 'tensorD',
     'packages': find_packages(exclude=['doc']),
     'description': 'Tensor Decomposition via TensorFlow',
     'long_description': readme(),
