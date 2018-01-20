@@ -70,11 +70,11 @@ data_provider = Provider()
 data_provider.full_tensor = lambda: X
 env = Environment(data_provider, summary_path='/tmp/cp_demo_' + '30')
 cp = CP_ALS(env)
-# set rank=10 for decomposition 
+# set rank=10 for decomposition
 args = CP_ALS.CP_Args(rank=10, validation_internal=1)
-# build decomposition model
+# build decomposition model with arguments
 cp.build_model(args)
-# train decomposition model
+# train decomposition model, set the max iteration as 100
 cp.train(100)
 # obtain factor matrices from trained model
 factor_matrices = cp.factors
