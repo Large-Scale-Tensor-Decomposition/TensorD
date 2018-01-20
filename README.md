@@ -76,10 +76,13 @@ args = CP_ALS.CP_Args(rank=10, validation_internal=1)
 cp.build_model(args)
 # train decomposition model
 cp.train(100)
-# obtain factor matrices
+# obtain factor matrices from trained model
 factor_matrices = cp.factors
-# obtain scaling vector
+for matrix in factor_matrices:
+    print(matrix)
+# obtain scaling vector from trained model
 lambdas = cp.lambdas
+print(lambdas)
 ```
 
 
