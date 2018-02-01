@@ -119,6 +119,7 @@ class HOOI(BaseFact):
         assert isinstance(args, HOOI.HOOI_Args)
         input_data = tf.placeholder(tf.float32, shape=self._env.full_shape())
         self._feed_dict = {input_data: self._env.full_data()}
+        input_norm = tf.norm(input_data)
         shape = input_data.get_shape().as_list()
         order = input_data.get_shape().ndims
 
@@ -153,11 +154,17 @@ class HOOI(BaseFact):
         with tf.name_scope('full-tensor') as scope:
             P = TTensor(g, assign_op)
             full_op = P.extract()
-
         with tf.name_scope('loss') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
+        with tf.name_scope('relative-residual') as scope:
+            rel_res_op = tf.norm(full_op - input_data) / input_norm
+        with tf.name_scope('objective-value') as scope:
+            obj_op = 0.5 * tf.square(tf.norm(full_op - input_data))
+
 
         tf.summary.scalar('loss', loss_op)
+        tf.summary.scalar('relative_residual', rel_res_op)
+        tf.summary.scalar('objective-value', obj_op)
 
         self._args = args
         self._init_op = init_op
@@ -165,6 +172,8 @@ class HOOI(BaseFact):
         self._factor_update_op = assign_op
         self._core_op = g
         self._loss_op = loss_op
+        self._obj_op = obj_op
+        self._rel_res_op = rel_res_op
 
     @property
     def full(self):
@@ -194,6 +203,8 @@ class HOOI(BaseFact):
         factor_update_op = self._factor_update_op
         core_op = self._core_op
         loss_op = self._loss_op
+        obj_op = self._obj_op
+        rel_res_op = self._rel_res_op
         loss_hist = []
 
         sum_op = tf.summary.merge_all()
@@ -205,19 +216,19 @@ class HOOI(BaseFact):
         for step in range(1, steps + 1):
             if (step == steps) or args.verbose or (step == 1) or (
                                 step % args.validation_internal == 0 and args.validation_internal != -1):
-                loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run(
-                    [loss_op, full_op, factor_update_op, core_op, sum_op], feed_dict=self._feed_dict)
+                loss_v, self._full_tensor, self._factors, self._core, obj, rel_res, sum_msg = sess.run(
+                    [loss_op, full_op, factor_update_op, core_op, obj_op, rel_res_op, sum_op], feed_dict=self._feed_dict)
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%.15f' % (step, loss_v))
             else:
-                self._factors, self._core, loss_v = sess.run([factor_update_op, core_op, loss_op],
+                self._factors, self._core, loss_v, obj, rel_res = sess.run([factor_update_op, core_op, loss_op, obj_op, rel_res_op],
                                                              feed_dict=self._feed_dict)
             loss_hist.append(loss_v)
             if step == 1:
-                loss_v0 = loss_v + 1
+                obj0 = obj + 1
 
-            relerr1 = abs(loss_v - loss_v0) / (loss_v0 + 1)
-            relerr2 = abs(loss_v - loss_v0)
+            relerr1 = abs(obj - obj0) / (obj0 + 1)
+            relerr2 = rel_res
             crit = relerr1 < args.tol
             if crit:
                 nstall = nstall + 1
@@ -225,7 +236,6 @@ class HOOI(BaseFact):
                 nstall = 0
             if nstall >= 3 or relerr2 < args.tol:
                 break
-            loss_v0 = loss_v
 
         print('HOOI model train finish, in %d steps, with RMSE = %.10f' % (step, loss_v))
         self._is_train_finish = True
