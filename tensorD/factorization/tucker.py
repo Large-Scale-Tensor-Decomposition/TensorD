@@ -44,6 +44,8 @@ class HOSVD(BaseFact):
         with tf.name_scope('loss') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
 
+        tf.summary.scalar('loss', loss_op)
+
         self._args = args
         self._init_op = init_op
         self._full_op = full_op
@@ -65,11 +67,14 @@ class HOSVD(BaseFact):
         self._is_train_finish = False
         sess = self._env.sess
 
+        sum_op = tf.summary.merge_all()
+        sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
+
         sess.run(self._init_op, feed_dict=self._feed_dict)
         print('HOSVD model initial finish')
 
-        loss_v, self._full_tensor, self._factors, self._core = sess.run(
-            [self._loss_op, self._full_op, self._factor_update_op, self._core_op], feed_dict=self._feed_dict)
+        loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run(
+            [self._loss_op, self._full_op, self._factor_update_op, self._core_op, sum_op], feed_dict=self._feed_dict)
         print('HOSVD model train finish, with RMSE = %f' % loss_v)
         self._is_train_finish = True
 
@@ -205,7 +210,7 @@ class HOOI(BaseFact):
         loss_op = self._loss_op
         obj_op = self._obj_op
         rel_res_op = self._rel_res_op
-        loss_hist = []
+        hist = []
 
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
@@ -219,11 +224,11 @@ class HOOI(BaseFact):
                 loss_v, self._full_tensor, self._factors, self._core, obj, rel_res, sum_msg = sess.run(
                     [loss_op, full_op, factor_update_op, core_op, obj_op, rel_res_op, sum_op], feed_dict=self._feed_dict)
                 sum_writer.add_summary(sum_msg, step)
-                print('step=%d, RMSE=%.15f' % (step, loss_v))
+                print('step=%d, RMSE=%.10f, relerr=%.10f' % (step, loss_v, rel_res))
             else:
                 self._factors, self._core, loss_v, obj, rel_res = sess.run([factor_update_op, core_op, loss_op, obj_op, rel_res_op],
                                                              feed_dict=self._feed_dict)
-            loss_hist.append(loss_v)
+            hist.append([loss_v, rel_res])
             if step == 1:
                 obj0 = obj + 1
 
@@ -239,4 +244,4 @@ class HOOI(BaseFact):
 
         print('HOOI model train finish, in %d steps, with RMSE = %.10f' % (step, loss_v))
         self._is_train_finish = True
-        return loss_hist
+        return hist

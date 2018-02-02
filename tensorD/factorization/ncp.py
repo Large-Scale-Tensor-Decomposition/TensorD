@@ -186,7 +186,7 @@ class NCP_BCU(BaseFact):
         loss_op = self._loss_op
         obj_op = self._obj_op
         rel_res_op = self._rel_res_op
-        loss_hist = []
+        hist = []
 
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
@@ -203,14 +203,14 @@ class NCP_BCU(BaseFact):
                     [factor_update_op, full_op, loss_op, obj_op, rel_res_op, sum_op, train_op],
                     feed_dict=self._feed_dict)
                 sum_writer.add_summary(sum_msg, step)
-                print('step=%d, RMSE=%.5f' % (step, loss_v))
+                print('step=%d, RMSE=%.10f, relerr=%.10f' % (step, loss_v, rel_res))
             else:
                 self._factors, loss_v, rel_res, obj, _ = sess.run(
                     [factor_update_op, loss_op, rel_res_op, obj_op, train_op], feed_dict=self._feed_dict)
 
             if step == 1:
                 obj0 = obj + 1
-            loss_hist.append(loss_v)
+            hist.append([loss_v, rel_res])
 
             relerr1 = abs(obj - obj0) / (obj0 + 1)
             relerr2 = rel_res
@@ -232,4 +232,4 @@ class NCP_BCU(BaseFact):
 
         print('Non-Negative CP model train finish, in %d steps, with RMSE = %.10f' % (step, loss_v))
         self._is_train_finish = True
-        return loss_hist
+        return hist
