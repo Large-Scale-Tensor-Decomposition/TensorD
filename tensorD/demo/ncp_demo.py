@@ -17,11 +17,11 @@ if __name__ == '__main__':
     X = synthetic_data_cp([20, 20, 20], 10)
     data_provider = Provider()
     data_provider.full_tensor = lambda: X
-    env = Environment(data_provider, summary_path='/tmp/ncp_demo_' + '30')
+    env = Environment(data_provider, summary_path='/tmp/ncp_demo')
     ncp = NCP_BCU(env)
-    args = NCP_BCU.NCP_Args(rank=350, validation_internal=50)
+    args = NCP_BCU.NCP_Args(rank=10, validation_internal=10)
     ncp.build_model(args)
-    ncp.train(2000)
+    ncp.train(1000)
     factor_matrices = ncp.factors
     lambdas = ncp.lambdas
     print('Training ends.\n\n\n')

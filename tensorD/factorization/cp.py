@@ -108,7 +108,6 @@ class CP_ALS(BaseFact):
 
         tf.summary.scalar('loss', loss_op)
         tf.summary.scalar('relative_residual', rel_res_op)
-        tf.summary.scalar('objective-value', obj_op)
 
         init_op = tf.global_variables_initializer()
 
@@ -148,8 +147,11 @@ class CP_ALS(BaseFact):
         for step in range(1, steps + 1):
             if (step == steps) or (args.verbose) or (step == 1) or (
                         step % args.validation_internal == 0 and args.validation_internal != -1):
+                run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                run_metadata = tf.RunMetadata()
                 self._factors, self._lambdas, self._full_tensor, loss_v, obj, rel_res, sum_msg = sess.run(
-                    [factor_update_op, lambda_op, full_op, loss_op, obj_op, rel_res_op, sum_op], feed_dict=self._feed_dict)
+                    [factor_update_op, lambda_op, full_op, loss_op, obj_op, rel_res_op, sum_op], feed_dict=self._feed_dict, options=run_options, run_metadata=run_metadata)
+                sum_writer.add_run_metadata(run_metadata, 'step%d' % step)
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%.10f, relerr=%.10f' % (step, loss_v, rel_res))
             else:
