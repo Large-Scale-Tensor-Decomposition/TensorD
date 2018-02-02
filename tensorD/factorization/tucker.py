@@ -32,7 +32,7 @@ class HOSVD(BaseFact):
         order = input_data.get_shape().ndims
         A = []
         for n in range(order):
-            _, U, _ = tf.svd(ops.unfold(input_data, n), full_matrices=True, name='svd-%d' % n)
+            _, U, _ = tf.svd(ops.unfold(input_data, n), full_matrices=False, name='svd-%d' % n)    # full_matrices=False to save memory
             A.append(U[:, :args.ranks[n]])
         g = ops.ttm(input_data, A, transpose=True)
 
@@ -73,8 +73,14 @@ class HOSVD(BaseFact):
         sess.run(self._init_op, feed_dict=self._feed_dict)
         print('HOSVD model initial finish')
 
+        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+        run_metadata = tf.RunMetadata()
+
+
         loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run(
-            [self._loss_op, self._full_op, self._factor_update_op, self._core_op, sum_op], feed_dict=self._feed_dict)
+            [self._loss_op, self._full_op, self._factor_update_op, self._core_op, sum_op], feed_dict=self._feed_dict, options=run_options, run_metadata=run_metadata)
+        sum_writer.add_run_metadata(run_metadata, 'step1')
+        sum_writer.add_summary(sum_msg, 1)
         print('HOSVD model train finish, with RMSE = %f' % loss_v)
         self._is_train_finish = True
 
@@ -135,7 +141,7 @@ class HOOI(BaseFact):
         init_ops = [None for _ in range(order)]
         for mode in range(order):
             with tf.name_scope('HOSVD-A-init-%d' % mode) as scope:
-                _, U, _ = tf.svd(ops.unfold(input_data, mode), full_matrices=True, name='svd-%d' % mode)
+                _, U, _ = tf.svd(ops.unfold(input_data, mode), full_matrices=False, name='svd-%d' % mode)    # full_matrices=False to save memory
                 init_ops[mode] = A[mode].assign(U[:, :args.ranks[mode]])
 
         assign_op = [None for _ in range(order)]
@@ -169,7 +175,6 @@ class HOOI(BaseFact):
 
         tf.summary.scalar('loss', loss_op)
         tf.summary.scalar('relative_residual', rel_res_op)
-        tf.summary.scalar('objective-value', obj_op)
 
         self._args = args
         self._init_op = init_op
@@ -221,8 +226,11 @@ class HOOI(BaseFact):
         for step in range(1, steps + 1):
             if (step == steps) or args.verbose or (step == 1) or (
                                 step % args.validation_internal == 0 and args.validation_internal != -1):
+                run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                run_metadata = tf.RunMetadata()
                 loss_v, self._full_tensor, self._factors, self._core, obj, rel_res, sum_msg = sess.run(
-                    [loss_op, full_op, factor_update_op, core_op, obj_op, rel_res_op, sum_op], feed_dict=self._feed_dict)
+                    [loss_op, full_op, factor_update_op, core_op, obj_op, rel_res_op, sum_op], feed_dict=self._feed_dict, options=run_options, run_metadata=run_metadata)
+                sum_writer.add_run_metadata(run_metadata, 'step%d' % step)
                 sum_writer.add_summary(sum_msg, step)
                 print('step=%d, RMSE=%.10f, relerr=%.10f' % (step, loss_v, rel_res))
             else:
