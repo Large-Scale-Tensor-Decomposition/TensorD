@@ -37,7 +37,7 @@ The Tucker decomposition
     >>> from tensorD.factorization.tucker import HOSVD
     >>> env = Environment(data_provider, summary_path='/tmp/hosvd_' + '20')
     >>> hosvd = HOSVD(env)
-    >>> args = HOSVD.HOSVD_Args(ranks=[10, 10, 10], validation_internal=1, tol=1.0e-4)
+    >>> args = HOSVD.HOSVD_Args(ranks=[10, 10, 10])
     >>> hosvd.build_model(args)
     >>> hosvd.train()
     # obtain factor matrices from trained model
