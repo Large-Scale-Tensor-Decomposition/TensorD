@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2018/1/17 PM4:28
+# @Time    : 2018/1/29 PM8:31
 # @Author  : Shiloh Leung
-# @Site    : 
-# @File    : ml_ntucker.py
+# @Site    :
+# @File    : ml_tucker.py
 # @Software: PyCharm Community Edition
 
+
 from tensorD.dataproc.reader import TensorReader
-import tensorflow as tf
 from tensorD.factorization.env import Environment
 from tensorD.dataproc.provider import Provider
-from tensorD.factorization.ntucker import NTUCKER_BCU
+from tensorD.factorization.tucker import HOOI
+from tensorD.factorization.tucker import HOSVD
 from tensorD.demo.DataGenerator import *
 
 if __name__ == '__main__':
@@ -21,14 +22,16 @@ if __name__ == '__main__':
         rating_tensor = sess.run(base.full_data)
     data_provider = Provider()
     data_provider.full_tensor = lambda: rating_tensor
-    env = Environment(data_provider, summary_path='/tmp/ntucker_ml')
-    ntucker = NTUCKER_BCU(env)
-    args = NTUCKER_BCU.NTUCKER_Args(ranks=[20, 20, 20], validation_internal=20)
-    ntucker.build_model(args)
-    hist = ntucker.train(2000)
-    out_path = '/root/tensorD_f/data_out_tmp/python_out/ntucker_ml_20.txt'
+    env = Environment(data_provider, summary_path='/tmp/tucker_ml')
+    hooi = HOOI(env)
+    args = HOOI.HOOI_Args(ranks=[20, 20, 20], validation_internal=1)
+    hooi.build_model(args)
+    hist = hooi.train(100)
+    out_path = '/root/tensorD_f/data_out_tmp/python_out/hooi_ml_20.txt'
     with open(out_path, 'w') as out:
         for iter in hist:
             loss = iter[0]
             rel_res = iter[1]
             out.write('%.10f, %.10f\n' % (loss, rel_res))
+
+

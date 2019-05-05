@@ -17,8 +17,10 @@ if __name__ == '__main__':
     cp = CP_ALS(env)
     args = CP_ALS.CP_Args(rank=20, validation_internal=1)
     cp.build_model(args)
-    loss_hist = cp.train(100)
+    hist = cp.train(100)
     out_path = '/root/tensorD_f/data_out_tmp/python_out/cp_ml_20.txt'
     with open(out_path, 'w') as out:
-        for loss in loss_hist:
-            out.write('%.6f\n' % loss)
+        for iter in hist:
+            loss = iter[0]
+            rel_res = iter[1]
+            out.write('%.10f, %.10f\n' % (loss, rel_res))

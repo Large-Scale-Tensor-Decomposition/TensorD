@@ -19,15 +19,17 @@ def tucker_run(N1, N2, N3, gR, dR, time):
     data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/tucker_' + str(N1))
     hooi = HOOI(env)
-    args = HOOI.HOOI_Args(ranks=[dR, dR, dR], validation_internal=200)
+    args = HOOI.HOOI_Args(ranks=[dR, dR, dR], validation_internal=10)
     hooi.build_model(args)
     print('\n\nTucker with %dx%dx%d, gR=%d, dR=%d, time=%d' % (N1, N2, N3, gR, dR, time))
-    loss_hist = hooi.train(6000)
+    hist = hooi.train(100)
     scale = str(N1) + '_' + str(gR) + '_' + str(dR)
     out_path = '/root/tensorD_f/data_out_tmp/python_out/tucker_' + scale + '_' + str(time) + '.txt'
     with open(out_path, 'w') as out:
-        for loss in loss_hist:
-            out.write('%.6f\n' % loss)
+        for iter in hist:
+            loss = iter[0]
+            rel_res = iter[1]
+            out.write('%.10f, %.10f\n' % (loss, rel_res))
 
 
 if __name__ == '__main__':

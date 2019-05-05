@@ -32,7 +32,7 @@ class HOSVD(BaseFact):
         order = input_data.get_shape().ndims
         A = []
         for n in range(order):
-            _, U, _ = tf.svd(ops.unfold(input_data, n), full_matrices=True, name='svd-%d' % n)
+            _, U, _ = tf.svd(ops.unfold(input_data, n), full_matrices=False, name='svd-%d' % n)    # full_matrices=False to save memory
             A.append(U[:, :args.ranks[n]])
         g = ops.ttm(input_data, A, transpose=True)
 
@@ -43,6 +43,8 @@ class HOSVD(BaseFact):
             full_op = P.extract()
         with tf.name_scope('loss') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
+
+        tf.summary.scalar('loss', loss_op)
 
         self._args = args
         self._init_op = init_op
@@ -65,11 +67,20 @@ class HOSVD(BaseFact):
         self._is_train_finish = False
         sess = self._env.sess
 
+        sum_op = tf.summary.merge_all()
+        sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
+
         sess.run(self._init_op, feed_dict=self._feed_dict)
         print('HOSVD model initial finish')
 
-        loss_v, self._full_tensor, self._factors, self._core = sess.run(
-            [self._loss_op, self._full_op, self._factor_update_op, self._core_op], feed_dict=self._feed_dict)
+        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+        run_metadata = tf.RunMetadata()
+
+
+        loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run(
+            [self._loss_op, self._full_op, self._factor_update_op, self._core_op, sum_op], feed_dict=self._feed_dict, options=run_options, run_metadata=run_metadata)
+        sum_writer.add_run_metadata(run_metadata, 'step1')
+        sum_writer.add_summary(sum_msg, 1)
         print('HOSVD model train finish, with RMSE = %f' % loss_v)
         self._is_train_finish = True
 
@@ -119,6 +130,7 @@ class HOOI(BaseFact):
         assert isinstance(args, HOOI.HOOI_Args)
         input_data = tf.placeholder(tf.float32, shape=self._env.full_shape())
         self._feed_dict = {input_data: self._env.full_data()}
+        input_norm = tf.norm(input_data)
         shape = input_data.get_shape().as_list()
         order = input_data.get_shape().ndims
 
@@ -129,7 +141,7 @@ class HOOI(BaseFact):
         init_ops = [None for _ in range(order)]
         for mode in range(order):
             with tf.name_scope('HOSVD-A-init-%d' % mode) as scope:
-                _, U, _ = tf.svd(ops.unfold(input_data, mode), full_matrices=True, name='svd-%d' % mode)
+                _, U, _ = tf.svd(ops.unfold(input_data, mode), full_matrices=False, name='svd-%d' % mode)    # full_matrices=False to save memory
                 init_ops[mode] = A[mode].assign(U[:, :args.ranks[mode]])
 
         assign_op = [None for _ in range(order)]
@@ -153,11 +165,16 @@ class HOOI(BaseFact):
         with tf.name_scope('full-tensor') as scope:
             P = TTensor(g, assign_op)
             full_op = P.extract()
-
         with tf.name_scope('loss') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
+        with tf.name_scope('relative-residual') as scope:
+            rel_res_op = tf.norm(full_op - input_data) / input_norm
+        with tf.name_scope('objective-value') as scope:
+            obj_op = 0.5 * tf.square(tf.norm(full_op - input_data))
+
 
         tf.summary.scalar('loss', loss_op)
+        tf.summary.scalar('relative_residual', rel_res_op)
 
         self._args = args
         self._init_op = init_op
@@ -165,6 +182,8 @@ class HOOI(BaseFact):
         self._factor_update_op = assign_op
         self._core_op = g
         self._loss_op = loss_op
+        self._obj_op = obj_op
+        self._rel_res_op = rel_res_op
 
     @property
     def full(self):
@@ -194,7 +213,9 @@ class HOOI(BaseFact):
         factor_update_op = self._factor_update_op
         core_op = self._core_op
         loss_op = self._loss_op
-        loss_hist = []
+        obj_op = self._obj_op
+        rel_res_op = self._rel_res_op
+        hist = []
 
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
@@ -205,19 +226,22 @@ class HOOI(BaseFact):
         for step in range(1, steps + 1):
             if (step == steps) or args.verbose or (step == 1) or (
                                 step % args.validation_internal == 0 and args.validation_internal != -1):
-                loss_v, self._full_tensor, self._factors, self._core, sum_msg = sess.run(
-                    [loss_op, full_op, factor_update_op, core_op, sum_op], feed_dict=self._feed_dict)
+                run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                run_metadata = tf.RunMetadata()
+                loss_v, self._full_tensor, self._factors, self._core, obj, rel_res, sum_msg = sess.run(
+                    [loss_op, full_op, factor_update_op, core_op, obj_op, rel_res_op, sum_op], feed_dict=self._feed_dict, options=run_options, run_metadata=run_metadata)
+                sum_writer.add_run_metadata(run_metadata, 'step%d' % step)
                 sum_writer.add_summary(sum_msg, step)
-                print('step=%d, RMSE=%.15f' % (step, loss_v))
+                print('step=%d, RMSE=%.10f, relerr=%.10f' % (step, loss_v, rel_res))
             else:
-                self._factors, self._core, loss_v = sess.run([factor_update_op, core_op, loss_op],
+                self._factors, self._core, loss_v, obj, rel_res = sess.run([factor_update_op, core_op, loss_op, obj_op, rel_res_op],
                                                              feed_dict=self._feed_dict)
-            loss_hist.append(loss_v)
+            hist.append([loss_v, rel_res])
             if step == 1:
-                loss_v0 = loss_v + 1
+                obj0 = obj + 1
 
-            relerr1 = abs(loss_v - loss_v0) / (loss_v0 + 1)
-            relerr2 = abs(loss_v - loss_v0)
+            relerr1 = abs(obj - obj0) / (obj0 + 1)
+            relerr2 = rel_res
             crit = relerr1 < args.tol
             if crit:
                 nstall = nstall + 1
@@ -225,8 +249,7 @@ class HOOI(BaseFact):
                 nstall = 0
             if nstall >= 3 or relerr2 < args.tol:
                 break
-            loss_v0 = loss_v
 
         print('HOOI model train finish, in %d steps, with RMSE = %.10f' % (step, loss_v))
         self._is_train_finish = True
-        return loss_hist
+        return hist

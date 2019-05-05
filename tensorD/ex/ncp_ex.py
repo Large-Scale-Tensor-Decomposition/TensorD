@@ -23,12 +23,14 @@ def ncp_run(N1, N2, N3, gR, dR, time):
     args = NCP_BCU.NCP_Args(rank=dR, validation_internal=200)
     ncp.build_model(args)
     print('\n\nNCP with %dx%dx%d, gR=%d, dR=%d, time=%d' % (N1, N2, N3, gR, dR, time))
-    loss_hist = ncp.train(6000)
+    hist = ncp.train(6000)
     scale = str(N1) + '_' + str(gR) + '_' + str(dR)
     out_path = '/root/tensorD_f/data_out_tmp/python_out/ncp_' + scale + '_' + str(time) + '.txt'
     with open(out_path, 'w') as out:
-        for loss in loss_hist:
-            out.write('%.6f\n' % loss)
+        for iter in hist:
+            loss = iter[0]
+            rel_res = iter[1]
+            out.write('%.10f, %.10f\n' % (loss, rel_res))
 
 
 if __name__ == '__main__':

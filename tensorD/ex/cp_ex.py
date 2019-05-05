@@ -23,15 +23,17 @@ def cp_run(N1, N2, N3, gR, dR, time):
     data_provider.full_tensor = lambda: X
     env = Environment(data_provider, summary_path='/tmp/cp_' + str(N1))
     cp = CP_ALS(env)
-    args = CP_ALS.CP_Args(rank=dR, validation_internal=200, tol=1.0e-4)
+    args = CP_ALS.CP_Args(rank=dR, validation_internal=50, tol=1.0e-4)
     cp.build_model(args)
     print('CP with %dx%dx%d, gR=%d, dR=%d, time=%d' % (N1, N2, N3, gR, dR, time))
-    loss_hist = cp.train(6000)
+    hist = cp.train(600)
     scale = str(N1) + '_' + str(gR) + '_' + str(dR)
     out_path = '/root/tensorD_f/data_out_tmp/python_out/cp_' + scale + '_' + str(time) + '.txt'
     with open(out_path, 'w') as out:
-        for loss in loss_hist:
-            out.write('%.6f\n' % loss)
+        for iter in hist:
+            loss = iter[0]
+            rel_res = iter[1]
+            out.write('%.10f, %.10f\n' % (loss, rel_res))
 
 
 if __name__ == '__main__':

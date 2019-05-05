@@ -39,9 +39,9 @@ class CP_ALS(BaseFact):
         self._lambda_op = None
         self._full_op = None
         self._factor_update_op = None
-        self._fit_op_zero = None
-        self._fit_op_not_zero = None
         self._loss_op = None
+        self._obj_op = None
+        self._rel_res_op = None
 
     def predict(self, *key):
         if not self._full_tensor:
@@ -68,6 +68,7 @@ class CP_ALS(BaseFact):
         assert isinstance(args, CP_ALS.CP_Args)
         input_data = tf.placeholder(tf.float32, shape=self._env.full_shape())
         self._feed_dict = {input_data: self._env.full_data()}
+        input_norm = tf.norm(input_data)
         shape = input_data.get_shape().as_list()
         order = len(shape)
 
@@ -98,11 +99,15 @@ class CP_ALS(BaseFact):
         with tf.name_scope('full-tensor') as scope:
             P = KTensor(assign_op, lambda_op)
             full_op = P.extract()
-
         with tf.name_scope('loss') as scope:
             loss_op = rmse_ignore_zero(input_data, full_op)
+        with tf.name_scope('relative-residual') as scope:
+            rel_res_op = tf.norm(full_op - input_data) / input_norm
+        with tf.name_scope('objective-value') as scope:
+            obj_op = 0.5 * tf.square(tf.norm(full_op - input_data))
 
         tf.summary.scalar('loss', loss_op)
+        tf.summary.scalar('relative_residual', rel_res_op)
 
         init_op = tf.global_variables_initializer()
 
@@ -112,6 +117,9 @@ class CP_ALS(BaseFact):
         self._full_op = full_op
         self._factor_update_op = assign_op
         self._loss_op = loss_op
+        self._obj_op = obj_op
+        self._rel_res_op = rel_res_op
+
 
     def train(self, steps):
         self._is_train_finish = False
@@ -125,7 +133,9 @@ class CP_ALS(BaseFact):
         full_op = self._full_op
         factor_update_op = self._factor_update_op
         loss_op = self._loss_op
-        loss_hist = []
+        obj_op = self._obj_op
+        rel_res_op = self._rel_res_op
+        hist = []
 
         sum_op = tf.summary.merge_all()
         sum_writer = tf.summary.FileWriter(self._env.summary_path, sess.graph)
@@ -137,19 +147,22 @@ class CP_ALS(BaseFact):
         for step in range(1, steps + 1):
             if (step == steps) or (args.verbose) or (step == 1) or (
                         step % args.validation_internal == 0 and args.validation_internal != -1):
-                self._factors, self._lambdas, self._full_tensor, loss_v, sum_msg = sess.run(
-                    [factor_update_op, lambda_op, full_op, loss_op, sum_op], feed_dict=self._feed_dict)
+                run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                run_metadata = tf.RunMetadata()
+                self._factors, self._lambdas, self._full_tensor, loss_v, obj, rel_res, sum_msg = sess.run(
+                    [factor_update_op, lambda_op, full_op, loss_op, obj_op, rel_res_op, sum_op], feed_dict=self._feed_dict, options=run_options, run_metadata=run_metadata)
+                sum_writer.add_run_metadata(run_metadata, 'step%d' % step)
                 sum_writer.add_summary(sum_msg, step)
-                print('step=%d, RMSE=%f' % (step, loss_v))
+                print('step=%d, RMSE=%.10f, relerr=%.10f' % (step, loss_v, rel_res))
             else:
-                self._factors, self._lambdas, loss_v = sess.run([factor_update_op, lambda_op, loss_op],
+                self._factors, self._lambdas, loss_v, obj, rel_res = sess.run([factor_update_op, lambda_op, loss_op, obj_op, rel_res_op],
                                                                 feed_dict=self._feed_dict)
-            loss_hist.append(loss_v)
+            hist.append([loss_v, rel_res])
             if step == 1:
-                loss_v0 = loss_v + 1
+                obj0 = obj + 1
 
-            relerr1 = abs(loss_v - loss_v0) / (loss_v0 + 1)
-            relerr2 = abs(loss_v - loss_v0)
+            relerr1 = abs(obj - obj0) / (obj0 + 1)
+            relerr2 = rel_res
             crit = relerr1 < args.tol
             if crit:
                 nstall = nstall + 1
@@ -157,8 +170,8 @@ class CP_ALS(BaseFact):
                 nstall = 0
             if nstall >= 3 or relerr2 < args.tol:
                 break
-            loss_v0 = loss_v
+
 
         print('CP model train finish, in %d steps, with RMSE = %.10f' % (step, loss_v))
         self._is_train_finish = True
-        return loss_hist
+        return hist

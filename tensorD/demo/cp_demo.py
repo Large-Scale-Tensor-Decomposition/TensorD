@@ -14,12 +14,12 @@ from tensorD.demo.DataGenerator import *
 
 if __name__ == '__main__':
     print('=========Train=========')
-    X = synthetic_data_cp([40, 40, 40], 10)
+    X = synthetic_data_cp([20, 20, 20], 10)
     data_provider = Provider()
     data_provider.full_tensor = lambda: X
-    env = Environment(data_provider, summary_path='/tmp/cp_demo_' + '30')
+    env = Environment(data_provider, summary_path='/tmp/cp_demo')
     cp = CP_ALS(env)
-    args = CP_ALS.CP_Args(rank=10, validation_internal=1)
+    args = CP_ALS.CP_Args(rank=10, validation_internal=5)
     cp.build_model(args)
     cp.train(100)
     factor_matrices = cp.factors
