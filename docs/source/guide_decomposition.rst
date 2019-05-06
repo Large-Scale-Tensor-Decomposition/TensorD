@@ -148,7 +148,7 @@ The non-negative Tucker (NTucker) decomposition
 The example:Pairwise Interaciton Tensor Decomposition
 ------------------------------------------------------
 
-Formally, pairwise interaction tensor assumes that each entry $T_{ijk}$ of a tensor :math:`\mathcal{T}` of size :math:`n_1 \times n_2\times n_3` is given by following:
+Formally, pairwise interaction tensor assumes that each entry :math:`T_{ijk}` of a tensor :math:`\mathcal{T}` of size :math:`n_1 \times n_2\times n_3` is given by following:
 
 .. math::
     T_{ijk}=\left \langle \mathbf{u}_{i}^{\left ( a \right )},\mathbf{v}_{j}^{\left ( a \right )} \right \rangle+\left \langle \mathbf{u}_{j}^{\left ( b \right )},\mathbf{v}_{k}^{\left ( b \right )} \right \rangle+\left \langle \mathbf{u}_{k}^{\left ( c \right )},\mathbf{v}_{i}^{\left ( c \right )} \right \rangle,\mathrm{for\,all}\left ( i,j,k \right )\in \left [ n_1 \right ]\times  \left [ n_2 \right ] \times \left [ n_3 \right ]
