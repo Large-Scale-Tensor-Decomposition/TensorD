@@ -186,7 +186,7 @@ The pairwise vectors in this formula are :math:`r_1, r_2, r_3` dimensions:
 
 
 
-Specific details can refer to the paper [3]_  "Exact and Stable Recovery of Pairwise Interaction Tensors, NIPS 2013".
+Specific details can refer to the paper "Exact and Stable Recovery of Pairwise Interaction Tensors, NIPS 2013" [3]_ .
 
 
 Multiple decompositions
