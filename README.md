@@ -93,6 +93,30 @@ print(lambdas)
 
 
 
+
+
+## Citing
+
+If you use TensorD, please cite the following paper:
+
+```
+@article{hao2018tensord,
+  title={TensorD: A tensor decomposition library in TensorFlow},
+  author={Hao, Liyang and Liang, Siqi and Ye, Jinmian and Xu, Zenglin},
+  journal={Neurocomputing},
+  volume={318},
+  pages={196--200},
+  year={2018},
+  publisher={Elsevier}
+}
+```
+
+
+
+
+
+
+
 ## Reference
 
 [1] M. Abadi, P. Barham, J. Chen, Z. Chen, A. Davis, J. Dean, M. Devin, S. Ghemawat,G. Irving, M. Isard, et al., Tensorflow:  A system for large-scale machine learning., in:  OSDI, Vol. 16, 2016, pp. 265-283.
