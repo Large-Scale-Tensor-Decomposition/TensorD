@@ -55,7 +55,7 @@ git clone https://github.com/Large-Scale-Tensor-Decomposition/tensorD.git
 
 ##  Example
 
-Here is a simple example for CP decomposition. See [documentation](http://smile-lab-tensord.readthedocs.io) or [demo files](https://github.com/Large-Scale-Tensor-Decomposition/tensorD/tree/master/tensorD/demo) for more examples. 
+Here is a simple example for CP decomposition. See [documentation](https://tensord-v02.readthedocs.io) or [demo files](https://github.com/Large-Scale-Tensor-Decomposition/tensorD/tree/master/tensorD/demo) for more examples. 
 
 ```python
 # import necessary packages
