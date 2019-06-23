@@ -3,9 +3,10 @@ import tensorflow as tf
 
 
 class Environment(object):
-    def __init__(self, data_provider, summary_path=None):
+    def __init__(self, data_provider, summary_path=None, session=tf.Session()):
         self._data_provider = data_provider
         self._sum_path = summary_path
+        self._sess = session
 
     @property
     def is_master(self):
@@ -30,4 +31,4 @@ class Environment(object):
 
     @property
     def sess(self):
-        return tf.Session()
+        return self._sess
